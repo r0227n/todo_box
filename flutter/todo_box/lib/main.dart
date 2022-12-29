@@ -74,6 +74,11 @@ class _MyHomePageState extends State<MyHomePage> {
       date: null,
     );
 
+    num = num.copyWith(title: 'update');
+    print(await query.finad(num.id));
+    query.update(num);
+    print(await query.finad(num.id));
+
     query.remove(num.id);
 
     await query.create('hogefuga$_counter', {'title': 'text not null'});

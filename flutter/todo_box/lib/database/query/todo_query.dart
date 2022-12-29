@@ -1,8 +1,6 @@
-import 'dart:convert' show jsonEncode;
+import 'dart:convert' show jsonDecode, jsonEncode;
 import '../helper/sql_helper.dart';
 import '../models/todo.dart';
-import '../models/sql_encode.dart';
-import '../models/sql_decode.dart';
 import '../static/todo_value.dart';
 
 class TodoQuery {
@@ -37,28 +35,20 @@ class TodoQuery {
     );
   }
 
-  Future<int> update(Todo todo) async {
-    final encode = SqlEncode.fromMap(todo.toJson());
-    return await sqlHelper.update(tableTodo, encode.toMap());
-  }
+  Future<int> update(Todo todo) => sqlHelper.update(tableTodo, _encode(todo));
 
-  Future<int> remove(int id) async {
-    return await sqlHelper.delete(tableTodo, id);
-  }
+  Future<int> remove(int id) => sqlHelper.delete(tableTodo, id);
 
   Future<Todo> finad(int id) async {
     final content = await sqlHelper.select(tableTodo, id);
-    final decode = SqlDecode.fromMap(content.first);
-    return Todo.fromJson(decode.toMap());
+
+    return _decode(content.first);
   }
 
-  Future<void> create(String name, Map<String, String> column) async {
-    sqlHelper.createTable(name, column);
-  }
+  Future<void> create(String name, Map<String, String> column) =>
+      sqlHelper.createTable(name, column);
 
-  Future<void> delete(String name) async {
-    await sqlHelper.deleteTable(name);
-  }
+  Future<void> delete(String name) => sqlHelper.deleteTable(name);
 
   Future<List<String>> finadAllTable({bool hideDefault = true}) async {
     final tables = await sqlHelper.toListTable();
@@ -68,6 +58,28 @@ class TodoQuery {
 
     return tables;
   }
+
+  Map<String, dynamic> _encode(Todo todo) {
+    final map = todo.toJson();
+
+    return {
+      columnId: map['id'],
+      columnTitle: map[columnTitle],
+      columnDone: map[columnDone] == true ? 1 : 0,
+      columnDate: map[columnDate],
+      columnTags: jsonEncode(map[columnTags]) == '[]' ? null : jsonEncode(map[columnTags]),
+      columnNotification: map[columnNotification] == true ? 1 : 0,
+    };
+  }
+
+  Todo _decode(Map<String, dynamic> map) => Todo.fromJson({
+        columnId: map[columnId],
+        columnTitle: map[columnTitle],
+        columnDone: map[columnDone] == 0 ? false : true,
+        columnDate: DateTime.tryParse(map[columnDate] ?? ''),
+        columnTags: map[columnTags] == null ? const <String>[] : jsonDecode(map[columnTags]),
+        columnNotification: map[columnNotification] == 0 ? false : true,
+      });
 
   factory TodoQuery.helper(
     String database,
