@@ -56,7 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    query = TodoQuery.helper(tableTodo, tableTodo, columnId);
+    query = TodoQuery.helper(tableTodo, tableTodo, columnId, null);
   }
 
   @override
