@@ -33,11 +33,19 @@ class SqlHeloper {
       createColumn += "$key ${column[key]},";
     }
 
+    createColumn = createColumn.substring(0, createColumn.length - 1);
+
     await instance.execute('''
 			create table $table ( 
 				$createColumn
 			)
 		''');
+  }
+
+  Future<void> deleteTable(String table) async {
+    await instance.execute('''
+      drop table if exists $table
+    ''');
   }
 
   Future<List<String>> toListTable() async {

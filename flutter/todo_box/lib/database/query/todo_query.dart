@@ -52,6 +52,14 @@ class TodoQuery {
     return Todo.fromJson(decode.toMap());
   }
 
+  Future<void> create(String name, Map<String, String> column) async {
+    sqlHelper.createTable(name, column);
+  }
+
+  Future<void> delete(String name) async {
+    await sqlHelper.deleteTable(name);
+  }
+
   Future<List<String>> finadAllTable({bool hideDefault = true}) async {
     final tables = await sqlHelper.toListTable();
     if (hideDefault) {
