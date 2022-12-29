@@ -11,13 +11,13 @@ class SqlEncode {
     required this.notification,
   });
 
-  final String id;
+  final int id;
 
   final String title;
 
   final int done;
 
-  final DateTime? date;
+  final String? date;
 
   final String? tags;
 
@@ -34,10 +34,10 @@ class SqlEncode {
 
   factory SqlEncode.fromMap(Map<String, dynamic> map) => SqlEncode(
         id: map['id'],
-        title: map['title'],
-        done: map['done'] == true ? 1 : 0,
-        date: map['date'],
-        tags: jsonEncode(map['tags']) == '[]' ? null : jsonEncode(map['tags']),
-        notification: map['notification'] == true ? 1 : 0,
+        title: map[columnTitle],
+        done: map[columnDone] == true ? 1 : 0,
+        date: map[columnDate],
+        tags: jsonEncode(map[columnTags]) == '[]' ? null : jsonEncode(map[columnTags]),
+        notification: map[columnNotification] == true ? 1 : 0,
       );
 }

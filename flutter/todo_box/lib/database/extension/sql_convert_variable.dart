@@ -1,6 +1,6 @@
 import 'dart:convert' show jsonDecode;
 
-extension SqlDecode on Object? {
+extension SqlEncode on Object? {
   /// Convert to [String]
   /// If [null], return [null].
   String? tryParse() {
