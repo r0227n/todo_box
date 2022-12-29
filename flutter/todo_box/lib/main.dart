@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:todo_box/database/helper/sql_helper.dart';
+import 'package:todo_box/database/static/todo_value.dart';
+import 'database/models/sql_encode.dart';
+import 'database/models/todo.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,8 +53,44 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  late final SqlHeloper todo;
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    todo = SqlHeloper.open(tableTodo, tableTodo, columnId);
+    // todo.open(tableTodo);
+  }
+
+  void _incrementCounter() async {
+    final test = Todo(
+        id: _counter.toString(),
+        title: "test",
+        done: true,
+        tags: [],
+        notification: false,
+        date: null);
+
+    final content = SqlEncode.fromMap(test.toJson());
+
+    final hoge = await todo.insert(content.toMap());
+
+    print(await todo.select(_counter.toString()));
+
+    final fuga = Todo(
+        id: _counter.toString(),
+        title: "update",
+        done: true,
+        tags: [],
+        notification: false,
+        date: null);
+    final aaa = SqlEncode.fromMap(fuga.toJson());
+
+    print(await todo.update(aaa.toMap()));
+    print(await todo.select(_counter.toString()));
+
+    todo.delete(_counter);
+
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
