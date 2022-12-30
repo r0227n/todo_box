@@ -42,12 +42,6 @@ class SqlHeloper {
 		''');
   }
 
-  Future<void> deleteTable(String table) async {
-    await instance.execute('''
-      drop table if exists $table
-    ''');
-  }
-
   Future<List<String>> toListTable() async {
     return (await instance.query('sqlite_master', columns: const <String>['name']))
         .where((element) => element.values.first != null)
@@ -65,11 +59,11 @@ class SqlHeloper {
     );
   }
 
-  Future<List<Map<String, Object?>>> select(String table, int id, {List<String>? select}) async {
+  Future<List<Map<String, Object?>>> select(String table, {int? id, List<String>? select}) async {
     return await instance.query(
       table,
       columns: select,
-      where: '$key = ?',
+      where: id == null ? null : '$key = ?',
       whereArgs: [id],
     );
   }
@@ -80,6 +74,18 @@ class SqlHeloper {
       where: '$key = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<void> deleteAllRow(String table) async {
+    await instance.execute('''
+			delete from $table 
+		''');
+  }
+
+  Future<void> deleteTable(String table) async {
+    await instance.execute('''
+      drop table if exists $table
+    ''');
   }
 
   Future<int> update(String table, Map<String, Object?> map) async {

@@ -40,15 +40,16 @@ class TodoQuery {
   Future<int> remove(int id) => sqlHelper.delete(tableTodo, id);
 
   Future<Todo> finad(int id) async {
-    final content = await sqlHelper.select(tableTodo, id);
+    final content = await sqlHelper.select(tableTodo, id: id);
 
     return _decode(content.first);
   }
 
-  Future<void> create(String name, Map<String, String> column) =>
-      sqlHelper.createTable(name, column);
+  Future<List<Todo>> findAll() async {
+    final content = await sqlHelper.select(tableTodo);
 
-  Future<void> delete(String name) => sqlHelper.deleteTable(name);
+    return content.map((e) => _decode(e)).toList();
+  }
 
   Future<List<String>> finadAllTable({bool hideDefault = true}) async {
     final tables = await sqlHelper.toListTable();
@@ -58,6 +59,13 @@ class TodoQuery {
 
     return tables;
   }
+
+  Future<void> create(String name, Map<String, String> column) =>
+      sqlHelper.createTable(name, column);
+
+  Future<void> delete(String name) => sqlHelper.deleteTable(name);
+
+  Future<void> deleteAllRow(String table) => sqlHelper.deleteAllRow(table);
 
   Map<String, dynamic> _encode(Todo todo) {
     final map = todo.toJson();

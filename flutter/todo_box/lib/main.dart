@@ -79,12 +79,12 @@ class _MyHomePageState extends State<MyHomePage> {
     query.update(num);
     print(await query.finad(num.id));
 
+    query.deleteAllRow(tableTodo);
     query.remove(num.id);
 
     await query.create('hogefuga$_counter', {'title': 'text not null'});
     await query.delete('hogefuga$_counter');
     print(await query.finadAllTable());
-
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
