@@ -1,14 +1,10 @@
 import 'package:sqflite/sqflite.dart';
 
 class SqlHeloper {
-  SqlHeloper.open(String database, String table, this.key, Map<String, String>? column) {
-    open(database, table, column: column)
-        .then((value) => instance = value)
-        .catchError((e) => throw ArgumentError(e));
-  }
+  const SqlHeloper(this.instance, this.key);
 
   /// [Database] インスタンス
-  late final Database instance;
+  final Database instance;
 
   /// 主キーの列名
   final String key;

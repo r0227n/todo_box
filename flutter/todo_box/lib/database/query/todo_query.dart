@@ -4,9 +4,12 @@ import '../models/todo.dart';
 import '../static/todo_value.dart';
 
 class TodoQuery {
-  const TodoQuery(this.sqlHelper);
+  const TodoQuery(this.sqlHelper, this.table);
 
   final SqlHeloper sqlHelper;
+
+  /// テーブル名
+  final String table;
 
   /// [Database] を閉じる
   void close() async => await sqlHelper.close();
@@ -19,7 +22,7 @@ class TodoQuery {
     required bool notification,
     DateTime? date,
   }) async {
-    final key = await sqlHelper.insert(tableTodo, {
+    final key = await sqlHelper.insert(table, {
       columnTitle: title,
       columnDone: done ? 1 : 0,
       columnDate: date,
@@ -38,25 +41,25 @@ class TodoQuery {
   }
 
   /// テーブル内の[Todo]を更新
-  Future<int> update(Todo todo) => sqlHelper.update(tableTodo, _encode(todo));
+  Future<int> update(Todo todo) => sqlHelper.update(table, _encode(todo));
 
   /// テーブル内から[Todo]を削除
   /// [id] はプライマリーキーである[Todo]のid
-  Future<int> remove(int id) => sqlHelper.delete(tableTodo, id);
+  Future<int> remove(int id) => sqlHelper.delete(table, id);
 
   Future<void> removeAll(String table) => sqlHelper.deleteAllRow(table);
 
   /// テーブル内から指定した[Todo]を取得
   /// [id] はプライマリーキーである[Todo]のid
   Future<Todo> finad(int id) async {
-    final content = await sqlHelper.select(tableTodo, id: id);
+    final content = await sqlHelper.select(table, id: id);
 
     return _decode(content.first);
   }
 
   /// テーブル内の[Todo]を全て取得
   Future<List<Todo>> findAll() async {
-    final content = await sqlHelper.select(tableTodo);
+    final content = await sqlHelper.select(table);
 
     return content.map((e) => _decode(e)).toList();
   }
@@ -104,12 +107,4 @@ class TodoQuery {
         columnTags: map[columnTags] == null ? const <String>[] : jsonDecode(map[columnTags]),
         columnNotification: map[columnNotification] == 0 ? false : true,
       });
-
-  factory TodoQuery.helper(
-    String database,
-    String table,
-    String key,
-    Map<String, String>? column,
-  ) =>
-      TodoQuery(SqlHeloper.open(database, table, key, column));
 }
