@@ -8,8 +8,10 @@ class TodoQuery {
 
   final SqlHeloper sqlHelper;
 
+  /// [Database] を閉じる
   void close() async => await sqlHelper.close();
 
+  /// [Todo] をテーブルに追加
   Future<Todo> add({
     required String title,
     required bool done,
@@ -35,23 +37,32 @@ class TodoQuery {
     );
   }
 
+  /// テーブル内の[Todo]を更新
   Future<int> update(Todo todo) => sqlHelper.update(tableTodo, _encode(todo));
 
+  /// テーブル内から[Todo]を削除
+  /// [id] はプライマリーキーである[Todo]のid
   Future<int> remove(int id) => sqlHelper.delete(tableTodo, id);
 
+  Future<void> removeAll(String table) => sqlHelper.deleteAllRow(table);
+
+  /// テーブル内から指定した[Todo]を取得
+  /// [id] はプライマリーキーである[Todo]のid
   Future<Todo> finad(int id) async {
     final content = await sqlHelper.select(tableTodo, id: id);
 
     return _decode(content.first);
   }
 
+  /// テーブル内の[Todo]を全て取得
   Future<List<Todo>> findAll() async {
     final content = await sqlHelper.select(tableTodo);
 
     return content.map((e) => _decode(e)).toList();
   }
 
-  Future<List<String>> finadAllTable({bool hideDefault = true}) async {
+  /// データベース内のテーブル名を一覧取得
+  Future<List<String>> listAllTable({bool hideDefault = true}) async {
     final tables = await sqlHelper.toListTable();
     if (hideDefault) {
       tables.remove('sqlite_sequence');
@@ -60,13 +71,17 @@ class TodoQuery {
     return tables;
   }
 
+  /// テーブルを新規作成
+  /// [name]はテーブル名を指定
+  /// [column]は列の名前を[key]、プロパティを[value]
   Future<void> create(String name, Map<String, String> column) =>
       sqlHelper.createTable(name, column);
 
+  /// テーブルを削除
+  /// [name]はテーブル名を指定
   Future<void> delete(String name) => sqlHelper.deleteTable(name);
 
-  Future<void> deleteAllRow(String table) => sqlHelper.deleteAllRow(table);
-
+  /// SQLが対応している形式にエンコード
   Map<String, dynamic> _encode(Todo todo) {
     final map = todo.toJson();
 
@@ -80,6 +95,7 @@ class TodoQuery {
     };
   }
 
+  /// SQL用にエンコードされたデータをデコード
   Todo _decode(Map<String, dynamic> map) => Todo.fromJson({
         columnId: map[columnId],
         columnTitle: map[columnTitle],
