@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'database/static/todo_value.dart';
+import 'database/query/todo_query.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,8 +51,40 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  late final TodoQuery query;
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    query = TodoQuery.helper(tableTodo, tableTodo, columnId, null);
+  }
+
+  @override
+  void dispose() {
+    query.close();
+    super.dispose();
+  }
+
+  void _incrementCounter() async {
+    var num = await query.add(
+      title: "test",
+      done: true,
+      tags: [],
+      notification: false,
+      date: null,
+    );
+
+    num = num.copyWith(title: 'update');
+    print(await query.finad(num.id));
+    query.update(num);
+    print(await query.finad(num.id));
+
+    query.removeAll(tableTodo);
+    query.remove(num.id);
+
+    await query.create('hogefuga$_counter', {'title': 'text not null'});
+    await query.delete('hogefuga$_counter');
+    print(await query.listAllTable());
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
