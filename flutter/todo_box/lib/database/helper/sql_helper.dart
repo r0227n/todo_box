@@ -69,7 +69,7 @@ class SqlHeloper {
       table,
       columns: select,
       where: id == null ? null : '$key = ?',
-      whereArgs: [id],
+      whereArgs: id == null ? null : [id],
     );
   }
 
