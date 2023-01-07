@@ -12,12 +12,12 @@ class TodoListView extends StatelessWidget {
       itemCount: todos.length,
       itemBuilder: ((context, index) {
         final todo = todos[index];
-        return RadioListTile<bool>(
+        return CheckboxListTile(
           tileColor: Colors.red,
-          groupValue: todo.done,
           title: Text(todo.title),
+          controlAffinity: ListTileControlAffinity.leading,
           value: todo.done,
-          onChanged: (value) {},
+          onChanged: (bool? value) {},
         );
       }),
     );
