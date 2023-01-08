@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-import '../controller/todo_controller.dart';
-import '../database/models/todo.dart';
-import 'components/todo_list_view.dart';
 import 'components/section.dart';
 import 'components/section_title.dart';
+import 'components/emoji_text.dart';
+import '../controller/table_controller.dart';
+import '../models/table.dart' as sql;
+
+final _currentTable = Provider<sql.Table>((ref) => throw UnimplementedError());
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final config = ref.watch(todoControllerProvider);
+    final config = ref.watch(tableControllerProvider);
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
@@ -27,12 +28,11 @@ class HomePage extends ConsumerWidget {
                 'Box',
                 top: 14.0,
               ),
-              Section(
-                ration: 3,
-                child: Container(
-                  color: Colors.green,
-                ),
-              ),
+              const Section(
+                  ration: 3,
+                  child: Center(
+                    child: Text('TEST'),
+                  )),
               const SectionTitle(
                 'Lists',
                 top: 8.0,
@@ -41,14 +41,23 @@ class HomePage extends ConsumerWidget {
               Section(
                 ration: 4,
                 borderRadius: 5.0,
-                child: TodoListView(todo),
+                child: ListView.builder(
+                  itemCount: todo.length,
+                  itemBuilder: (context, index) {
+                    return ProviderScope(
+                      overrides: [
+                        _currentTable.overrideWithValue(todo[index]),
+                      ],
+                      child: const _TodoItem(),
+                    );
+                  },
+                ),
               ),
               const Padding(padding: EdgeInsets.only(bottom: 15.0)),
             ],
           ),
           bottomNavigationBar: BottomAppBar(
             color: Theme.of(context).primaryColor,
-            notchMargin: 10.0,
             // TODO: height propertyが認識されたら、高さを修正する
             shape: const AutomaticNotchedShape(
               RoundedRectangleBorder(),
@@ -82,24 +91,32 @@ class HomePage extends ConsumerWidget {
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              final query = ref.read(todoControllerProvider.notifier);
-
-              var num = await query.add(
-                Todo(
-                  title: "test",
-                  done: true,
-                  tags: [],
-                  notification: false,
-                  date: null,
-                ),
-              );
-            },
+            onPressed: () {},
             tooltip: 'Increment',
             child: const Icon(Icons.add),
           ), // This trailing comma makes auto-formatting nicer for build methods.
         );
       },
+    );
+  }
+}
+
+class _TodoItem extends HookConsumerWidget {
+  const _TodoItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final table = ref.watch(_currentTable);
+
+    return Card(
+      child: ListTile(
+        leading: EmojiText(table.icon),
+        title: Text(table.title),
+        trailing: Text(
+          '${table.content.length}',
+          style: Theme.of(context).textTheme.caption,
+        ),
+      ),
     );
   }
 }
