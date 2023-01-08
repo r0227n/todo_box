@@ -7,7 +7,7 @@ const String columnDate = 'date';
 const String columnTags = 'tags';
 const String columnNotification = 'notification';
 
-const String typeId = '$columnId integer key autoincrement';
+const String typeId = '$columnId integer primary key autoincrement not null';
 const String typeTitle = '$columnTitle text not null';
 const String typeDone = '$columnDone integer not null';
 const String typeDate = '$columnDate text null';
