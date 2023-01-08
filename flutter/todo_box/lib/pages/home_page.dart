@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'list_page.dart';
 import 'components/section.dart';
 import 'components/section_title.dart';
 import 'components/emoji_text.dart';
@@ -18,7 +19,7 @@ class HomePage extends ConsumerWidget {
     return config.when(
       loading: () => const CircularProgressIndicator(),
       error: ((error, stackTrace) => Text('Error $error')),
-      data: (todo) {
+      data: (tables) {
         return Scaffold(
           appBar: AppBar(),
           body: Column(
@@ -29,10 +30,13 @@ class HomePage extends ConsumerWidget {
                 top: 14.0,
               ),
               const Section(
-                  ration: 3,
-                  child: Center(
-                    child: Text('TEST'),
-                  )),
+                ration: 3,
+                borderRadius: 8,
+                child: ListPage(
+                  'box',
+                  display: PageDisplay.page,
+                ),
+              ),
               const SectionTitle(
                 'Lists',
                 top: 8.0,
@@ -42,11 +46,11 @@ class HomePage extends ConsumerWidget {
                 ration: 4,
                 borderRadius: 5.0,
                 child: ListView.builder(
-                  itemCount: todo.length,
+                  itemCount: tables.length,
                   itemBuilder: (context, index) {
                     return ProviderScope(
                       overrides: [
-                        _currentTable.overrideWithValue(todo[index]),
+                        _currentTable.overrideWithValue(tables[index]),
                       ],
                       child: const _TodoItem(),
                     );
@@ -101,7 +105,7 @@ class HomePage extends ConsumerWidget {
   }
 }
 
-class _TodoItem extends HookConsumerWidget {
+class _TodoItem extends ConsumerWidget {
   const _TodoItem();
 
   @override

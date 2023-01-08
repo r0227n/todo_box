@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:todo_box/controller/todo_controller.dart';
+import 'package:todo_box/database/models/todo.dart';
+
+final _currentTodo = Provider<Todo>((ref) => throw UnimplementedError());
+
+enum PageDisplay {
+  page,
+  component;
+
+  bool get isPage => this == PageDisplay.page;
+  bool get isComponent => this == PageDisplay.component;
+}
+
+class ListPage extends ConsumerWidget {
+  const ListPage(this.table, {this.display = PageDisplay.page, super.key});
+
+  final String table;
+  final PageDisplay display;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final config = ref.watch(todoControllerProvider);
+
+    return config.when(
+      error: (error, stackTrace) => Center(child: Text(error.toString())),
+      loading: () => const CircularProgressIndicator(),
+      data: (todos) {
+        final selectTable = todos
+            .where((element) => element.table.startsWith('_') && element.table == table)
+            .toList();
+
+        return Scaffold(
+          appBar: display.isPage ? null : AppBar(title: Text(table)),
+          body: ListView.builder(
+            itemCount: selectTable.length,
+            itemBuilder: (context, index) {
+              return ProviderScope(
+                overrides: [_currentTodo.overrideWithValue(selectTable[index])],
+                child: const _ListPageItem(),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ListPageItem extends ConsumerWidget {
+  const _ListPageItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todo = ref.watch(_currentTodo);
+
+    return Material(
+      child: CheckboxListTile(
+        tileColor: Colors.red,
+        title: Text(todo.title),
+        controlAffinity: ListTileControlAffinity.leading,
+        value: todo.done,
+        onChanged: (bool? check) {},
+      ),
+    );
+  }
+}
