@@ -23,7 +23,7 @@ class TodoController extends _$TodoController {
     );
   }
 
-  Future<void> add(Todo todo) async {
+  Future<Todo?> add(Todo todo) async {
     final query = ref.read(todoQueryProvider);
 
     final result = await AsyncValue.guard(() async => await query.add(
@@ -33,16 +33,23 @@ class TodoController extends _$TodoController {
           notification: todo.notification,
         ));
 
-    result.maybeWhen(
-      orElse: (() {
-        // TODO: エラーハンドリング実装
-      }),
-      data: (data) async => await update((p0) {
+    return result.maybeWhen(orElse: (() {
+      // TODO: エラーハンドリング実装
+      return null;
+    }), data: (data) async {
+      await update((p0) {
         p0.add(data);
         return p0;
-      }),
-    );
+      });
+
+      return data;
+    });
   }
+
+  void addAll(List<Todo> todos) async => await update((p0) {
+        p0.addAll(todos);
+        return p0;
+      });
 
   Future<void> removeAll() async {
     final query = ref.read(todoQueryProvider);

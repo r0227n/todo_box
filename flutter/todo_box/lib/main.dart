@@ -13,8 +13,8 @@ void main() async {
 
   final database = await openDatabase(
     '$databasesPath$tableTodo.db',
-    onCreate: (db, version) {
-      return db.execute(
+    onCreate: (db, version) async {
+      await db.execute(
         '''CREATE TABLE $tableTodo(
           $typeId,
           $typeTitle,
@@ -25,6 +25,13 @@ void main() async {
         )
         ''',
       );
+      await db.insert(tableTodo, {
+        columnTitle: '_📂' '_$tableTodo',
+        columnDone: 0,
+        columnDate: null,
+        columnTags: null,
+        columnNotification: 0,
+      });
     },
     version: 1,
   );
