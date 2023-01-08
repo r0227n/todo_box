@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'list_page.dart';
 import 'components/section.dart';
-import 'components/section_title.dart';
 import 'components/emoji_text.dart';
 import '../controller/table_controller.dart';
 import '../models/table.dart' as sql;
@@ -25,9 +24,15 @@ class HomePage extends ConsumerWidget {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const SectionTitle(
-                'Box',
-                top: 14.0,
+              ListTile(
+                title: Text(
+                  'Box',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.open_in_full_rounded),
+                  onPressed: () {},
+                ),
               ),
               const Section(
                 ration: 3,
@@ -37,10 +42,11 @@ class HomePage extends ConsumerWidget {
                   display: PageDisplay.page,
                 ),
               ),
-              const SectionTitle(
-                'Lists',
-                top: 8.0,
-                bottom: 3.0,
+              ListTile(
+                title: Text(
+                  'Lists',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
               ),
               Section(
                 ration: 4,
