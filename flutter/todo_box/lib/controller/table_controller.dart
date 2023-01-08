@@ -2,8 +2,8 @@
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:characters/characters.dart';
-import '../database/query/todo_query.dart';
-import '../database/models/todo.dart';
+import 'query/todo_query.dart';
+import '../models/todo.dart';
 import '../controller/todo_controller.dart';
 import '../provider/todo_query_provider.dart';
 import '../models/table.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:todo_box/controller/todo_controller.dart';
-import 'package:todo_box/database/models/todo.dart';
+import 'package:todo_box/models/todo.dart';
 
 final _currentTodo = Provider<Todo>((ref) => throw UnimplementedError());
 

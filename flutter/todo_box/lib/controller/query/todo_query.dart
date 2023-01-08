@@ -1,6 +1,6 @@
-import '/database/models/column_type.dart';
-import '../helper/sql_helper.dart';
-import '../models/todo.dart';
+import '../../models/column_type.dart';
+import '../../database/helper/sql_helper.dart';
+import '../../models/todo.dart';
 
 class TodoQuery {
   const TodoQuery(this.sqlHelper, this.table);

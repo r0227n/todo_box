@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
-import 'database/models/default_table.dart';
+import 'models/default_table.dart';
 import 'database/helper/sql_helper.dart';
-import 'database/query/todo_query.dart';
+import 'controller/query/todo_query.dart';
 import 'pages/home_page.dart';
 import 'provider/todo_query_provider.dart';
 

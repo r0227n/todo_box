@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../database/models/todo.dart';
+import '../models/todo.dart';
 import '../provider/todo_query_provider.dart';
 
 part 'todo_controller.g.dart';
