@@ -49,11 +49,13 @@ class TableController extends _$TableController {
 
         data.remove(info);
         data = data.map((t) => t.copyWith(table: table)).toList();
-        controller.addAll(data);
+        if (data.isNotEmpty) {
+          controller.addAll(data);
+        }
 
         return Table(
           icon: decodeInfo.substring(1, 3),
-          title: info.title.substring(4),
+          title: table,
           content: data.map((e) => e.id ?? -1).toList(),
         );
       }),

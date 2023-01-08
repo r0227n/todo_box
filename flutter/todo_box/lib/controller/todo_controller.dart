@@ -1,5 +1,4 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../database/static/todo_value.dart';
 import '../database/models/todo.dart';
 import '../provider/todo_query_provider.dart';
 
@@ -51,10 +50,10 @@ class TodoController extends _$TodoController {
         return p0;
       });
 
-  Future<void> removeAll() async {
+  Future<void> removeAll(String table) async {
     final query = ref.read(todoQueryProvider);
     update((p0) {
-      query.removeAll(tableTodo);
+      query.removeAll(table);
       return [];
     });
   }

@@ -1,8 +1,6 @@
-import 'dart:convert' show jsonDecode, jsonEncode;
-
+import '/database/models/column_type.dart';
 import '../helper/sql_helper.dart';
 import '../models/todo.dart';
-import '../static/todo_value.dart';
 
 class TodoQuery {
   const TodoQuery(this.sqlHelper, this.table);
@@ -11,6 +9,8 @@ class TodoQuery {
 
   /// テーブル名
   final String table;
+
+  final columnType = const ColumnType();
 
   /// [Database] を閉じる
   void close() async => await sqlHelper.close();
@@ -23,13 +23,16 @@ class TodoQuery {
     required bool notification,
     DateTime? date,
   }) async {
-    final key = await sqlHelper.insert(table, {
-      columnTitle: title,
-      columnDone: done ? 1 : 0,
-      columnDate: date,
-      columnTags: tags.isEmpty ? null : jsonEncode(tags),
-      columnNotification: notification ? 1 : 0,
-    });
+    final key = await sqlHelper.insert(
+      table,
+      columnType.toInsert(
+        title: title,
+        done: done,
+        date: date,
+        tags: tags,
+        notification: notification,
+      ),
+    );
 
     return Todo(
       id: key,
@@ -83,8 +86,8 @@ class TodoQuery {
   /// [column]は列の名前を[key]、プロパティを[value]
   Future<void> create(String name, String emoji, Map<String, String> column) async {
     try {
-      await sqlHelper.createTable(name, column);
-      add(title: '_$emoji' '_$name', done: false, tags: const [], notification: false);
+      await sqlHelper.createTable(name, columnType.toMap());
+      await add(title: '_$emoji' '_$name', done: false, tags: const [], notification: false);
     } catch (e) {
       throw 'Failed create tabel: $e';
     }
@@ -98,23 +101,9 @@ class TodoQuery {
   Map<String, dynamic> _encode(Todo todo) {
     final map = todo.toJson();
 
-    return {
-      columnId: map[columnId],
-      columnTitle: map[columnTitle],
-      columnDone: map[columnDone] == true ? 1 : 0,
-      columnDate: map[columnDate],
-      columnTags: jsonEncode(map[columnTags]) == '[]' ? null : jsonEncode(map[columnTags]),
-      columnNotification: map[columnNotification] == true ? 1 : 0,
-    };
+    return columnType.fromJson(map);
   }
 
   /// SQL用にエンコードされたデータをデコード
-  Todo _decode(Map<String, dynamic> map) => Todo.fromJson({
-        'id': map[columnId],
-        columnTitle: map[columnTitle],
-        columnDone: map[columnDone] == 0 ? false : true,
-        columnDate: DateTime.tryParse(map[columnDate] ?? ''),
-        columnTags: map[columnTags] == null ? const <String>[] : jsonDecode(map[columnTags]),
-        columnNotification: map[columnNotification] == 0 ? false : true,
-      });
+  Todo _decode(Map<String, dynamic> map) => Todo.fromJson(columnType.toDecode(map));
 }
