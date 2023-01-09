@@ -10,7 +10,7 @@ class DefaultTable extends ColumnType {
       $title $typeTitle,
       $done $typeDone,
       $date $typeDate,
-      $tags $typeTags,todo_value
+      $tags $typeTags,
       $notification $typeNotification
     )
   ''';

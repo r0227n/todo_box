@@ -4,9 +4,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:characters/characters.dart';
 import 'query/todo_query.dart';
 import '../models/todo.dart';
+import '../models/table.dart';
 import '../controller/todo_controller.dart';
 import '../provider/todo_query_provider.dart';
-import '../models/table.dart';
 
 part 'table_controller.g.dart';
 

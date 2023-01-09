@@ -9,8 +9,8 @@ enum PageDisplay {
   page,
   component;
 
-  bool get isPage => this == PageDisplay.page;
-  bool get isComponent => this == PageDisplay.component;
+  bool get isPage => this != PageDisplay.page;
+  bool get isComponent => this != PageDisplay.component;
 }
 
 class ListPage extends ConsumerWidget {

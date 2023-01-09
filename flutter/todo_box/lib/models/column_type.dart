@@ -1,8 +1,5 @@
 import 'dart:convert' show jsonDecode, jsonEncode;
 
-const String defaultEmoji = '📂';
-const String defaultTable = 'box';
-
 class ColumnType {
   const ColumnType({
     this.typeId = 'INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL',

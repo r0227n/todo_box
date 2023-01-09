@@ -31,7 +31,16 @@ class HomePage extends ConsumerWidget {
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.open_in_full_rounded),
-                  onPressed: () {},
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ListPage(
+                        'box',
+                        display: PageDisplay.page,
+                      ),
+                      fullscreenDialog: true, // true だとモーダル遷移になる
+                    ),
+                  ),
                 ),
               ),
               const Section(
@@ -39,7 +48,7 @@ class HomePage extends ConsumerWidget {
                 borderRadius: 8,
                 child: ListPage(
                   'box',
-                  display: PageDisplay.page,
+                  display: PageDisplay.component,
                 ),
               ),
               ListTile(
@@ -125,6 +134,14 @@ class _TodoItem extends ConsumerWidget {
         trailing: Text(
           '${table.content.length}',
           style: Theme.of(context).textTheme.caption,
+        ),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ListPage(
+              table.title,
+            ),
+          ),
         ),
       ),
     );
