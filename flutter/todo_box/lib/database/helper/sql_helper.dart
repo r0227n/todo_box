@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import '../extension/sql_annotation.dart';
 
 class SqlHeloper {
   const SqlHeloper(this.instance, this.key);
@@ -76,10 +77,11 @@ class SqlHeloper {
   /// 行を削除
   /// [table]: テーブル名
   /// [id]: 主キー
-  Future<int> delete(String table, int id) async {
+  /// [equal]: [where]の算術演算子(true: =, false: !=)
+  Future<int> delete(String table, int id, {bool equal = true}) async {
     return await instance.delete(
       table,
-      where: '$key = ?',
+      where: '$key ${equal.toEqual()} ?',
       whereArgs: [id],
     );
   }

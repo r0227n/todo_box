@@ -51,7 +51,8 @@ class TodoQuery {
   /// [id] はプライマリーキーである[Todo]のid
   Future<int> remove(int id) => sqlHelper.delete(table, id);
 
-  Future<void> removeAll(String table) => sqlHelper.deleteAllRow(table);
+  Future<void> clear(Todo metadata) =>
+      sqlHelper.delete(metadata.table, metadata.id ?? -1, equal: false);
 
   /// テーブル内から指定した[Todo]を取得
   /// [id] はプライマリーキーである[Todo]のid

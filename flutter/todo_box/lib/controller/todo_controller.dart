@@ -38,10 +38,9 @@ class TodoController extends _$TodoController {
       // TODO: エラーハンドリング実装
       return null;
     }), data: (data) async {
-      table.addTodo(data);
+      await table.addTodo(data);
       await update((p0) async {
         p0.add(data);
-        await table.addTodo(data);
 
         return p0;
       });
@@ -55,11 +54,22 @@ class TodoController extends _$TodoController {
         return p0;
       });
 
-  Future<void> removeAll(String table) async {
-    final query = ref.read(todoQueryProvider);
-    update((p0) {
-      query.removeAll(table);
-      return [];
+  Future<void> clear(Todo metadata) async {
+    await ref.read(todoQueryProvider).clear(metadata);
+    ref.read(tableControllerProvider.notifier).clear(metadata);
+
+    state = const AsyncData(<Todo>[]);
+  }
+
+  Future<Todo> findMetadata() async {
+    final metadata = await AsyncValue.guard(() async {
+      final todos = await future;
+      return todos.firstWhere((todo) => todo.title.startsWith('_'));
     });
+
+    return metadata.maybeWhen(
+      orElse: () => throw StateError('Tabe metadata is not exit'),
+      data: (data) => data,
+    );
   }
 }

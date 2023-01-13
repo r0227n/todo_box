@@ -50,6 +50,19 @@ class TableController extends _$TableController {
     });
   }
 
+  Future<void> clear(Todo metadata) async {
+    state = await AsyncValue.guard(() async {
+      final tables = await future;
+      return [
+        for (final table in tables)
+          if (table.title == metadata.table)
+            table.copyWith(content: [metadata.id ?? -1])
+          else
+            table,
+      ];
+    });
+  }
+
   Future<Table?> _findTable(TodoQuery query, TodoController controller, String table) async {
     final result = await AsyncValue.guard(() async => await query.findAll(name: table));
     return result.maybeWhen(
