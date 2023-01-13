@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:todo_box/controller/table_controller.dart';
 import '../models/todo.dart';
 import '../provider/todo_query_provider.dart';
 
@@ -24,6 +25,7 @@ class TodoController extends _$TodoController {
 
   Future<Todo?> add(Todo todo) async {
     final query = ref.read(todoQueryProvider);
+    final table = ref.read(tableControllerProvider.notifier);
 
     final result = await AsyncValue.guard(() async => await query.add(
           title: todo.title,
@@ -36,8 +38,11 @@ class TodoController extends _$TodoController {
       // TODO: エラーハンドリング実装
       return null;
     }), data: (data) async {
-      await update((p0) {
+      table.addTodo(data);
+      await update((p0) async {
         p0.add(data);
+        await table.addTodo(data);
+
         return p0;
       });
 
