@@ -4,7 +4,9 @@ import 'list_page.dart';
 import 'components/section.dart';
 import 'components/emoji_text.dart';
 import '../controller/table_controller.dart';
+import '../controller/todo_controller.dart';
 import '../models/table.dart' as sql;
+import '../models/todo.dart';
 
 final _currentTable = Provider<sql.Table>((ref) => throw UnimplementedError());
 
@@ -110,7 +112,11 @@ class HomePage extends ConsumerWidget {
           ),
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
           floatingActionButton: FloatingActionButton(
-            onPressed: () {},
+            onPressed: () async {
+              await ref
+                  .read(todoControllerProvider.notifier)
+                  .add(Todo(title: 'aaa', done: false, date: null, tags: [], notification: false));
+            },
             tooltip: 'Increment',
             child: const Icon(Icons.add),
           ), // This trailing comma makes auto-formatting nicer for build methods.

@@ -28,7 +28,7 @@ class ListPage extends ConsumerWidget {
       loading: () => const CircularProgressIndicator(),
       data: (todos) {
         final selectTable = todos
-            .where((element) => element.table.startsWith('_') && element.table == table)
+            .where((element) => !element.title.startsWith('_') && element.table == table)
             .toList();
 
         return Scaffold(
@@ -36,9 +36,36 @@ class ListPage extends ConsumerWidget {
           body: ListView.builder(
             itemCount: selectTable.length,
             itemBuilder: (context, index) {
-              return ProviderScope(
-                overrides: [_currentTodo.overrideWithValue(selectTable[index])],
-                child: const _ListPageItem(),
+              return Dismissible(
+                key: ValueKey<int>(selectTable[index].id ?? -1),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  color: Colors.red,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: const <Widget>[
+                        Icon(Icons.delete, color: Colors.white),
+                        Text(
+                          'Delete',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+                onDismissed: (_) {
+                  ref.read(todoControllerProvider.notifier).remove(selectTable[index]);
+                },
+                child: ProviderScope(
+                  overrides: [_currentTodo.overrideWithValue(selectTable[index])],
+                  child: const _ListPageItem(),
+                ),
               );
             },
           ),
