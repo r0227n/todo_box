@@ -54,6 +54,16 @@ class TodoController extends _$TodoController {
         return p0;
       });
 
+  Future<void> remove(Todo todo) async {
+    await ref.read(todoQueryProvider).remove(todo);
+    ref.read(tableControllerProvider.notifier).removeTodo(todo);
+
+    await update((p0) {
+      p0.remove(todo);
+      return p0;
+    });
+  }
+
   Future<void> clear(Todo metadata) async {
     await ref.read(todoQueryProvider).clear(metadata);
     ref.read(tableControllerProvider.notifier).clear(metadata);

@@ -49,7 +49,7 @@ class TodoQuery {
 
   /// テーブル内から[Todo]を削除
   /// [id] はプライマリーキーである[Todo]のid
-  Future<int> remove(int id) => sqlHelper.delete(table, id);
+  Future<int> remove(Todo todo) => sqlHelper.delete(todo.table, todo.id ?? -1);
 
   Future<void> clear(Todo metadata) =>
       sqlHelper.delete(metadata.table, metadata.id ?? -1, equal: false);

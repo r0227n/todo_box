@@ -50,6 +50,24 @@ class TableController extends _$TableController {
     });
   }
 
+  Future<void> removeTodo(Todo todo) async {
+    state = await AsyncValue.guard(() async {
+      final tables = await future;
+      final oldState = tables.firstWhere((t) => t.title == todo.table);
+      final newState = [
+        for (final id in oldState.content)
+          if (id != todo.id) id,
+      ];
+
+      return tables.map((e) {
+        if (e.title == todo.table) {
+          return e.copyWith(content: newState);
+        }
+        return e;
+      }).toList();
+    });
+  }
+
   Future<void> clear(Todo metadata) async {
     state = await AsyncValue.guard(() async {
       final tables = await future;
@@ -68,19 +86,15 @@ class TableController extends _$TableController {
     return result.maybeWhen(
       orElse: (() => null),
       data: ((data) {
-        final info = data.firstWhere((Todo todo) {
+        final metadata = data.firstWhere((Todo todo) {
           return todo.title.startsWith('_');
-        }, orElse: () => throw StateError('Table Info row is not exist'));
-        final decodeInfo = info.title.characters.toString();
+        }, orElse: () => throw StateError('Table metadata is not exist'));
+        final decodeTitle = metadata.title.characters.toString();
 
-        data.remove(info);
-        data = data.map((t) => t.copyWith(table: table)).toList();
-        if (data.isNotEmpty) {
-          controller.addAll(data);
-        }
+        data.remove(metadata);
 
         return Table(
-          icon: decodeInfo.substring(1, 3),
+          icon: decodeTitle.substring(1, 3),
           title: table,
           content: data.map((e) => e.id ?? -1).toList(),
         );
