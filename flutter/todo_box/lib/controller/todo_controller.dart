@@ -71,6 +71,15 @@ class TodoController extends _$TodoController {
     state = const AsyncData(<Todo>[]);
   }
 
+  Future<void> toggle(Todo todo) async {
+    final newState = todo.copyWith(done: !todo.done);
+    ref.read(todoQueryProvider).update(newState);
+    state = state.whenData((oldState) => [
+          for (final old in oldState)
+            if (old == todo) newState else old,
+        ]);
+  }
+
   Future<Todo> findMetadata() async {
     final metadata = await AsyncValue.guard(() async {
       final todos = await future;

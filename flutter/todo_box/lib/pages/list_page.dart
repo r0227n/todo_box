@@ -88,7 +88,7 @@ class _ListPageItem extends ConsumerWidget {
         title: Text(todo.title),
         controlAffinity: ListTileControlAffinity.leading,
         value: todo.done,
-        onChanged: (bool? check) {},
+        onChanged: (_) => ref.read(todoControllerProvider.notifier).toggle(todo),
       ),
     );
   }

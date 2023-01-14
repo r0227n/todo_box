@@ -63,7 +63,7 @@ class ColumnType {
       };
 
   Map<String, dynamic> fromJson(Map<String, dynamic> json) => {
-        id: json[id],
+        id: json['id'],
         title: json[title],
         done: json[done] == true ? 1 : 0,
         date: json[date],
