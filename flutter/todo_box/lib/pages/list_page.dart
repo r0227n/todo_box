@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:todo_box/controller/todo_controller.dart';
-import 'package:todo_box/models/todo.dart';
+import 'components/consumer_widget_extension.dart';
+import '../controller/todo_controller.dart';
+import '../models/todo.dart';
 
 final _currentTodo = Provider<Todo>((ref) => throw UnimplementedError());
 
@@ -69,6 +70,9 @@ class ListPage extends ConsumerWidget {
               );
             },
           ),
+          bottomNavigationBar: display.isPage ? null : navigationBar(),
+          floatingActionButtonLocation: display.isPage ? null : buttonLocation(),
+          floatingActionButton: display.isPage ? null : actionButton(ref),
         );
       },
     );

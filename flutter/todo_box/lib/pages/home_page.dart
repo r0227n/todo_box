@@ -3,10 +3,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'list_page.dart';
 import 'components/section.dart';
 import 'components/emoji_text.dart';
+import 'components/consumer_widget_extension.dart';
 import '../controller/table_controller.dart';
-import '../controller/todo_controller.dart';
 import '../models/table.dart' as sql;
-import '../models/todo.dart';
 
 final _currentTable = Provider<sql.Table>((ref) => throw UnimplementedError());
 
@@ -77,49 +76,9 @@ class HomePage extends ConsumerWidget {
               const Padding(padding: EdgeInsets.only(bottom: 15.0)),
             ],
           ),
-          bottomNavigationBar: BottomAppBar(
-            color: Theme.of(context).primaryColor,
-            // TODO: height propertyが認識されたら、高さを修正する
-            shape: const AutomaticNotchedShape(
-              RoundedRectangleBorder(),
-              StadiumBorder(
-                side: BorderSide(),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  IconButton(
-                    icon: const Icon(
-                      Icons.person_outline,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {},
-                  ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.info_outline,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            ),
-          ),
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-          floatingActionButton: FloatingActionButton(
-            onPressed: () async {
-              await ref
-                  .read(todoControllerProvider.notifier)
-                  .add(Todo(title: 'aaa', done: false, date: null, tags: [], notification: false));
-            },
-            tooltip: 'Increment',
-            child: const Icon(Icons.add),
-          ), // This trailing comma makes auto-formatting nicer for build methods.
+          bottomNavigationBar: navigationBar(),
+          floatingActionButtonLocation: buttonLocation(),
+          floatingActionButton: actionButton(ref),
         );
       },
     );
