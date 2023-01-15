@@ -1,14 +1,11 @@
 import 'package:sqflite/sqflite.dart';
+import '../extension/sql_annotation.dart';
 
 class SqlHeloper {
-  SqlHeloper.open(String database, String table, this.key, Map<String, String>? column) {
-    open(database, table, column: column)
-        .then((value) => instance = value)
-        .catchError((e) => throw ArgumentError(e));
-  }
+  const SqlHeloper(this.instance, this.key);
 
   /// [Database] インスタンス
-  late final Database instance;
+  final Database instance;
 
   /// 主キーの列名
   final String key;
@@ -68,22 +65,23 @@ class SqlHeloper {
   /// [table]: テーブル名
   /// [id]: 主キー
   /// [select]: 検索対象の行。未指定時は全ての値を取得
-  Future<List<Map<String, Object?>>> select(String table, {int? id, List<String>? select}) async {
-    return await instance.query(
-      table,
-      columns: select,
-      where: id == null ? null : '$key = ?',
-      whereArgs: [id],
-    );
+  Future<List<Map<String, Object?>>> select(String table, {int? id, List<String>? select}) {
+    String sql = "SELECT * FROM $table";
+    if (id != null) {
+      sql += ' WHERE $key = $id';
+    }
+
+    return instance.rawQuery(sql);
   }
 
   /// 行を削除
   /// [table]: テーブル名
   /// [id]: 主キー
-  Future<int> delete(String table, int id) async {
+  /// [equal]: [where]の算術演算子(true: =, false: !=)
+  Future<int> delete(String table, int id, {bool equal = true}) async {
     return await instance.delete(
       table,
-      where: '$key = ?',
+      where: '$key ${equal.toEqual()} ?',
       whereArgs: [id],
     );
   }
