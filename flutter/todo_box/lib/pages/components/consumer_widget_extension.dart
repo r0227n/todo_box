@@ -9,8 +9,9 @@ extension ExtConsumerWiget on ConsumerWidget {
 
   FloatingActionButtonLocation buttonLocation() => FloatingActionButtonLocation.centerDocked;
 
-  FloatingActionButton actionButton(WidgetRef ref) => FloatingActionButton(
+  FloatingActionButton actionButton(WidgetRef ref, FocusNode focusNode) => FloatingActionButton(
         onPressed: () async {
+          focusNode.requestFocus();
           await ref
               .read(todoControllerProvider.notifier)
               .add(Todo(title: 'aaa', done: false, date: null, tags: [], notification: false));
