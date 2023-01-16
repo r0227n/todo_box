@@ -59,28 +59,29 @@ class _KeyboardModsState extends State<KeyboardMods> {
     return Stack(
       children: <Widget>[
         widget.child,
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Offstage(
-              offstage: !hasFocus(),
-              child: widget.focusWidget ??
+        Offstage(
+          offstage: !hasFocus(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              widget.focusWidget ??
                   TextField(
                     focusNode: widget.parentNode,
                   ),
-            ),
-            Visibility(
-              visible: hasFocus() && widget.mods.isNotEmpty,
-              child: SizedBox(
-                height: widget.height,
-                width: widget.width,
-                child: Row(
-                  children: widget.mods,
+              Visibility(
+                visible: hasFocus() && widget.mods.isNotEmpty,
+                child: SizedBox(
+                  height: widget.height,
+                  width: widget.width,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: widget.mods,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
