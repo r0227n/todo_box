@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'mod_tool.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
@@ -7,6 +8,7 @@ class KeyboardMods extends StatefulWidget {
     this.autofocus = false,
     required this.mods,
     required this.child,
+    this.topTool,
     this.height = 50.0,
     this.width,
     super.key,
@@ -19,6 +21,8 @@ class KeyboardMods extends StatefulWidget {
   ///
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
+
+  final ModTool? topTool;
 
   /// Parent [FocusNode]
   final FocusNode parentNode;
@@ -62,13 +66,21 @@ class _KeyboardModsState extends State<KeyboardMods> {
         Offstage(
           offstage: !hasFocus(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               widget.focusWidget ??
                   TextField(
                     focusNode: widget.parentNode,
                   ),
+              if (widget.topTool is ModTool)
+                ValueListenableBuilder(
+                  valueListenable: widget.topTool!.select,
+                  builder: (context, visible, _) => Visibility(
+                    visible: visible,
+                    child: widget.topTool!.child,
+                  ),
+                ),
               Visibility(
                 visible: hasFocus() && widget.mods.isNotEmpty,
                 child: SizedBox(

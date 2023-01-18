@@ -7,6 +7,7 @@ import 'components/emoji_text.dart';
 import 'components/consumer_widget_extension.dart';
 import 'components/keyboard_mods.dart';
 import 'components/mod_button.dart';
+import 'components/mod_tool.dart';
 import '../controller/table_controller.dart';
 import '../models/table.dart' as sql;
 
@@ -19,26 +20,37 @@ class HomePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(tableControllerProvider);
     final focus = useFocusNode();
+    final selectMod = useValueNotifier<bool>(false);
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
       error: ((error, stackTrace) => Text('Error $error')),
       data: (tables) {
         return Scaffold(
-          // resizeToAvoidBottomInset: false,
           appBar: AppBar(),
           body: KeyboardMods(
             parentNode: focus,
-            mods: const [
+            mods: [
               ModButton(
-                icon: Icon(Icons.settings_outlined),
+                icon: const Icon(Icons.settings_outlined),
                 modsStyle: ModButtonTheme.outline,
-                selectedIcon: Icon(
+                selectedIcon: const Icon(
                   Icons.settings,
                   color: Colors.red,
                 ),
+                onTap: (value) {
+                  selectMod.value = value;
+                },
               ),
             ],
+            topTool: ModTool(
+                position: ModPosition.top,
+                select: selectMod,
+                child: Container(
+                  height: 100,
+                  width: 200,
+                  color: Colors.green,
+                )),
             child: Column(
               children: <Widget>[
                 ListTile(

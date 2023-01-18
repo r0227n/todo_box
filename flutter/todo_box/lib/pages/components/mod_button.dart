@@ -18,12 +18,14 @@ class ModButton extends StatefulWidget {
     required this.icon,
     required this.selectedIcon,
     required this.modsStyle,
+    this.onTap,
     super.key,
   });
 
   final Widget icon;
   final Widget selectedIcon;
   final ModButtonTheme modsStyle;
+  final ValueChanged<bool>? onTap;
 
   @override
   State<ModButton> createState() => _ModButtonState();
@@ -39,6 +41,13 @@ class _ModButtonState extends State<ModButton> {
             setState(() {
               selected = !selected;
             });
+            if (widget.onTap is ValueChanged<bool>) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  widget.onTap!(selected);
+                }
+              });
+            }
           }
         : null;
 
