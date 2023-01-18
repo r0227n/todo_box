@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:todo_box/pages/components/keyboard_mods.dart';
 import 'list_page.dart';
 import 'components/section.dart';
 import 'components/emoji_text.dart';
 import 'components/consumer_widget_extension.dart';
+import 'components/keyboard_mods.dart';
+import 'components/mod_button.dart';
 import '../controller/table_controller.dart';
 import '../models/table.dart' as sql;
 
@@ -28,11 +29,14 @@ class HomePage extends HookConsumerWidget {
           appBar: AppBar(),
           body: KeyboardMods(
             parentNode: focus,
-            mods: [
-              Container(
-                height: 100,
-                width: 200,
-                color: Colors.blue,
+            mods: const [
+              ModButton(
+                icon: Icon(Icons.settings_outlined),
+                modsStyle: ModButtonTheme.outline,
+                selectedIcon: Icon(
+                  Icons.settings,
+                  color: Colors.red,
+                ),
               ),
             ],
             child: Column(
