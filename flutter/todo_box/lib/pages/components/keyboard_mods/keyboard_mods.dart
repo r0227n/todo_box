@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_box/pages/components/keyboard_mods/mod_tool.dart';
 import 'mod_button.dart';
 
 class KeyboardMods extends StatefulWidget {
@@ -139,9 +140,8 @@ class _KeyboardModsState extends State<KeyboardMods> {
                   controller: _controller,
                 ),
               ),
-              if (hasFocus())
-                for (final ModButton button in modButtons)
-                  if (button.select) button.tool.toWidget(),
+              if (hasFocus() && _topModToolButtonItem is ModButton)
+                _topModToolButtonItem!.tool.toWidget(),
               if (hasFocus() && widget.mods.isNotEmpty)
                 SizedBox(
                   height: widget.height,
@@ -160,37 +160,12 @@ class _KeyboardModsState extends State<KeyboardMods> {
   /// Whether this node has input focus.
   bool hasFocus() => widget.parentNode.hasFocus;
 
-  Future<bool> _shouldRemoveKeyboard(BuildContext context) async {
-    if (_controller.text.isEmpty) {
-      return true;
+  ModButton? get _topModToolButtonItem {
+    final content = modButtons.where((b) => b.select && b.tool.position == ModPositioned.top);
+    if (content.isEmpty) {
+      return null;
     }
 
-    final selectAction = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Basic dialog title'),
-          content: Text('${hasFocus()}'),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Disable'),
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Enable'),
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-          ],
-        );
-      },
-    );
-
-    return selectAction ?? false;
+    return content.first;
   }
 }
