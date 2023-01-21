@@ -4,12 +4,12 @@ import 'mod_button.dart';
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
     required this.parentNode,
-    this.focusWidget,
     this.autofocus = false,
     required this.mods,
     required this.child,
     this.height = 50.0,
     this.width,
+    this.onChange,
     super.key,
   });
 
@@ -24,9 +24,6 @@ class KeyboardMods extends StatefulWidget {
   /// Parent [FocusNode]
   final FocusNode parentNode;
 
-  /// Focus widget[focusWidget]of [parentNode]
-  final Widget? focusWidget;
-
   /// [TextField]'s [autofocus] property
   ///
   /// If [focusWidget] is null, use [TextField]
@@ -40,22 +37,36 @@ class KeyboardMods extends StatefulWidget {
   /// Width of [mods] displayed above keyboard
   final double? width;
 
+  final ValueChanged<String>? onChange;
+
   @override
   State<KeyboardMods> createState() => _KeyboardModsState();
 }
 
 class _KeyboardModsState extends State<KeyboardMods> {
   late List<ModButton> modButtons;
+  final TextEditingController _controller = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     int count = 0;
     modButtons = widget.mods.map((e) => e.copyWith(modIndex: count++, callback: update)).toList();
+
+    _controller.addListener(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        } else if (widget.onChange is ValueChanged<String>) {
+          widget.onChange!(_controller.text);
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
+    _controller.dispose();
     super.dispose();
   }
 
@@ -84,12 +95,53 @@ class _KeyboardModsState extends State<KeyboardMods> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              widget.focusWidget ??
-                  TextField(
-                    focusNode: widget.parentNode,
-                  ),
-              for (final ModButton button in modButtons)
-                if (button.select) button.tool.toWidget(),
+              GestureDetector(
+                onVerticalDragUpdate: (detail) {
+                  if (((detail.primaryDelta ?? -1.0) < 0.0) || !hasFocus()) {
+                    return;
+                  } else if (_controller.text.isNotEmpty) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                          SnackBar(
+                            showCloseIcon: true,
+                            action: SnackBarAction(
+                              label: 'Restore',
+                              onPressed: () {
+                                // Code to execute.
+                              },
+                            ),
+                            content: const Text('Discard current task'),
+                            duration: const Duration(milliseconds: 3000),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                          ),
+                        )
+                        .closed
+                        .then((closedReason) {
+                      if (closedReason == SnackBarClosedReason.action) {
+                        FocusScope.of(context).requestFocus(widget.parentNode);
+                      } else {
+                        _controller.clear();
+                      }
+                    });
+                  }
+
+                  // Close Keyboard
+                  FocusManager.instance.primaryFocus?.unfocus();
+                },
+                child: TextField(
+                  focusNode: widget.parentNode,
+                  controller: _controller,
+                ),
+              ),
+              if (hasFocus())
+                for (final ModButton button in modButtons)
+                  if (button.select) button.tool.toWidget(),
               if (hasFocus() && widget.mods.isNotEmpty)
                 SizedBox(
                   height: widget.height,
@@ -107,4 +159,38 @@ class _KeyboardModsState extends State<KeyboardMods> {
 
   /// Whether this node has input focus.
   bool hasFocus() => widget.parentNode.hasFocus;
+
+  Future<bool> _shouldRemoveKeyboard(BuildContext context) async {
+    if (_controller.text.isEmpty) {
+      return true;
+    }
+
+    final selectAction = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Basic dialog title'),
+          content: Text('${hasFocus()}'),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Disable'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Enable'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    return selectAction ?? false;
+  }
 }

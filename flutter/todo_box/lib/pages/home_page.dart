@@ -99,7 +99,7 @@ class HomePage extends HookConsumerWidget {
               ],
             ),
           ),
-          bottomNavigationBar: navigationBar(),
+          bottomNavigationBar: focus.hasFocus ? null : navigationBar(),
           floatingActionButtonLocation: buttonLocation(),
           floatingActionButton: focus.hasFocus
               ? null
