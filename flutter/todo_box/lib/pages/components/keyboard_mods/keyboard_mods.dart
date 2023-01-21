@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'mod_tool.dart';
+import 'mod_button.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
@@ -8,21 +8,18 @@ class KeyboardMods extends StatefulWidget {
     this.autofocus = false,
     required this.mods,
     required this.child,
-    this.topTool,
     this.height = 50.0,
     this.width,
     super.key,
   });
 
   /// Widget displayed above the keyboard
-  final List<Widget> mods;
+  final List<ModButton> mods;
 
   /// The widget below this widget in the tree.
   ///
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
-
-  final ModTool? topTool;
 
   /// Parent [FocusNode]
   final FocusNode parentNode;
@@ -48,14 +45,32 @@ class KeyboardMods extends StatefulWidget {
 }
 
 class _KeyboardModsState extends State<KeyboardMods> {
+  late List<ModButton> modButtons;
+
   @override
   void initState() {
     super.initState();
+    int count = 0;
+    modButtons = widget.mods.map((e) => e.copyWith(modIndex: count++, callback: update)).toList();
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void update(ModButton newModButton, int? index) {
+    if (index is int) {
+      setState(() {
+        modButtons = modButtons.map((e) {
+          if (e.modIndex == index) {
+            return e;
+          }
+          return e.copyWith(select: false);
+        }).toList();
+        modButtons[index] = newModButton.copyWith(select: !newModButton.select);
+      });
+    }
   }
 
   @override
@@ -73,25 +88,16 @@ class _KeyboardModsState extends State<KeyboardMods> {
                   TextField(
                     focusNode: widget.parentNode,
                   ),
-              if (widget.topTool is ModTool)
-                ValueListenableBuilder(
-                  valueListenable: widget.topTool!.select,
-                  builder: (context, visible, _) => Visibility(
-                    visible: visible,
-                    child: widget.topTool!.child,
-                  ),
-                ),
-              Visibility(
-                visible: hasFocus() && widget.mods.isNotEmpty,
-                child: SizedBox(
+              for (final ModButton button in modButtons)
+                if (button.select) button.tool.toWidget(),
+              if (hasFocus() && widget.mods.isNotEmpty)
+                SizedBox(
                   height: widget.height,
                   width: widget.width,
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: widget.mods,
+                    children: modButtons,
                   ),
                 ),
-              ),
             ],
           ),
         ),

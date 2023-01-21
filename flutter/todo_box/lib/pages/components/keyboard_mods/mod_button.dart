@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'mod_tool.dart';
 
-enum ModButtonTheme {
+enum ModButtonType {
   fillted(true),
   disabledFillted(false),
   filledTonal(true),
@@ -10,49 +11,125 @@ enum ModButtonTheme {
 
   final bool enable;
 
-  const ModButtonTheme(this.enable);
+  const ModButtonType(this.enable);
 }
 
 class ModButton extends StatefulWidget {
   const ModButton({
     required this.icon,
     required this.selectedIcon,
-    required this.modsStyle,
+    required this.type,
+    required this.tool,
+    this.enable = true,
     this.onTap,
+    this.modIndex,
+    this.select = false,
+    this.callback,
     super.key,
   });
 
-  final Widget icon;
-  final Widget selectedIcon;
-  final ModButtonTheme modsStyle;
+  const ModButton.fillted({
+    required this.icon,
+    required this.selectedIcon,
+    required this.tool,
+    this.enable = true,
+    this.onTap,
+    super.key,
+  })  : select = false,
+        modIndex = null,
+        callback = null,
+        type = enable ? ModButtonType.fillted : ModButtonType.disabledFillted;
+
+  const ModButton.filledTonal({
+    required this.icon,
+    required this.selectedIcon,
+    required this.tool,
+    this.enable = true,
+    this.onTap,
+    super.key,
+  })  : select = false,
+        modIndex = null,
+        callback = null,
+        type = enable ? ModButtonType.filledTonal : ModButtonType.disabledFilledTonal;
+
+  const ModButton.outline({
+    required this.icon,
+    required this.selectedIcon,
+    required this.tool,
+    this.enable = true,
+    this.onTap,
+    super.key,
+  })  : select = false,
+        modIndex = null,
+        callback = null,
+        type = enable ? ModButtonType.outline : ModButtonType.disabledOutline;
+
+  final Icon icon;
+  final Icon selectedIcon;
+  final ModButtonType type;
+  final ModTool tool;
+  final bool enable;
   final ValueChanged<bool>? onTap;
+  final bool select;
+  final int? modIndex;
+  final Function? callback;
 
   @override
   State<ModButton> createState() => _ModButtonState();
+
+  ModButton copyWith({
+    Icon? icon,
+    Icon? selectedIcon,
+    ModButtonType? type,
+    ModTool? tool,
+    bool? select,
+    ValueChanged<bool>? onTap,
+    int? modIndex,
+    Function? callback,
+  }) =>
+      ModButton(
+        icon: icon ?? this.icon,
+        selectedIcon: selectedIcon ?? this.selectedIcon,
+        type: type ?? this.type,
+        tool: tool ?? this.tool,
+        select: select ?? this.select,
+        onTap: onTap ?? this.onTap,
+        modIndex: modIndex ?? this.modIndex,
+        callback: callback ?? this.callback,
+      );
 }
 
 class _ModButtonState extends State<ModButton> {
-  bool selected = false;
+  late final VoidCallback? onPressed;
+
+  @override
+  void initState() {
+    super.initState();
+
+    onPressed = widget.type.enable
+        ? () {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
+              } else if (widget.onTap is ValueChanged<bool>) {
+                widget.onTap!(widget.select);
+              } else if (widget.callback is Function) {
+                widget.callback!(widget.copyWith(select: widget.select), widget.modIndex);
+              }
+            });
+          }
+        : null;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final VoidCallback? onPressed = widget.modsStyle.enable
-        ? () {
-            setState(() {
-              selected = !selected;
-            });
-            if (widget.onTap is ValueChanged<bool>) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  widget.onTap!(selected);
-                }
-              });
-            }
-          }
-        : null;
-
     return IconButton(
-      isSelected: selected,
+      isSelected: widget.select,
       icon: widget.icon,
       selectedIcon: widget.selectedIcon,
       onPressed: onPressed,
@@ -60,35 +137,22 @@ class _ModButtonState extends State<ModButton> {
     );
   }
 
-  VoidCallback? _enablePressed() {
-    if (!widget.modsStyle.enable) {
-      return null;
-    }
-
-    return () {
-      setState(() {
-        print('object');
-        selected = !selected;
-      });
-    };
-  }
-
   ButtonStyle _buttonStyle(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    switch (widget.modsStyle) {
-      case ModButtonTheme.fillted:
-        return enabledFilledButtonStyle(selected, colors);
-      case ModButtonTheme.disabledFillted:
-        return disabledFilledButtonStyle(selected, colors);
-      case ModButtonTheme.filledTonal:
-        return enabledFilledButtonStyle(selected, colors);
-      case ModButtonTheme.disabledFilledTonal:
-        return disabledFilledButtonStyle(selected, colors);
-      case ModButtonTheme.outline:
-        return disabledFilledButtonStyle(selected, colors);
-      case ModButtonTheme.disabledOutline:
-        return disabledFilledButtonStyle(selected, colors);
+    switch (widget.type) {
+      case ModButtonType.fillted:
+        return enabledFilledButtonStyle(widget.select, colors);
+      case ModButtonType.disabledFillted:
+        return disabledFilledButtonStyle(widget.select, colors);
+      case ModButtonType.filledTonal:
+        return enabledFilledButtonStyle(widget.select, colors);
+      case ModButtonType.disabledFilledTonal:
+        return disabledFilledButtonStyle(widget.select, colors);
+      case ModButtonType.outline:
+        return disabledFilledButtonStyle(widget.select, colors);
+      case ModButtonType.disabledOutline:
+        return disabledFilledButtonStyle(widget.select, colors);
     }
   }
 

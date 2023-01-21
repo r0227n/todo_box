@@ -4,10 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'list_page.dart';
 import 'components/section.dart';
 import 'components/emoji_text.dart';
+import 'components/mods.dart';
 import 'components/consumer_widget_extension.dart';
-import 'components/keyboard_mods.dart';
-import 'components/mod_button.dart';
-import 'components/mod_tool.dart';
 import '../controller/table_controller.dart';
 import '../models/table.dart' as sql;
 
@@ -20,7 +18,6 @@ class HomePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(tableControllerProvider);
     final focus = useFocusNode();
-    final selectMod = useValueNotifier<bool>(false);
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
@@ -30,27 +27,24 @@ class HomePage extends HookConsumerWidget {
           appBar: AppBar(),
           body: KeyboardMods(
             parentNode: focus,
-            mods: [
-              ModButton(
-                icon: const Icon(Icons.settings_outlined),
-                modsStyle: ModButtonTheme.outline,
-                selectedIcon: const Icon(
+            mods: const [
+              ModButton.outline(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(
                   Icons.settings,
                   color: Colors.red,
                 ),
-                onTap: (value) {
-                  selectMod.value = value;
-                },
+                tool: ModTool.top(category: ModCategory.action),
+              ),
+              ModButton.outline(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(
+                  Icons.home,
+                  color: Colors.red,
+                ),
+                tool: ModTool.top(category: ModCategory.action),
               ),
             ],
-            topTool: ModTool(
-                position: ModPosition.top,
-                select: selectMod,
-                child: Container(
-                  height: 100,
-                  width: 200,
-                  color: Colors.green,
-                )),
             child: Column(
               children: <Widget>[
                 ListTile(
@@ -107,16 +101,18 @@ class HomePage extends HookConsumerWidget {
           ),
           bottomNavigationBar: navigationBar(),
           floatingActionButtonLocation: buttonLocation(),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              if (focus.hasFocus) {
-                FocusScope.of(context).unfocus();
-              } else {
-                FocusScope.of(context).requestFocus(focus);
-              }
-            },
-            child: const Icon(Icons.abc),
-          ),
+          floatingActionButton: focus.hasFocus
+              ? null
+              : FloatingActionButton(
+                  onPressed: () {
+                    if (focus.hasFocus) {
+                      FocusScope.of(context).unfocus();
+                    } else {
+                      FocusScope.of(context).requestFocus(focus);
+                    }
+                  },
+                  child: const Icon(Icons.abc),
+                ),
         );
       },
     );
@@ -150,18 +146,3 @@ class _TodoItem extends ConsumerWidget {
     );
   }
 }
-
-// import 'package:flutter/material.dart';
-
-// import 'components/keyboard_mods.dart';
-
-// class HomePage extends StatelessWidget {
-//   const HomePage({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return const A(
-//       title: 'a',
-//     );
-//   }
-// }
