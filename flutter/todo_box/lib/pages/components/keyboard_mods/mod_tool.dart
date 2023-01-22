@@ -8,7 +8,8 @@ enum ModCategory {
 
 enum ModPositioned {
   top,
-  bottom;
+  bottom,
+  dialog;
 }
 
 class ModTool {

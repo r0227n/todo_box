@@ -26,6 +26,7 @@ class HomePage extends HookConsumerWidget {
         return Scaffold(
           appBar: AppBar(),
           body: KeyboardMods(
+            context: context,
             parentNode: focus,
             mods: const [
               ModButton.outline(
@@ -42,7 +43,7 @@ class HomePage extends HookConsumerWidget {
                   Icons.home,
                   color: Colors.red,
                 ),
-                tool: ModTool.top(category: ModCategory.action),
+                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.calendar),
               ),
             ],
             child: Column(
