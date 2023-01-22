@@ -43,7 +43,7 @@ class HomePage extends HookConsumerWidget {
                   Icons.home,
                   color: Colors.red,
                 ),
-                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.calendar),
+                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
               ),
             ],
             child: Column(

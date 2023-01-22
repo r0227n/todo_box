@@ -115,6 +115,12 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
       case ModCategory.calendar:
         _restorableDatePickerRouteFuture.present();
         break;
+      case ModCategory.time:
+        showTimePicker(
+          initialTime: TimeOfDay.now(),
+          context: context,
+        ).then((value) => print(value));
+        break;
       case ModCategory.image:
         // TODO: Handle this case.
         break;
@@ -187,7 +193,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
     return Stack(
       children: <Widget>[
         Opacity(
-          opacity: hasFocus() ? 0.8 : 1.0,
+          opacity: hasFocus ? 0.8 : 1.0,
           child: widget.child,
         ),
         Column(
@@ -195,10 +201,10 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Offstage(
-              offstage: !hasFocus(),
+              offstage: !hasFocus,
               child: GestureDetector(
                 onVerticalDragUpdate: (detail) {
-                  if (((detail.primaryDelta ?? -1.0) < 0.0) || !hasFocus()) {
+                  if (((detail.primaryDelta ?? -1.0) < 0.0) || !hasFocus) {
                     return;
                   } else if (_controller.text.isNotEmpty) {
                     ScaffoldMessenger.of(context)
@@ -238,8 +244,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                 ),
               ),
             ),
-            if (hasFocus() && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
-            if (hasFocus() && widget.mods.isNotEmpty)
+            if (hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
+            if (hasFocus && widget.mods.isNotEmpty)
               SizedBox(
                 height: widget.height,
                 width: widget.width,
@@ -254,7 +260,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   }
 
   /// Whether this node has input focus.
-  bool hasFocus() => widget.parentNode.hasFocus;
+  bool get hasFocus => widget.parentNode.hasFocus;
 
   ModButton? _visibleModButton(ModPositioned positioned) {
     final content = modButtons.where((b) => b.select && b.tool.position == positioned);
