@@ -13,6 +13,7 @@ class KeyboardMods extends StatefulWidget {
     this.height = 50.0,
     this.width,
     this.onChange,
+    this.onSubmitted,
     super.key,
   });
 
@@ -45,6 +46,9 @@ class KeyboardMods extends StatefulWidget {
   final double? width;
 
   final ValueChanged<String>? onChange;
+
+  /// Called when the user indicates that they are done editing the text in the [TextField].
+  final ValueChanged<String>? onSubmitted;
 
   @override
   State<KeyboardMods> createState() => _KeyboardModsState();
@@ -188,7 +192,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   @override
   Widget build(BuildContext context) {
     final topModButtonTool = _visibleModButton(ModPositioned.top);
-    final bottomModButtonTool = _visibleModButton(ModPositioned.bottom);
 
     return Stack(
       children: <Widget>[
@@ -241,6 +244,11 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                 child: TextField(
                   focusNode: widget.parentNode,
                   controller: _controller,
+                  onSubmitted: (text) {
+                    if (mounted && widget.onSubmitted is ValueChanged<String>) {
+                      widget.onSubmitted!(text);
+                    }
+                  },
                 ),
               ),
             ),
