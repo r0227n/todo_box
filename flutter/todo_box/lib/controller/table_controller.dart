@@ -53,6 +53,7 @@ class TableController extends _$TableController {
   Future<void> removeTodo(Todo todo) async {
     state = await AsyncValue.guard(() async {
       final tables = await future;
+      print(tables);
       final oldState = tables.firstWhere((t) => t.title == todo.table);
       final newState = [
         for (final id in oldState.content)
@@ -82,7 +83,7 @@ class TableController extends _$TableController {
   }
 
   Future<Table?> _findTable(TodoQuery query, TodoController controller, String table) async {
-    final result = await AsyncValue.guard(() async => await query.findAll(name: table));
+    final result = await AsyncValue.guard(() async => await query.findAll(table: table));
     return result.maybeWhen(
       orElse: (() => null),
       data: ((data) {

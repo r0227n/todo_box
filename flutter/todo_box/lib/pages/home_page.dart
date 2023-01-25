@@ -23,7 +23,9 @@ class HomePage extends HookConsumerWidget {
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
-      error: ((error, stackTrace) => Text('Error $error')),
+      error: ((error, stackTrace) => Center(
+            child: Text('Error $error'),
+          )),
       data: (tables) {
         return Scaffold(
           appBar: AppBar(),

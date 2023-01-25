@@ -24,7 +24,7 @@ void main() async {
   runApp(
     ProviderScope(
       overrides: [
-        todoQueryProvider.overrideWithValue(TodoQuery(helper, DefaultTable.name)),
+        todoQueryProvider.overrideWithValue(TodoQuery(helper)),
       ],
       child: const MyApp(),
     ),
