@@ -14,7 +14,7 @@ extension ExtConsumerWiget on ConsumerWidget {
           focusNode.requestFocus();
           await ref
               .read(todoControllerProvider.notifier)
-              .add(Todo(title: 'aaa', done: false, date: null, tags: [], notification: false));
+              .add(Todo(title: 'aaa', done: false, date: null, tags: [], notification: []));
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),

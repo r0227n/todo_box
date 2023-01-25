@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_box/pages/components/keyboard_mods/mod_tool.dart';
+import 'mod_tool.dart';
 import 'mod_button.dart';
 
 class KeyboardMods extends StatefulWidget {
@@ -60,6 +60,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   late final RestorableDateTime _selectedDate;
   late final RestorableRouteFuture<DateTime?> _restorableDatePickerRouteFuture;
+
+  DateTime? _todoTime;
 
   @override
   void initState() {
@@ -123,7 +125,14 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         showTimePicker(
           initialTime: TimeOfDay.now(),
           context: context,
-        ).then((value) => print(value));
+        ).then((time) {
+          if (time == null) {
+            return;
+          }
+
+          final now = DateTime.now();
+          _todoTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+        });
         break;
       case ModCategory.image:
         // TODO: Handle this case.
@@ -186,7 +195,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
       });
     }
     // TODO: UI反映させる
-    print(_selectedDate.value);
+    // print(_selectedDate.value);
   }
 
   @override

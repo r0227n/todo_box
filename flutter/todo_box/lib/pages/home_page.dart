@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import '../controller/todo_controller.dart';
+import '../models/todo.dart';
 import 'list_page.dart';
 import 'components/section.dart';
 import 'components/emoji_text.dart';
@@ -99,6 +101,11 @@ class HomePage extends HookConsumerWidget {
                 const Padding(padding: EdgeInsets.only(bottom: 15.0)),
               ],
             ),
+            onSubmitted: (value) async {
+              await ref
+                  .read(todoControllerProvider.notifier)
+                  .add(Todo(title: value, done: false, date: null, tags: [], notification: []));
+            },
           ),
           bottomNavigationBar: focus.hasFocus ? null : navigationBar(),
           floatingActionButtonLocation: buttonLocation(),
@@ -111,6 +118,14 @@ class HomePage extends HookConsumerWidget {
                     } else {
                       FocusScope.of(context).requestFocus(focus);
                     }
+
+                    // ref.read(localNotificationProvider.notifier).addNotification(
+                    //       'Notification Title',
+                    //       'Notification Body',
+                    //       DateTime.now().millisecondsSinceEpoch + 1000,
+                    //       1,
+                    //       channel: 'testing',
+                    //     );
                   },
                   child: const Icon(Icons.abc),
                 ),
