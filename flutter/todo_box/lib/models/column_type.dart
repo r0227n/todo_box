@@ -56,7 +56,7 @@ class ColumnType {
       };
 
   Map<String, dynamic> toDecode(Map<String, dynamic> json) => {
-        'id': json[id],
+        '_id': json[id],
         title: json[title],
         done: json[done] == 0 ? false : true,
         date: DateTime.tryParse(json[date] ?? ''),

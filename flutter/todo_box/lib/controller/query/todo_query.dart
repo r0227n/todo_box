@@ -34,6 +34,7 @@ class TodoQuery {
 
     return Todo(
       id: key,
+      table: table,
       title: title,
       done: done,
       date: date,

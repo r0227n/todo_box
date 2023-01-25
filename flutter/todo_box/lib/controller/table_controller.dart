@@ -53,7 +53,6 @@ class TableController extends _$TableController {
   Future<void> removeTodo(Todo todo) async {
     state = await AsyncValue.guard(() async {
       final tables = await future;
-      print(tables);
       final oldState = tables.firstWhere((t) => t.title == todo.table);
       final newState = [
         for (final id in oldState.content)

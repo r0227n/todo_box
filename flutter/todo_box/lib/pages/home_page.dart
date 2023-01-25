@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../controller/todo_controller.dart';
+import '../models/default_table.dart';
 import '../models/todo.dart';
 import 'list_page.dart';
 import 'components/section.dart';
@@ -73,7 +74,7 @@ class HomePage extends HookConsumerWidget {
                   ration: 3,
                   borderRadius: 8,
                   child: ListPage(
-                    'box',
+                    DefaultTable.name,
                     display: PageDisplay.component,
                   ),
                 ),
@@ -102,8 +103,13 @@ class HomePage extends HookConsumerWidget {
               ],
             ),
             onSubmitted: (value) async {
-              await ref.read(todoControllerProvider.notifier).add(
-                  Todo(title: value.text, done: false, date: null, tags: [], notification: []));
+              await ref.read(todoControllerProvider.notifier).add(Todo(
+                  table: 'Box',
+                  title: value.text,
+                  done: false,
+                  date: null,
+                  tags: [],
+                  notification: []));
             },
           ),
           bottomNavigationBar: focus.hasFocus ? null : navigationBar(),

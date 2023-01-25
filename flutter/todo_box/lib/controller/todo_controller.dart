@@ -13,7 +13,6 @@ class TodoController extends _$TodoController {
     final query = ref.watch(todoQueryProvider);
     state = const AsyncLoading();
     final todos = await AsyncValue.guard(() => query.findAll(table: DefaultTable.name));
-
     return todos.maybeWhen(
       orElse: (() {
         // TODO: エラーハンドリングを実装する
@@ -57,14 +56,13 @@ class TodoController extends _$TodoController {
       });
 
   Future<void> remove(Todo todo) async {
-    await AsyncValue.guard(() => ref.read(todoQueryProvider).remove(todo));
+    AsyncValue.guard(() => ref.read(todoQueryProvider).remove(todo));
     AsyncValue.guard(() => ref.read(tableControllerProvider.notifier).removeTodo(todo));
-    // print(todo);
 
-    // await update((p0) {
-    //   p0.remove(todo);
-    //   return p0;
-    // });
+    await update((p0) {
+      p0.remove(todo);
+      return p0;
+    });
   }
 
   Future<void> clear(Todo metadata) async {
