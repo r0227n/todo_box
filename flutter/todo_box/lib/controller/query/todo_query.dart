@@ -33,7 +33,6 @@ class TodoQuery {
         notification: notification,
       ),
     );
-    print(key);
 
     return Todo(
       id: key,
@@ -67,7 +66,6 @@ class TodoQuery {
   /// [name]はテーブル名を指定
   Future<List<Todo>> findAll({String? name, List<String>? where}) async {
     final content = await listFields(name ?? table, where: where);
-    print(content.first);
     return content.map((e) => _decode(e)).toList();
   }
 

@@ -48,7 +48,7 @@ class KeyboardMods extends StatefulWidget {
   final ValueChanged<String>? onChange;
 
   /// Called when the user indicates that they are done editing the text in the [TextField].
-  final ValueChanged<String>? onSubmitted;
+  final ValueChanged<ModInputValue>? onSubmitted;
 
   @override
   State<KeyboardMods> createState() => _KeyboardModsState();
@@ -61,7 +61,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   late final RestorableDateTime _selectedDate;
   late final RestorableRouteFuture<DateTime?> _restorableDatePickerRouteFuture;
 
-  DateTime? _todoTime;
+  DateTime? _selectDateTime;
 
   @override
   void initState() {
@@ -130,8 +130,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
             return;
           }
 
-          final now = DateTime.now();
-          _todoTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+          final now = _selectDateTime ?? DateTime.now();
+          _selectDateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
         });
         break;
       case ModCategory.image:
@@ -194,8 +194,9 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         }).toList();
       });
     }
-    // TODO: UI反映させる
-    // print(_selectedDate.value);
+    final now = _selectDateTime ?? DateTime.now();
+    _selectDateTime = DateTime(_selectedDate.value.year, _selectedDate.value.month,
+        _selectedDate.value.day, now.hour, now.minute);
   }
 
   @override
@@ -254,8 +255,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   focusNode: widget.parentNode,
                   controller: _controller,
                   onSubmitted: (text) {
-                    if (mounted && widget.onSubmitted is ValueChanged<String>) {
-                      widget.onSubmitted!(text);
+                    if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
+                      widget.onSubmitted!(ModInputValue(text: text, date: _selectDateTime));
                     }
                   },
                 ),
@@ -290,4 +291,14 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   // Close Keyboard
   void get _closeKeyboard => FocusManager.instance.primaryFocus?.unfocus();
+}
+
+class ModInputValue {
+  const ModInputValue({
+    required this.text,
+    required this.date,
+  });
+
+  final String text;
+  final DateTime? date;
 }

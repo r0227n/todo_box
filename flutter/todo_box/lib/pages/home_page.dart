@@ -32,18 +32,16 @@ class HomePage extends HookConsumerWidget {
             parentNode: focus,
             mods: const [
               ModButton.outline(
-                icon: Icon(Icons.settings_outlined),
+                icon: Icon(Icons.event_available_outlined),
                 selectedIcon: Icon(
-                  Icons.settings,
-                  color: Colors.red,
+                  Icons.event_available,
                 ),
-                tool: ModTool.top(category: ModCategory.action),
+                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.calendar),
               ),
               ModButton.outline(
-                icon: Icon(Icons.home_outlined),
+                icon: Icon(Icons.schedule_outlined),
                 selectedIcon: Icon(
-                  Icons.home,
-                  color: Colors.red,
+                  Icons.schedule,
                 ),
                 tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
               ),
@@ -102,9 +100,8 @@ class HomePage extends HookConsumerWidget {
               ],
             ),
             onSubmitted: (value) async {
-              await ref
-                  .read(todoControllerProvider.notifier)
-                  .add(Todo(title: value, done: false, date: null, tags: [], notification: []));
+              await ref.read(todoControllerProvider.notifier).add(
+                  Todo(title: value.text, done: false, date: null, tags: [], notification: []));
             },
           ),
           bottomNavigationBar: focus.hasFocus ? null : navigationBar(),
