@@ -20,7 +20,7 @@ class TodoQuery {
     required String title,
     required bool done,
     required List<String> tags,
-    required bool notification,
+    required List<DateTime> notification,
     DateTime? date,
   }) async {
     final key = await sqlHelper.insert(
@@ -33,6 +33,7 @@ class TodoQuery {
         notification: notification,
       ),
     );
+    print(key);
 
     return Todo(
       id: key,
@@ -66,6 +67,7 @@ class TodoQuery {
   /// [name]はテーブル名を指定
   Future<List<Todo>> findAll({String? name, List<String>? where}) async {
     final content = await listFields(name ?? table, where: where);
+    print(content.first);
     return content.map((e) => _decode(e)).toList();
   }
 
@@ -88,7 +90,7 @@ class TodoQuery {
   Future<void> create(String name, String emoji, Map<String, String> column) async {
     try {
       await sqlHelper.createTable(name, columnType.toMap());
-      await add(title: '_$emoji' '_$name', done: false, tags: const [], notification: false);
+      await add(title: '_$emoji' '_$name', done: false, tags: const [], notification: []);
     } catch (e) {
       throw 'Failed create tabel: $e';
     }

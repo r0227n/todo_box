@@ -83,6 +83,7 @@ class TableController extends _$TableController {
 
   Future<Table?> _findTable(TodoQuery query, TodoController controller, String table) async {
     final result = await AsyncValue.guard(() async => await query.findAll(name: table));
+    print(result);
     return result.maybeWhen(
       orElse: (() => null),
       data: ((data) {

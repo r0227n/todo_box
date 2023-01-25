@@ -31,7 +31,7 @@ class TodoController extends _$TodoController {
           title: todo.title,
           done: todo.done,
           tags: todo.tags ?? [],
-          notification: todo.notification,
+          notification: todo.notification ?? [],
         ));
 
     return result.maybeWhen(orElse: (() {
