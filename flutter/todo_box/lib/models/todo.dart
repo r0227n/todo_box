@@ -13,7 +13,7 @@ class Todo with _$Todo {
     required bool done,
     required DateTime? date,
     required List<String>? tags,
-    required List<DateTime>? notification,
+    required List<DateTime?> notification,
   }) = _Todo;
 
   factory Todo.fromJson(Map<String, dynamic> json) => _$TodoFromJson(json);

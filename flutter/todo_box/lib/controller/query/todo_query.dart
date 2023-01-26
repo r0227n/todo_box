@@ -18,7 +18,7 @@ class TodoQuery {
     required String title,
     required bool done,
     required List<String> tags,
-    required List<DateTime> notification,
+    required List<DateTime?> notification,
     DateTime? date,
   }) async {
     final key = await sqlHelper.insert(

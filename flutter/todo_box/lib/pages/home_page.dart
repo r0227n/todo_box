@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import '../controller/local_notification_controller.dart';
 import '../controller/todo_controller.dart';
 import '../models/default_table.dart';
 import '../models/todo.dart';
@@ -103,13 +104,25 @@ class HomePage extends HookConsumerWidget {
               ],
             ),
             onSubmitted: (value) async {
-              await ref.read(todoControllerProvider.notifier).add(Todo(
+              final todo = await ref.read(todoControllerProvider.notifier).add(Todo(
                   table: 'Box',
                   title: value.text,
                   done: false,
-                  date: null,
+                  date: value.date,
                   tags: [],
-                  notification: []));
+                  notification: [value.date]));
+              if (todo != null) {
+                ref.read(localNotificationProvider.notifier).addNotification(
+                      'Notification Title',
+                      todo.title,
+                      todo.date?.millisecondsSinceEpoch ??
+                          DateTime.now().millisecondsSinceEpoch + 1000,
+                      todo.id ?? -1,
+                      channel: 'testing',
+                    );
+              } else {
+                // TODO: エラーハンドリング
+              }
             },
           ),
           bottomNavigationBar: focus.hasFocus ? null : navigationBar(),
@@ -123,14 +136,6 @@ class HomePage extends HookConsumerWidget {
                     } else {
                       FocusScope.of(context).requestFocus(focus);
                     }
-
-                    // ref.read(localNotificationProvider.notifier).addNotification(
-                    //       'Notification Title',
-                    //       'Notification Body',
-                    //       DateTime.now().millisecondsSinceEpoch + 1000,
-                    //       1,
-                    //       channel: 'testing',
-                    //     );
                   },
                   child: const Icon(Icons.abc),
                 ),

@@ -38,7 +38,6 @@ class ListPage extends ConsumerWidget {
             itemCount: selectTable.length,
             itemBuilder: (context, index) {
               return Dismissible(
-                // key: ValueKey<int>(selectTable[index].id ?? -1),
                 key: UniqueKey(),
                 direction: DismissDirection.endToStart,
                 background: Container(

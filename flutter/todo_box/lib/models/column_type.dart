@@ -43,7 +43,7 @@ class ColumnType {
     required bool done,
     required DateTime? date,
     required List<String> tags,
-    required List<DateTime> notification,
+    required List<DateTime?> notification,
   }) =>
       {
         this.title: title,
@@ -52,7 +52,12 @@ class ColumnType {
         this.tags: tags.isEmpty ? null : jsonEncode(tags),
         this.notification: notification.isEmpty
             ? null
-            : jsonEncode(notification.map((e) => e.toIso8601String()).toList()),
+            : jsonEncode(notification.map((e) {
+                if (e != null) {
+                  return e.toIso8601String();
+                }
+                return e;
+              }).toList()),
       };
 
   Map<String, dynamic> toDecode(Map<String, dynamic> json) => {
