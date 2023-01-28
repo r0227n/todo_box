@@ -17,9 +17,9 @@ class TodoQuery {
     required String table,
     required String title,
     required bool done,
+    required DateTime? date,
     required List<String> tags,
     required List<DateTime?> notification,
-    DateTime? date,
   }) async {
     final key = await sqlHelper.insert(
       table,
@@ -88,7 +88,12 @@ class TodoQuery {
     try {
       await sqlHelper.createTable(table, columnType.toMap());
       await add(
-          table: table, title: '_$emoji' '_$table', done: false, tags: const [], notification: []);
+          table: table,
+          title: '_$emoji' '_$table',
+          done: false,
+          date: null,
+          tags: const [],
+          notification: []);
     } catch (e) {
       throw 'Failed create tabel: $e';
     }

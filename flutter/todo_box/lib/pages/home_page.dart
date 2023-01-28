@@ -111,12 +111,11 @@ class HomePage extends HookConsumerWidget {
                   date: value.date,
                   tags: [],
                   notification: [value.date]));
-              if (todo != null) {
+              if (todo != null && (value.date?.isAfter(DateTime.now()) ?? false)) {
                 ref.read(localNotificationProvider.notifier).addNotification(
                       'Notification Title',
                       todo.title,
-                      todo.date?.millisecondsSinceEpoch ??
-                          DateTime.now().millisecondsSinceEpoch + 1000,
+                      todo.date!,
                       todo.id ?? -1,
                       channel: 'testing',
                     );

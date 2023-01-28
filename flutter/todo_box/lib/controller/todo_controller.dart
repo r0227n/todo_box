@@ -31,6 +31,7 @@ class TodoController extends _$TodoController {
           table: todo.table,
           title: todo.title,
           done: todo.done,
+          date: todo.date,
           tags: todo.tags ?? [],
           notification: todo.notification,
         ));

@@ -126,6 +126,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
           initialTime: TimeOfDay.now(),
           context: context,
         ).then((time) {
+          FocusScope.of(context).requestFocus(widget.parentNode);
           if (time == null) {
             return;
           }

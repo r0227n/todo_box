@@ -48,7 +48,7 @@ class ColumnType {
       {
         this.title: title,
         this.done: done ? 1 : 0,
-        this.date: date,
+        this.date: date is DateTime ? date.toIso8601String() : null,
         this.tags: tags.isEmpty ? null : jsonEncode(tags),
         this.notification: notification.isEmpty
             ? null
@@ -64,7 +64,7 @@ class ColumnType {
         '_id': json[id],
         title: json[title],
         done: json[done] == 0 ? false : true,
-        date: DateTime.tryParse(json[date] ?? ''),
+        date: json[date],
         tags: json[tags] == null ? const <String>[] : jsonDecode(json[tags]),
         notification:
             json[notification] == null ? const <DateTime>[] : jsonDecode(json[notification]),
