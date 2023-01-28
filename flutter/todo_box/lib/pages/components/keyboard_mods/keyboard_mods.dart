@@ -252,20 +252,35 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
                   _closeKeyboard;
                 },
-                child: TextField(
-                  focusNode: widget.parentNode,
-                  controller: _controller,
-                  onSubmitted: (text) {
-                    if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                      widget.onSubmitted!(ModInputValue(text: text, date: _selectDateTime));
-                    }
-                  },
+                child: Container(
+                  // color: Colors.blue,
+                  child: TextField(
+                    focusNode: widget.parentNode,
+                    controller: _controller,
+                    onSubmitted: (text) {
+                      if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
+                        widget.onSubmitted!(ModInputValue(text: text, date: _selectDateTime));
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      filled: true,
+                      fillColor: Colors.green,
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(width: 0),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(13),
+                        ),
+                      ),
+                      hintText: 'New Todo',
+                    ),
+                  ),
                 ),
               ),
             ),
             if (hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
             if (hasFocus && widget.mods.isNotEmpty)
-              SizedBox(
+              Container(
+                color: Colors.grey,
                 height: widget.height,
                 width: widget.width,
                 child: Row(
