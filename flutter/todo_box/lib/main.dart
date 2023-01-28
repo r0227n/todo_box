@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'models/default_table.dart';
 import 'database/helper/sql_helper.dart';
 import 'controller/query/todo_query.dart';
@@ -42,6 +43,16 @@ class MyApp extends StatelessWidget {
         colorSchemeSeed: const Color(0xff6750a4),
         useMaterial3: true,
       ),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('ja'), // Japanese
+      ],
       home: const HomePage(),
     );
   }
