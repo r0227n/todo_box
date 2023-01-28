@@ -8,11 +8,10 @@ extension LocalString on DateTime {
     if (localizations.localeName == 'ja') {
       // 時刻未選択
       if (hour == 0 && minute == 0 && second == 0 && millisecond == 0) {
-        return DateFormat('MMMEd', 'ja').format(DateTime.now());
+        return DateFormat('MMMEd', 'ja').format(this);
       }
 
-      return DateFormat('MMMEd', 'ja').format(DateTime.now()) +
-          DateFormat('HH:mm').format(DateTime.now());
+      return DateFormat('MMMEd', 'ja').format(this) + DateFormat('HH:mm').format(this);
     }
 
     ///　英語 / アメリカ

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'mod_tool.dart';
 import 'mod_button.dart';
 
@@ -173,31 +174,24 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   }
 
   void _selectDate(DateTime? newSelectedDate) {
+    modButtons = modButtons.map((e) {
+      if (e.select) {
+        return e.copyWith(select: false);
+      }
+      return e;
+    }).toList();
+
     if (newSelectedDate != null) {
       // Select Action
-      setState(() {
-        modButtons = modButtons.map((e) {
-          if (e.select) {
-            return e.copyWith(select: false);
-          }
-          return e;
-        }).toList();
-        _selectedDate.value = newSelectedDate;
-      });
-    } else {
-      // Cancel Action
-      setState(() {
-        modButtons = modButtons.map((e) {
-          if (e.select) {
-            return e.copyWith(select: false);
-          }
-          return e;
-        }).toList();
-      });
+      _selectedDate.value = newSelectedDate;
+      _selectDateTime = DateTime(
+        newSelectedDate.year,
+        newSelectedDate.month,
+        newSelectedDate.day,
+        _selectDateTime?.hour ?? newSelectedDate.hour,
+        _selectDateTime?.minute ?? newSelectedDate.minute,
+      );
     }
-    final now = _selectDateTime ?? DateTime.now();
-    _selectDateTime = DateTime(_selectedDate.value.year, _selectedDate.value.month,
-        _selectedDate.value.day, now.hour, now.minute);
   }
 
   @override
@@ -252,32 +246,41 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
                   _closeKeyboard;
                 },
-                child: Container(
-                  // color: Colors.blue,
-                  child: TextField(
-                    focusNode: widget.parentNode,
-                    controller: _controller,
-                    onSubmitted: (text) {
-                      if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                        widget.onSubmitted!(ModInputValue(text: text, date: _selectDateTime));
-                      }
-                    },
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Colors.green,
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(width: 0),
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(13),
-                        ),
+                child: TextField(
+                  focusNode: widget.parentNode,
+                  controller: _controller,
+                  onSubmitted: (text) {
+                    if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
+                      widget.onSubmitted!(ModInputValue(text: text, date: _selectDateTime));
+                    }
+                  },
+                  decoration: const InputDecoration(
+                    filled: true,
+                    fillColor: Colors.green,
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(width: 0),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(13),
                       ),
-                      hintText: 'New Todo',
                     ),
+                    hintText: 'New Todo',
                   ),
                 ),
               ),
             ),
             if (hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
+            if (_selectDateTime != null)
+              InputChip(
+                label: Text(_selectDateTime!.formatLocal(context.l10n)),
+                onPressed: () {
+                  print(_selectDateTime);
+                },
+                onDeleted: () {
+                  setState(() {
+                    _selectDateTime = null;
+                  });
+                },
+              ),
             if (hasFocus && widget.mods.isNotEmpty)
               Container(
                 color: Colors.grey,
