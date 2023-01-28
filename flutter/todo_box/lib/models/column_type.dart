@@ -12,7 +12,7 @@ class ColumnType {
     this.date = 'date',
     this.typeTags = 'TEXT NULL',
     this.tags = 'tags',
-    this.typeNotification = 'INTEGER NOT NULL',
+    this.typeNotification = 'TEXT NULL',
     this.notification = 'notification',
   });
 
@@ -43,23 +43,31 @@ class ColumnType {
     required bool done,
     required DateTime? date,
     required List<String> tags,
-    required bool notification,
+    required List<DateTime?> notification,
   }) =>
       {
         this.title: title,
         this.done: done ? 1 : 0,
-        this.date: date,
+        this.date: date is DateTime ? date.toIso8601String() : null,
         this.tags: tags.isEmpty ? null : jsonEncode(tags),
-        this.notification: notification ? 1 : 0,
+        this.notification: notification.isEmpty
+            ? null
+            : jsonEncode(notification.map((e) {
+                if (e != null) {
+                  return e.toIso8601String();
+                }
+                return e;
+              }).toList()),
       };
 
   Map<String, dynamic> toDecode(Map<String, dynamic> json) => {
-        'id': json[id],
+        '_id': json[id],
         title: json[title],
         done: json[done] == 0 ? false : true,
-        date: DateTime.tryParse(json[date] ?? ''),
+        date: json[date],
         tags: json[tags] == null ? const <String>[] : jsonDecode(json[tags]),
-        notification: json[notification] == 0 ? false : true,
+        notification:
+            json[notification] == null ? const <DateTime>[] : jsonDecode(json[notification]),
       };
 
   Map<String, dynamic> fromJson(Map<String, dynamic> json) => {
@@ -67,7 +75,8 @@ class ColumnType {
         title: json[title],
         done: json[done] == true ? 1 : 0,
         date: json[date],
-        tags: jsonEncode(json[tags]) == '[]' ? null : jsonEncode(json[tags]),
-        notification: json[notification] == true ? 1 : 0,
+        tags: jsonEncode(json[tags]) == 'null' ? null : jsonEncode(json[tags]),
+        notification:
+            jsonEncode(json[notification]) == 'null' ? null : jsonEncode(json[notification]),
       };
 }

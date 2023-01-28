@@ -3,12 +3,9 @@ import '../../database/helper/sql_helper.dart';
 import '../../models/todo.dart';
 
 class TodoQuery {
-  const TodoQuery(this.sqlHelper, this.table);
+  const TodoQuery(this.sqlHelper);
 
   final SqlHeloper sqlHelper;
-
-  /// テーブル名
-  final String table;
 
   final columnType = const ColumnType();
 
@@ -17,11 +14,12 @@ class TodoQuery {
 
   /// [Todo] をテーブルに追加
   Future<Todo> add({
+    required String table,
     required String title,
     required bool done,
+    required DateTime? date,
     required List<String> tags,
-    required bool notification,
-    DateTime? date,
+    required List<DateTime?> notification,
   }) async {
     final key = await sqlHelper.insert(
       table,
@@ -36,6 +34,7 @@ class TodoQuery {
 
     return Todo(
       id: key,
+      table: table,
       title: title,
       done: done,
       date: date,
@@ -45,7 +44,7 @@ class TodoQuery {
   }
 
   /// テーブル内の[Todo]を更新
-  Future<int> update(Todo todo) => sqlHelper.update(table, _encode(todo));
+  Future<int> update(Todo todo) => sqlHelper.update(todo.table, _encode(todo));
 
   /// テーブル内から[Todo]を削除
   /// [id] はプライマリーキーである[Todo]のid
@@ -56,7 +55,7 @@ class TodoQuery {
 
   /// テーブル内から指定した[Todo]を取得
   /// [id] はプライマリーキーである[Todo]のid
-  Future<Todo> finad(int id) async {
+  Future<Todo> finad(String table, int id) async {
     final content = await sqlHelper.select(table, id: id);
 
     return _decode(content.first);
@@ -64,8 +63,8 @@ class TodoQuery {
 
   /// テーブル内の[Todo]を全て取得
   /// [name]はテーブル名を指定
-  Future<List<Todo>> findAll({String? name, List<String>? where}) async {
-    final content = await listFields(name ?? table, where: where);
+  Future<List<Todo>> findAll({required String table, List<String>? where}) async {
+    final content = await listFields(table, where: where);
     return content.map((e) => _decode(e)).toList();
   }
 
@@ -85,10 +84,16 @@ class TodoQuery {
   /// テーブルを新規作成
   /// [name]はテーブル名を指定
   /// [column]は列の名前を[key]、プロパティを[value]
-  Future<void> create(String name, String emoji, Map<String, String> column) async {
+  Future<void> create(String table, String emoji, Map<String, String> column) async {
     try {
-      await sqlHelper.createTable(name, columnType.toMap());
-      await add(title: '_$emoji' '_$name', done: false, tags: const [], notification: false);
+      await sqlHelper.createTable(table, columnType.toMap());
+      await add(
+          table: table,
+          title: '_$emoji' '_$table',
+          done: false,
+          date: null,
+          tags: const [],
+          notification: []);
     } catch (e) {
       throw 'Failed create tabel: $e';
     }

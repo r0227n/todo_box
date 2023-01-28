@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import '../controller/local_notification_controller.dart';
+import '../controller/todo_controller.dart';
+import '../models/default_table.dart';
+import '../models/todo.dart';
 import 'list_page.dart';
 import 'components/section.dart';
 import 'components/emoji_text.dart';
@@ -21,7 +25,9 @@ class HomePage extends HookConsumerWidget {
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
-      error: ((error, stackTrace) => Text('Error $error')),
+      error: ((error, stackTrace) => Center(
+            child: Text('Error $error'),
+          )),
       data: (tables) {
         return Scaffold(
           appBar: AppBar(),
@@ -30,18 +36,16 @@ class HomePage extends HookConsumerWidget {
             parentNode: focus,
             mods: const [
               ModButton.outline(
-                icon: Icon(Icons.settings_outlined),
+                icon: Icon(Icons.event_available_outlined),
                 selectedIcon: Icon(
-                  Icons.settings,
-                  color: Colors.red,
+                  Icons.event_available,
                 ),
-                tool: ModTool.top(category: ModCategory.action),
+                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.calendar),
               ),
               ModButton.outline(
-                icon: Icon(Icons.home_outlined),
+                icon: Icon(Icons.schedule_outlined),
                 selectedIcon: Icon(
-                  Icons.home,
-                  color: Colors.red,
+                  Icons.schedule,
                 ),
                 tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
               ),
@@ -71,7 +75,7 @@ class HomePage extends HookConsumerWidget {
                   ration: 3,
                   borderRadius: 8,
                   child: ListPage(
-                    'box',
+                    DefaultTable.name,
                     display: PageDisplay.component,
                   ),
                 ),
@@ -99,6 +103,26 @@ class HomePage extends HookConsumerWidget {
                 const Padding(padding: EdgeInsets.only(bottom: 15.0)),
               ],
             ),
+            onSubmitted: (value) async {
+              final todo = await ref.read(todoControllerProvider.notifier).add(Todo(
+                  table: 'Box',
+                  title: value.text,
+                  done: false,
+                  date: value.date,
+                  tags: [],
+                  notification: [value.date]));
+              if (todo != null && (value.date?.isAfter(DateTime.now()) ?? false)) {
+                ref.read(localNotificationProvider.notifier).addNotification(
+                      'Notification Title',
+                      todo.title,
+                      todo.date!,
+                      todo.id ?? -1,
+                      channel: 'testing',
+                    );
+              } else {
+                // TODO: エラーハンドリング
+              }
+            },
           ),
           bottomNavigationBar: focus.hasFocus ? null : navigationBar(),
           floatingActionButtonLocation: buttonLocation(),

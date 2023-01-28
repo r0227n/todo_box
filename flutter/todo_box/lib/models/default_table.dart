@@ -2,7 +2,7 @@ import 'column_type.dart';
 
 class DefaultTable extends ColumnType {
   const DefaultTable();
-  static const String name = 'box';
+  static const String name = 'Box';
 
   String create() => '''
 		CREATE TABLE $name(
@@ -20,7 +20,7 @@ class DefaultTable extends ColumnType {
         super.done: 0,
         super.date: null,
         super.tags: null,
-        super.notification: 0,
+        super.notification: null,
       };
 
   String path(String path) => '${path}todo.db';

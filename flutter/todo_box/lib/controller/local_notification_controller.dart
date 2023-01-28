@@ -23,10 +23,11 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
     await AsyncValue.guard(() async => state.initialize(initSettings));
   }
 
-  Future<void> addNotification(String title, String body, int endTime, int id,
+  Future<void> addNotification(String title, String body, DateTime endTime, int id,
       {required String channel}) async {
     tz.initializeTimeZones();
-    final scheduleTime = tz.TZDateTime.fromMillisecondsSinceEpoch(tz.local, endTime);
+    final scheduleTime =
+        tz.TZDateTime.fromMillisecondsSinceEpoch(tz.local, endTime.millisecondsSinceEpoch);
 
     final androidDetail = AndroidNotificationDetails(
       channel, // channel Id

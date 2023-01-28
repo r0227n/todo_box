@@ -38,7 +38,7 @@ class ListPage extends ConsumerWidget {
             itemCount: selectTable.length,
             itemBuilder: (context, index) {
               return Dismissible(
-                key: ValueKey<int>(selectTable[index].id ?? -1),
+                key: UniqueKey(),
                 direction: DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
@@ -60,8 +60,8 @@ class ListPage extends ConsumerWidget {
                     ),
                   ),
                 ),
-                onDismissed: (_) {
-                  ref.read(todoControllerProvider.notifier).remove(selectTable[index]);
+                onDismissed: (_) async {
+                  await ref.read(todoControllerProvider.notifier).remove(selectTable[index]);
                 },
                 child: ProviderScope(
                   overrides: [_currentTodo.overrideWithValue(selectTable[index])],

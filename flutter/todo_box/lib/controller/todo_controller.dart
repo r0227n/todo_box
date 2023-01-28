@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:todo_box/controller/table_controller.dart';
+import '../models/default_table.dart';
 import '../models/todo.dart';
 import '../provider/todo_query_provider.dart';
 
@@ -11,8 +12,7 @@ class TodoController extends _$TodoController {
   FutureOr<List<Todo>> build() async {
     final query = ref.watch(todoQueryProvider);
     state = const AsyncLoading();
-    final todos = await AsyncValue.guard(() => query.findAll());
-
+    final todos = await AsyncValue.guard(() => query.findAll(table: DefaultTable.name));
     return todos.maybeWhen(
       orElse: (() {
         // TODO: エラーハンドリングを実装する
@@ -28,8 +28,10 @@ class TodoController extends _$TodoController {
     final table = ref.read(tableControllerProvider.notifier);
 
     final result = await AsyncValue.guard(() async => await query.add(
+          table: todo.table,
           title: todo.title,
           done: todo.done,
+          date: todo.date,
           tags: todo.tags ?? [],
           notification: todo.notification,
         ));
@@ -55,8 +57,8 @@ class TodoController extends _$TodoController {
       });
 
   Future<void> remove(Todo todo) async {
-    await ref.read(todoQueryProvider).remove(todo);
-    ref.read(tableControllerProvider.notifier).removeTodo(todo);
+    AsyncValue.guard(() => ref.read(todoQueryProvider).remove(todo));
+    AsyncValue.guard(() => ref.read(tableControllerProvider.notifier).removeTodo(todo));
 
     await update((p0) {
       p0.remove(todo);
