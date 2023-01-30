@@ -72,42 +72,39 @@ class ListPage extends ConsumerWidget {
           ),
           bottomNavigationBar: display.isPage ? null : navigationBar(),
           floatingActionButtonLocation: display.isPage ? null : buttonLocation(),
-          // floatingActionButton: display.isPage ? null : actionButton(ref),
+          // floatingActionButton: display.isPage ? null : actionButton(ref, _focus),
         );
       },
     );
   }
 }
 
-class _ListPageItem extends HookConsumerWidget {
+class _ListPageItem extends ConsumerWidget {
   const _ListPageItem();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final todo = ref.watch(_currentTodo);
-    Color getColor(Set<MaterialState> states) {
-      const Set<MaterialState> interactiveStates = <MaterialState>{
-        MaterialState.pressed,
-        MaterialState.hovered,
-        MaterialState.focused,
-      };
-      if (states.any(interactiveStates.contains)) {
-        return Colors.blue;
-      }
-      return Colors.red;
-    }
 
     return Material(
       child: ListTile(
         leading: Checkbox(
           checkColor: Colors.white,
-          fillColor: MaterialStateProperty.resolveWith(getColor),
           value: todo.done,
-          onChanged: (bool? value) {
-            ref.read(todoControllerProvider.notifier).toggle(todo);
-          },
+          onChanged: (_) => ref.read(todoControllerProvider.notifier).toggle(todo),
         ),
-        title: Text(todo.title),
+        title: Text(
+          todo.title,
+          style: todo.done
+              ? const TextStyle(
+                  decoration: TextDecoration.lineThrough,
+                )
+              : null,
+        ),
+        onTap: () {
+          // TODO: 画面遷移処理を記述し、詳細画面に遷移させる
+          print('tap');
+        },
       ),
     );
   }
