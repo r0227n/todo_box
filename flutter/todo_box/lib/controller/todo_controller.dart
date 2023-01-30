@@ -75,7 +75,7 @@ class TodoController extends _$TodoController {
 
   Future<void> toggle(Todo todo) async {
     final newState = todo.copyWith(done: !todo.done);
-    ref.read(todoQueryProvider).update(newState);
+    await AsyncValue.guard(() async => await ref.read(todoQueryProvider).update(newState));
     state = state.whenData((oldState) => [
           for (final old in oldState)
             if (old == todo) newState else old,
