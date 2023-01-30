@@ -172,25 +172,23 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
     );
   }
 
+  /// [RestorableRouteFuture]'s [onComplete] action
+  /// 日付選択ダイアログが閉じた後のアクション
   void _selectDate(DateTime? newSelectedDate) {
-    modButtons = modButtons.map((e) {
-      if (e.select) {
-        return e.copyWith(select: false);
-      }
-      return e;
-    }).toList();
-
-    if (newSelectedDate != null) {
-      // Select Action
-      _selectedDate.value = newSelectedDate;
-      _selectDateTime = DateTime(
-        newSelectedDate.year,
-        newSelectedDate.month,
-        newSelectedDate.day,
-        _selectDateTime?.hour ?? newSelectedDate.hour,
-        _selectDateTime?.minute ?? newSelectedDate.minute,
-      );
+    // Cancel Action
+    if (newSelectedDate == null) {
+      return;
     }
+
+    // Select Action
+    _selectedDate.value = newSelectedDate;
+    _selectDateTime = DateTime(
+      newSelectedDate.year,
+      newSelectedDate.month,
+      newSelectedDate.day,
+      _selectDateTime?.hour ?? newSelectedDate.hour,
+      _selectDateTime?.minute ?? newSelectedDate.minute,
+    );
   }
 
   @override
