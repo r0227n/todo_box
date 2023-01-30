@@ -10,6 +10,8 @@ class KeyboardMods extends StatefulWidget {
     required this.parentNode,
     this.autofocus = false,
     required this.mods,
+    this.menus = const <String>[],
+    this.initialMenu,
     required this.child,
     this.height = 50.0,
     this.width,
@@ -24,6 +26,10 @@ class KeyboardMods extends StatefulWidget {
 
   /// Widget displayed above the keyboard
   final List<ModButton> mods;
+
+  final List<String> menus;
+
+  final String? initialMenu;
 
   /// The widget below this widget in the tree.
   ///
@@ -64,6 +70,9 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   DateTime? _selectDateTime;
 
+  final _menuKey = GlobalKey<PopupMenuButtonState>();
+  late String _menuLabel;
+
   @override
   void initState() {
     super.initState();
@@ -94,6 +103,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         );
       },
     );
+
+    _menuLabel = widget.menus.isEmpty ? '' : widget.initialMenu ?? widget.menus.first;
   }
 
   @override
@@ -106,18 +117,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   /// Update　when ModButton's pressed.
   void _updateState(ModButton newModButton, int? index) {
-    if (index is int) {
-      setState(() {
-        modButtons = modButtons.map((e) {
-          if (e.modIndex == index) {
-            return e;
-          }
-          return e.copyWith(select: false);
-        }).toList();
-
-        modButtons[index] = newModButton.copyWith(select: !newModButton.select);
-      });
-    }
     switch (newModButton.tool.category) {
       case ModCategory.calendar:
         _restorableDatePickerRouteFuture.present();
@@ -268,19 +267,69 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                 ),
               ),
             ),
-            if (hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
-            if (_selectDateTime != null)
-              InputChip(
-                label: Text(_selectDateTime!.formatLocal(context.l10n)),
-                onPressed: () {
-                  print(_selectDateTime);
-                },
-                onDeleted: () {
-                  setState(() {
-                    _selectDateTime = null;
-                  });
-                },
+            if (hasFocus && widget.menus.isNotEmpty)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Listener(
+                      onPointerDown: (_) {
+                        Future.delayed(const Duration(milliseconds: 200)).whenComplete(
+                            () => FocusScope.of(context).requestFocus(widget.parentNode));
+                        _menuKey.currentState?.showButtonMenu();
+                      },
+                      child: PopupMenuButton(
+                        key: _menuKey,
+                        initialValue: widget.initialMenu,
+                        offset: const Offset(0, -120),
+                        itemBuilder: (context) {
+                          return [
+                            for (final menuItem in widget.menus)
+                              PopupMenuItem(
+                                value: menuItem,
+                                child: Text(menuItem),
+                                onTap: () {
+                                  setState(() {
+                                    _menuLabel = menuItem;
+                                  });
+                                },
+                              ),
+                          ];
+                        },
+                        child: ListTile(
+                          leading: const Icon(
+                            Icons.all_inbox,
+                            size: 24.0,
+                          ),
+                          title: Transform.translate(
+                            offset: const Offset(-4.0, 0),
+                            child: Text(
+                              _menuLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_selectDateTime != null)
+                    InputChip(
+                      label: Text(_selectDateTime!.formatLocal(context.l10n)),
+                      onPressed: () {
+                        print(_selectDateTime);
+                      },
+                      onDeleted: () {
+                        setState(() {
+                          _selectDateTime = null;
+                        });
+                      },
+                    ),
+                  const Spacer(),
+                ],
               ),
+            if (hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
             if (hasFocus && widget.mods.isNotEmpty)
               Container(
                 color: Colors.grey,
