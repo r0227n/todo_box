@@ -250,8 +250,13 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   controller: _controller,
                   onSubmitted: (text) {
                     if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                      widget.onSubmitted!(ModInputValue(text: text, date: _selectDateTime));
+                      widget.onSubmitted!(ModInputValue(
+                        text: text,
+                        selectMenu: _menuLabel,
+                        date: _selectDateTime,
+                      ));
                     }
+                    _controller.clear();
                   },
                   decoration: const InputDecoration(
                     filled: true,
@@ -281,7 +286,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                       child: PopupMenuButton(
                         key: _menuKey,
                         initialValue: widget.initialMenu,
-                        offset: const Offset(0, -120),
+                        offset: Offset(0, -34.0 * widget.menus.length),
                         itemBuilder: (context) {
                           return [
                             for (final menuItem in widget.menus)
@@ -364,9 +369,11 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 class ModInputValue {
   const ModInputValue({
     required this.text,
+    required this.selectMenu,
     required this.date,
   });
 
   final String text;
+  final String selectMenu;
   final DateTime? date;
 }
