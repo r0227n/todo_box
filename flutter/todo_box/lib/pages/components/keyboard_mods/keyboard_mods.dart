@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'mod_tool.dart';
 import 'mod_button.dart';
 
@@ -9,6 +10,8 @@ class KeyboardMods extends StatefulWidget {
     required this.parentNode,
     this.autofocus = false,
     required this.mods,
+    this.menus = const <String>[],
+    this.initialMenu,
     required this.child,
     this.height = 50.0,
     this.width,
@@ -23,6 +26,10 @@ class KeyboardMods extends StatefulWidget {
 
   /// Widget displayed above the keyboard
   final List<ModButton> mods;
+
+  final List<String> menus;
+
+  final String? initialMenu;
 
   /// The widget below this widget in the tree.
   ///
@@ -63,6 +70,9 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   DateTime? _selectDateTime;
 
+  final _menuKey = GlobalKey<PopupMenuButtonState>();
+  late String _menuLabel;
+
   @override
   void initState() {
     super.initState();
@@ -93,6 +103,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         );
       },
     );
+
+    _menuLabel = widget.menus.isEmpty ? '' : widget.initialMenu ?? widget.menus.first;
   }
 
   @override
@@ -105,18 +117,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   /// Update　when ModButton's pressed.
   void _updateState(ModButton newModButton, int? index) {
-    if (index is int) {
-      setState(() {
-        modButtons = modButtons.map((e) {
-          if (e.modIndex == index) {
-            return e;
-          }
-          return e.copyWith(select: false);
-        }).toList();
-
-        modButtons[index] = newModButton.copyWith(select: !newModButton.select);
-      });
-    }
     switch (newModButton.tool.category) {
       case ModCategory.calendar:
         _restorableDatePickerRouteFuture.present();
@@ -172,32 +172,23 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
     );
   }
 
+  /// [RestorableRouteFuture]'s [onComplete] action
+  /// 日付選択ダイアログが閉じた後のアクション
   void _selectDate(DateTime? newSelectedDate) {
-    if (newSelectedDate != null) {
-      // Select Action
-      setState(() {
-        modButtons = modButtons.map((e) {
-          if (e.select) {
-            return e.copyWith(select: false);
-          }
-          return e;
-        }).toList();
-        _selectedDate.value = newSelectedDate;
-      });
-    } else {
-      // Cancel Action
-      setState(() {
-        modButtons = modButtons.map((e) {
-          if (e.select) {
-            return e.copyWith(select: false);
-          }
-          return e;
-        }).toList();
-      });
+    // Cancel Action
+    if (newSelectedDate == null) {
+      return;
     }
-    final now = _selectDateTime ?? DateTime.now();
-    _selectDateTime = DateTime(_selectedDate.value.year, _selectedDate.value.month,
-        _selectedDate.value.day, now.hour, now.minute);
+
+    // Select Action
+    _selectedDate.value = newSelectedDate;
+    _selectDateTime = DateTime(
+      newSelectedDate.year,
+      newSelectedDate.month,
+      newSelectedDate.day,
+      _selectDateTime?.hour ?? newSelectedDate.hour,
+      _selectDateTime?.minute ?? newSelectedDate.minute,
+    );
   }
 
   @override
@@ -257,15 +248,94 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   controller: _controller,
                   onSubmitted: (text) {
                     if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                      widget.onSubmitted!(ModInputValue(text: text, date: _selectDateTime));
+                      widget.onSubmitted!(ModInputValue(
+                        text: text,
+                        selectMenu: _menuLabel,
+                        date: _selectDateTime,
+                      ));
                     }
+                    _controller.clear();
                   },
+                  decoration: const InputDecoration(
+                    filled: true,
+                    fillColor: Colors.green,
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(width: 0),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(13),
+                      ),
+                    ),
+                    hintText: 'New Todo',
+                  ),
                 ),
               ),
             ),
+            if (hasFocus && widget.menus.isNotEmpty)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Listener(
+                      onPointerDown: (_) {
+                        Future.delayed(const Duration(milliseconds: 200)).whenComplete(
+                            () => FocusScope.of(context).requestFocus(widget.parentNode));
+                        _menuKey.currentState?.showButtonMenu();
+                      },
+                      child: PopupMenuButton(
+                        key: _menuKey,
+                        initialValue: widget.initialMenu,
+                        offset: Offset(0, -34.0 * widget.menus.length),
+                        itemBuilder: (context) {
+                          return [
+                            for (final menuItem in widget.menus)
+                              PopupMenuItem(
+                                value: menuItem,
+                                child: Text(menuItem),
+                                onTap: () {
+                                  setState(() {
+                                    _menuLabel = menuItem;
+                                  });
+                                },
+                              ),
+                          ];
+                        },
+                        child: ListTile(
+                          leading: const Icon(
+                            Icons.all_inbox,
+                            size: 24.0,
+                          ),
+                          title: Transform.translate(
+                            offset: const Offset(-4.0, 0),
+                            child: Text(
+                              _menuLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_selectDateTime != null)
+                    InputChip(
+                      label: Text(_selectDateTime!.formatLocal(context.l10n)),
+                      onPressed: () {
+                        print(_selectDateTime);
+                      },
+                      onDeleted: () {
+                        setState(() {
+                          _selectDateTime = null;
+                        });
+                      },
+                    ),
+                  const Spacer(),
+                ],
+              ),
             if (hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
             if (hasFocus && widget.mods.isNotEmpty)
-              SizedBox(
+              Container(
+                color: Colors.grey,
                 height: widget.height,
                 width: widget.width,
                 child: Row(
@@ -297,9 +367,11 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 class ModInputValue {
   const ModInputValue({
     required this.text,
+    required this.selectMenu,
     required this.date,
   });
 
   final String text;
+  final String selectMenu;
   final DateTime? date;
 }

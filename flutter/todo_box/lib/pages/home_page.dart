@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../controller/local_notification_controller.dart';
-import '../controller/todo_controller.dart';
-import '../models/default_table.dart';
-import '../models/todo.dart';
 import 'list_page.dart';
 import 'components/section.dart';
 import 'components/emoji_text.dart';
 import 'components/mods.dart';
 import 'components/consumer_widget_extension.dart';
 import '../controller/table_controller.dart';
+import '../controller/local_notification_controller.dart';
+import '../controller/todo_controller.dart';
+import '../models/default_table.dart';
+import '../models/todo.dart';
 import '../models/table.dart' as sql;
 
 final _currentTable = Provider<sql.Table>((ref) => throw UnimplementedError());
@@ -50,11 +50,15 @@ class HomePage extends HookConsumerWidget {
                 tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
               ),
             ],
+            menus: tables.map((e) => e.title).toList(),
+            initialMenu: tables
+                .firstWhere((t) => t.title == DefaultTable.name, orElse: () => throw Error())
+                .title,
             child: Column(
               children: <Widget>[
                 ListTile(
                   title: Text(
-                    'Box',
+                    DefaultTable.name,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   trailing: IconButton(
@@ -63,7 +67,7 @@ class HomePage extends HookConsumerWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => const ListPage(
-                          'box',
+                          DefaultTable.name,
                           display: PageDisplay.page,
                         ),
                         fullscreenDialog: true, // true だとモーダル遷移になる
@@ -105,7 +109,7 @@ class HomePage extends HookConsumerWidget {
             ),
             onSubmitted: (value) async {
               final todo = await ref.read(todoControllerProvider.notifier).add(Todo(
-                  table: 'Box',
+                  table: value.selectMenu,
                   title: value.text,
                   done: false,
                   date: value.date,
