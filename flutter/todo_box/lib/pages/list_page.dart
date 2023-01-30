@@ -79,20 +79,35 @@ class ListPage extends ConsumerWidget {
   }
 }
 
-class _ListPageItem extends ConsumerWidget {
+class _ListPageItem extends HookConsumerWidget {
   const _ListPageItem();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final todo = ref.watch(_currentTodo);
+    Color getColor(Set<MaterialState> states) {
+      const Set<MaterialState> interactiveStates = <MaterialState>{
+        MaterialState.pressed,
+        MaterialState.hovered,
+        MaterialState.focused,
+      };
+      if (states.any(interactiveStates.contains)) {
+        return Colors.blue;
+      }
+      return Colors.red;
+    }
 
     return Material(
-      child: CheckboxListTile(
-        tileColor: Colors.red,
+      child: ListTile(
+        leading: Checkbox(
+          checkColor: Colors.white,
+          fillColor: MaterialStateProperty.resolveWith(getColor),
+          value: todo.done,
+          onChanged: (bool? value) {
+            ref.read(todoControllerProvider.notifier).toggle(todo);
+          },
+        ),
         title: Text(todo.title),
-        controlAffinity: ListTileControlAffinity.leading,
-        value: todo.done,
-        onChanged: (_) => ref.read(todoControllerProvider.notifier).toggle(todo),
       ),
     );
   }
