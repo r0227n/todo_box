@@ -21,7 +21,7 @@ class HomePage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(tableControllerProvider);
-    final focus = useFocusNode();
+    final test = useState<bool>(true);
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
@@ -32,8 +32,7 @@ class HomePage extends HookConsumerWidget {
         return Scaffold(
           appBar: AppBar(),
           body: KeyboardMods(
-            context: context,
-            parentNode: focus,
+            visibleKeyboard: test.value,
             mods: const [
               ModButton.outline(
                 icon: Icon(Icons.event_available_outlined),
@@ -128,20 +127,14 @@ class HomePage extends HookConsumerWidget {
               }
             },
           ),
-          bottomNavigationBar: focus.hasFocus ? null : navigationBar(),
+          bottomNavigationBar: test.value ? navigationBar() : null,
           floatingActionButtonLocation: buttonLocation(),
-          floatingActionButton: focus.hasFocus
-              ? null
-              : FloatingActionButton(
-                  onPressed: () {
-                    if (focus.hasFocus) {
-                      FocusScope.of(context).unfocus();
-                    } else {
-                      FocusScope.of(context).requestFocus(focus);
-                    }
-                  },
-                  child: const Icon(Icons.abc),
-                ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              test.value = !test.value;
+            },
+            child: const Icon(Icons.abc),
+          ),
         );
       },
     );
