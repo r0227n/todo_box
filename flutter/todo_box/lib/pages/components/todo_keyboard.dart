@@ -21,10 +21,10 @@ class TodoKeyboard extends KeyboardMods {
       ),
     ],
     required super.child,
-    super.menus,
-    super.initialMenu,
-    super.onSwipeDown,
-    super.onSubmitted,
+    required super.menus,
+    required super.initialMenu,
+    required super.onSwipeDown,
+    required super.onSubmitted,
     super.key,
   });
 }
