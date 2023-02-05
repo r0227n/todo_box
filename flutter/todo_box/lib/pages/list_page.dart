@@ -72,7 +72,7 @@ class ListPage extends ConsumerWidget {
           ),
           bottomNavigationBar: display.isPage ? null : navigationBar(),
           floatingActionButtonLocation: display.isPage ? null : buttonLocation(),
-          // floatingActionButton: display.isPage ? null : actionButton(ref, _focus),
+          floatingActionButton: display.isPage ? null : actionButton(null),
         );
       },
     );

@@ -133,12 +133,7 @@ class HomePage extends HookConsumerWidget {
           bottomNavigationBar: showKeyboard.value ? navigationBar() : null,
           floatingActionButtonLocation: showKeyboard.value ? buttonLocation() : null,
           floatingActionButton: showKeyboard.value
-              ? FloatingActionButton(
-                  onPressed: () {
-                    showKeyboard.value = !showKeyboard.value;
-                  },
-                  child: const Icon(Icons.abc),
-                )
+              ? actionButton(() => showKeyboard.value = !showKeyboard.value)
               : null,
         );
       },
