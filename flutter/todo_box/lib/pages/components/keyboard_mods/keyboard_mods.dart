@@ -15,6 +15,7 @@ class KeyboardMods extends StatefulWidget {
     this.height = 50.0,
     this.width,
     this.onChange,
+    this.onSwipeDown,
     this.onSubmitted,
     super.key,
   });
@@ -49,6 +50,9 @@ class KeyboardMods extends StatefulWidget {
   final double? width;
 
   final ValueChanged<String>? onChange;
+
+  /// Notification swipe down for [TextField]
+  final ValueGetter? onSwipeDown;
 
   /// Called when the user indicates that they are done editing the text in the [TextField].
   final ValueChanged<ModInputValue>? onSubmitted;
@@ -111,6 +115,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   @override
   void didUpdateWidget(covariant KeyboardMods oldWidget) {
     super.didUpdateWidget(oldWidget);
+    print(oldWidget);
 
     if (oldWidget.visibleKeyboard) {
       FocusScope.of(context).requestFocus(_node);
@@ -255,7 +260,10 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   }
                   FocusScope.of(context).unfocus();
 
-                  // _closeKeyboard;
+                  // Notification dwipe down
+                  if (widget.onSwipeDown is ValueGetter) {
+                    widget.onSwipeDown!();
+                  }
                 },
                 child: TextField(
                   focusNode: _node,
@@ -370,9 +378,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
     return content.first;
   }
-
-  // Close Keyboard
-  void get _closeKeyboard => FocusManager.instance.primaryFocus?.unfocus();
 }
 
 class ModInputValue {

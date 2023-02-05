@@ -21,7 +21,7 @@ class HomePage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(tableControllerProvider);
-    final test = useState<bool>(true);
+    final showKeyboard = useState<bool>(true);
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
@@ -32,7 +32,7 @@ class HomePage extends HookConsumerWidget {
         return Scaffold(
           appBar: AppBar(),
           body: KeyboardMods(
-            visibleKeyboard: test.value,
+            visibleKeyboard: showKeyboard.value,
             mods: const [
               ModButton.outline(
                 icon: Icon(Icons.event_available_outlined),
@@ -106,6 +106,9 @@ class HomePage extends HookConsumerWidget {
                 const Padding(padding: EdgeInsets.only(bottom: 15.0)),
               ],
             ),
+            onSwipeDown: () {
+              showKeyboard.value = !showKeyboard.value;
+            },
             onSubmitted: (value) async {
               final todo = await ref.read(todoControllerProvider.notifier).add(Todo(
                   table: value.selectMenu,
@@ -127,14 +130,16 @@ class HomePage extends HookConsumerWidget {
               }
             },
           ),
-          bottomNavigationBar: test.value ? navigationBar() : null,
-          floatingActionButtonLocation: buttonLocation(),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              test.value = !test.value;
-            },
-            child: const Icon(Icons.abc),
-          ),
+          bottomNavigationBar: showKeyboard.value ? navigationBar() : null,
+          floatingActionButtonLocation: showKeyboard.value ? buttonLocation() : null,
+          floatingActionButton: showKeyboard.value
+              ? FloatingActionButton(
+                  onPressed: () {
+                    showKeyboard.value = !showKeyboard.value;
+                  },
+                  child: const Icon(Icons.abc),
+                )
+              : null,
         );
       },
     );
