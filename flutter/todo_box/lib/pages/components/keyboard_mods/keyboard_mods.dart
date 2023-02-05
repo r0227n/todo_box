@@ -115,7 +115,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   @override
   void didUpdateWidget(covariant KeyboardMods oldWidget) {
     super.didUpdateWidget(oldWidget);
-    print(oldWidget);
 
     if (oldWidget.visibleKeyboard) {
       FocusScope.of(context).requestFocus(_node);
@@ -342,9 +341,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   if (_selectDateTime != null)
                     InputChip(
                       label: Text(_selectDateTime!.formatLocal(context.l10n)),
-                      onPressed: () {
-                        print(_selectDateTime);
-                      },
+                      onPressed: () {},
                       onDeleted: () {
                         setState(() {
                           _selectDateTime = null;
