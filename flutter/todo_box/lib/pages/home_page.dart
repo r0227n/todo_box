@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'list_page.dart';
-import 'components/section.dart';
-import 'components/emoji_text.dart';
-import 'components/mods.dart';
-import 'components/consumer_widget_extension.dart';
-import '../controller/table_controller.dart';
 import '../controller/local_notification_controller.dart';
 import '../controller/todo_controller.dart';
 import '../models/default_table.dart';
 import '../models/todo.dart';
+import 'components/section.dart';
+import 'list_page.dart';
+import 'components/emoji_text.dart';
+import 'components/todo_keyboard.dart';
+import 'components/consumer_widget_extension.dart';
+import '../controller/table_controller.dart';
 import '../models/table.dart' as sql;
 
 final _currentTable = Provider<sql.Table>((ref) => throw UnimplementedError());
@@ -31,28 +31,10 @@ class HomePage extends HookConsumerWidget {
       data: (tables) {
         return Scaffold(
           appBar: AppBar(),
-          body: KeyboardMods(
+          body: TodoKeyboard(
             visibleKeyboard: showKeyboard.value,
-            mods: const [
-              ModButton.outline(
-                icon: Icon(Icons.event_available_outlined),
-                selectedIcon: Icon(
-                  Icons.event_available,
-                ),
-                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.calendar),
-              ),
-              ModButton.outline(
-                icon: Icon(Icons.schedule_outlined),
-                selectedIcon: Icon(
-                  Icons.schedule,
-                ),
-                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
-              ),
-            ],
             menus: tables.map((e) => e.title).toList(),
-            initialMenu: tables
-                .firstWhere((t) => t.title == DefaultTable.name, orElse: () => throw Error())
-                .title,
+            initialMenu: DefaultTable.name,
             child: Column(
               children: <Widget>[
                 ListTile(
@@ -128,6 +110,7 @@ class HomePage extends HookConsumerWidget {
               } else {
                 // TODO: エラーハンドリング
               }
+              showKeyboard.value = !showKeyboard.value;
             },
           ),
           bottomNavigationBar: showKeyboard.value ? navigationBar() : null,
