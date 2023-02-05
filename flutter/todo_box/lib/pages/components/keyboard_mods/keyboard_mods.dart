@@ -5,9 +5,8 @@ import 'mod_button.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
-    required this.context,
     this.restorationId,
-    required this.parentNode,
+    required this.visibleKeyboard,
     this.autofocus = false,
     required this.mods,
     this.menus = const <String>[],
@@ -16,13 +15,12 @@ class KeyboardMods extends StatefulWidget {
     this.height = 50.0,
     this.width,
     this.onChange,
+    this.onSwipeDown,
     this.onSubmitted,
     super.key,
   });
 
   final String? restorationId;
-
-  final BuildContext context;
 
   /// Widget displayed above the keyboard
   final List<ModButton> mods;
@@ -36,8 +34,7 @@ class KeyboardMods extends StatefulWidget {
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
 
-  /// Parent [FocusNode]
-  final FocusNode parentNode;
+  final bool visibleKeyboard;
 
   /// [TextField]'s [autofocus] property
   ///
@@ -54,6 +51,9 @@ class KeyboardMods extends StatefulWidget {
 
   final ValueChanged<String>? onChange;
 
+  /// Notification swipe down for [TextField]
+  final ValueGetter? onSwipeDown;
+
   /// Called when the user indicates that they are done editing the text in the [TextField].
   final ValueChanged<ModInputValue>? onSubmitted;
 
@@ -62,6 +62,8 @@ class KeyboardMods extends StatefulWidget {
 }
 
 class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
+  late final FocusNode _node;
+
   late List<ModButton> modButtons;
   late final TextEditingController _controller;
 
@@ -76,6 +78,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   @override
   void initState() {
     super.initState();
+    _node = FocusNode(debugLabel: 'KeyboardMods');
+
     int count = 0;
     modButtons =
         widget.mods.map((e) => e.copyWith(modIndex: count++, callback: _updateState)).toList();
@@ -107,8 +111,21 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
     _menuLabel = widget.menus.isEmpty ? '' : widget.initialMenu ?? widget.menus.first;
   }
 
+  /// 親Widgetが再描画したタイミングで呼び出される
+  @override
+  void didUpdateWidget(covariant KeyboardMods oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.visibleKeyboard) {
+      FocusScope.of(context).requestFocus(_node);
+    } else {
+      FocusScope.of(context).unfocus();
+    }
+  }
+
   @override
   void dispose() {
+    _node.dispose();
     _controller.dispose();
     _selectedDate.dispose();
     _restorableDatePickerRouteFuture.dispose();
@@ -126,7 +143,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
           initialTime: TimeOfDay.now(),
           context: context,
         ).then((time) {
-          FocusScope.of(context).requestFocus(widget.parentNode);
+          FocusScope.of(context).requestFocus(_node);
           if (time == null) {
             return;
           }
@@ -198,7 +215,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
     return Stack(
       children: <Widget>[
         Opacity(
-          opacity: hasFocus ? 0.8 : 1.0,
+          opacity: _node.hasFocus ? 0.8 : 1.0,
           child: widget.child,
         ),
         Column(
@@ -206,10 +223,10 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Offstage(
-              offstage: !hasFocus,
+              offstage: !_node.hasFocus,
               child: GestureDetector(
                 onVerticalDragUpdate: (detail) {
-                  if (((detail.primaryDelta ?? -1.0) < 0.0) || !hasFocus) {
+                  if (((detail.primaryDelta ?? -1.0) < 0.0) || !_node.hasFocus) {
                     return;
                   } else if (_controller.text.isNotEmpty) {
                     ScaffoldMessenger.of(context)
@@ -234,17 +251,21 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                         .closed
                         .then((closedReason) {
                       if (closedReason == SnackBarClosedReason.action) {
-                        FocusScope.of(context).requestFocus(widget.parentNode);
+                        FocusScope.of(context).requestFocus(_node);
                       } else {
                         _controller.clear();
                       }
                     });
                   }
+                  FocusScope.of(context).unfocus();
 
-                  _closeKeyboard;
+                  // Notification dwipe down
+                  if (widget.onSwipeDown is ValueGetter) {
+                    widget.onSwipeDown!();
+                  }
                 },
                 child: TextField(
-                  focusNode: widget.parentNode,
+                  focusNode: _node,
                   controller: _controller,
                   onSubmitted: (text) {
                     if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
@@ -270,15 +291,15 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                 ),
               ),
             ),
-            if (hasFocus && widget.menus.isNotEmpty)
+            if (_node.hasFocus && widget.menus.isNotEmpty)
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Listener(
                       onPointerDown: (_) {
-                        Future.delayed(const Duration(milliseconds: 200)).whenComplete(
-                            () => FocusScope.of(context).requestFocus(widget.parentNode));
+                        Future.delayed(const Duration(milliseconds: 200))
+                            .whenComplete(() => FocusScope.of(context).requestFocus(_node));
                         _menuKey.currentState?.showButtonMenu();
                       },
                       child: PopupMenuButton(
@@ -320,9 +341,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   if (_selectDateTime != null)
                     InputChip(
                       label: Text(_selectDateTime!.formatLocal(context.l10n)),
-                      onPressed: () {
-                        print(_selectDateTime);
-                      },
+                      onPressed: () {},
                       onDeleted: () {
                         setState(() {
                           _selectDateTime = null;
@@ -332,8 +351,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   const Spacer(),
                 ],
               ),
-            if (hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
-            if (hasFocus && widget.mods.isNotEmpty)
+            if (_node.hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
+            if (_node.hasFocus && widget.mods.isNotEmpty)
               Container(
                 color: Colors.grey,
                 height: widget.height,
@@ -348,9 +367,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
     );
   }
 
-  /// Whether this node has input focus.
-  bool get hasFocus => widget.parentNode.hasFocus;
-
   ModButton? _visibleModButton(ModPositioned positioned) {
     final content = modButtons.where((b) => b.select && b.tool.position == positioned);
     if (content.isEmpty) {
@@ -359,9 +375,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
     return content.first;
   }
-
-  // Close Keyboard
-  void get _closeKeyboard => FocusManager.instance.primaryFocus?.unfocus();
 }
 
 class ModInputValue {

@@ -21,7 +21,7 @@ class HomePage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(tableControllerProvider);
-    final focus = useFocusNode();
+    final showKeyboard = useState<bool>(true);
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
@@ -32,8 +32,7 @@ class HomePage extends HookConsumerWidget {
         return Scaffold(
           appBar: AppBar(),
           body: KeyboardMods(
-            context: context,
-            parentNode: focus,
+            visibleKeyboard: showKeyboard.value,
             mods: const [
               ModButton.outline(
                 icon: Icon(Icons.event_available_outlined),
@@ -107,6 +106,9 @@ class HomePage extends HookConsumerWidget {
                 const Padding(padding: EdgeInsets.only(bottom: 15.0)),
               ],
             ),
+            onSwipeDown: () {
+              showKeyboard.value = !showKeyboard.value;
+            },
             onSubmitted: (value) async {
               final todo = await ref.read(todoControllerProvider.notifier).add(Todo(
                   table: value.selectMenu,
@@ -128,20 +130,11 @@ class HomePage extends HookConsumerWidget {
               }
             },
           ),
-          bottomNavigationBar: focus.hasFocus ? null : navigationBar(),
-          floatingActionButtonLocation: buttonLocation(),
-          floatingActionButton: focus.hasFocus
-              ? null
-              : FloatingActionButton(
-                  onPressed: () {
-                    if (focus.hasFocus) {
-                      FocusScope.of(context).unfocus();
-                    } else {
-                      FocusScope.of(context).requestFocus(focus);
-                    }
-                  },
-                  child: const Icon(Icons.abc),
-                ),
+          bottomNavigationBar: showKeyboard.value ? navigationBar() : null,
+          floatingActionButtonLocation: showKeyboard.value ? buttonLocation() : null,
+          floatingActionButton: showKeyboard.value
+              ? actionButton(() => showKeyboard.value = !showKeyboard.value)
+              : null,
         );
       },
     );
