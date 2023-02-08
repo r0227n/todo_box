@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'components/dropdown_list_tile.dart';
 import '../l10n/app_localizations.dart';
 import '../models/todo.dart';
 
@@ -37,23 +36,62 @@ class _DetailPageState extends State<DetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: <Widget>[
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.delete_outlined),
+          ),
+          const SizedBox(width: 12.0),
+        ],
+      ),
       body: ListView(
         children: <Widget>[
-          DorpdownListTile(
-            title: Text(_tabelLabel),
-            onTap: () {
-              print('object');
-            },
+          Padding(
+            padding: const EdgeInsets.only(left: 1.0),
+            child: Row(
+              children: <Widget>[
+                Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: TextButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.arrow_drop_down,
+                      size: 24.0,
+                    ),
+                    label: Text(_tabelLabel),
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
           ),
-          TextField(
-            controller: txtController,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+            child: TextField(
+              maxLines: null,
+              controller: txtController,
+              style: const TextStyle(fontSize: 16.0),
+            ),
           ),
           _DatePicker(
             null,
             _dateTime?.toMMMEd(context.l10n) ?? '日時を追加',
-            onSelect: (value) {
-              print(value);
+            onSelect: (date) {
+              if (date == null) {
+                return;
+              }
+
+              final now = DateTime.now();
+              setState(() {
+                _dateTime = DateTime(
+                  date.year,
+                  date.month,
+                  date.day,
+                  _dateTime?.hour ?? now.hour,
+                  _dateTime?.minute ?? now.minute,
+                );
+              });
             },
           ),
           ListTile(
@@ -69,7 +107,12 @@ class _DetailPageState extends State<DetailPage> {
 
                 setState(() {
                   _dateTime = DateTime(
-                      now.year, now.month, now.day, selectedTime.hour, selectedTime.minute);
+                    _dateTime?.year ?? now.year,
+                    _dateTime?.month ?? now.month,
+                    _dateTime?.day ?? now.day,
+                    selectedTime.hour,
+                    selectedTime.minute,
+                  );
                 });
               }
             },
@@ -96,18 +139,9 @@ class _DatePicker extends StatefulWidget {
 }
 
 class __DatePickerState extends State<_DatePicker> with RestorationMixin {
-  late String _label;
-
   @override
   void initState() {
     super.initState();
-    _label = widget.data;
-  }
-
-  @override
-  void didUpdateWidget(covariant _DatePicker oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _label = widget.data;
   }
 
   @override
@@ -153,7 +187,6 @@ class __DatePickerState extends State<_DatePicker> with RestorationMixin {
     if (newSelectedDate != null) {
       setState(() {
         _selectedDate.value = newSelectedDate;
-        _label = newSelectedDate.formatLocal(context.l10n);
       });
       if (widget.onSelect is ValueChanged<DateTime>) {
         widget.onSelect!(newSelectedDate);
@@ -166,7 +199,7 @@ class __DatePickerState extends State<_DatePicker> with RestorationMixin {
     return Material(
       child: ListTile(
         leading: const Icon(Icons.event_available),
-        title: Text(_label),
+        title: Text(widget.data),
         onTap: () => _restorableDatePickerRouteFuture.present(),
       ),
     );
