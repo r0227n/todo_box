@@ -46,8 +46,9 @@ class _DetailPageState extends State<DetailPage> {
           Consumer(
             builder: (context, ref, _) => IconButton(
               onPressed: () async {
-                final table = ref.read(todoControllerProvider.notifier);
-                table.remove(widget.todo);
+                final todoCtrl = ref.read(todoControllerProvider.notifier);
+                todoCtrl.remove(widget.todo);
+                // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
                 Navigator.pop(context);
               },
               icon: const Icon(Icons.delete_outlined),
@@ -79,7 +80,7 @@ class _DetailPageState extends State<DetailPage> {
                                 children: <Widget>[
                                   const Padding(
                                     padding: EdgeInsets.fromLTRB(0.0, 14.0, 0.0, 10.0),
-                                    child: Text('Modal BottomSheet'),
+                                    child: Text('Move todo to'),
                                   ),
                                   for (final table in tables)
                                     TextButton.icon(
@@ -161,6 +162,18 @@ class _DetailPageState extends State<DetailPage> {
             },
           )
         ],
+      ),
+      floatingActionButton: Consumer(
+        builder: (context, ref, _) => FloatingActionButton.extended(
+          onPressed: () {
+            final todoCtrl = ref.read(todoControllerProvider.notifier);
+            todoCtrl.toggle(widget.todo);
+            // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
+            Navigator.pop(context);
+          },
+          label: widget.todo.done ? const Text('Uncomplete') : const Text('Complete'),
+          icon: widget.todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
+        ),
       ),
     );
   }
