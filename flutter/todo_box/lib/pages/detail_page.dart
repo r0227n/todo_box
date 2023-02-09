@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'components/emoji_text.dart';
+import '../provider/tables_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/todo.dart';
+import '../models/table.dart' as todo;
 
 class DetailPage extends StatefulWidget {
   const DetailPage(this.todo, {super.key});
@@ -54,7 +58,43 @@ class _DetailPageState extends State<DetailPage> {
                 Directionality(
                   textDirection: TextDirection.rtl,
                   child: TextButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final table = await showModalBottomSheet<todo.Table>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Consumer(builder: (context, ref, _) {
+                            final tables = ref.watch(tablesProvider);
+                            return SizedBox(
+                              height: 90.0 + 40.0 * tables.length,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  const Padding(
+                                    padding: EdgeInsets.fromLTRB(0.0, 14.0, 0.0, 10.0),
+                                    child: Text('Modal BottomSheet'),
+                                  ),
+                                  for (final table in tables)
+                                    TextButton.icon(
+                                      icon: EmojiText(table.icon),
+                                      label: Text(table.title),
+                                      onPressed: () => Navigator.pop(context, table),
+                                    ),
+                                ],
+                              ),
+                            );
+                          });
+                        },
+                      );
+
+                      if (table == null) {
+                        return;
+                      }
+
+                      setState(() {
+                        _tabelLabel = table.title;
+                      });
+                    },
                     icon: const Icon(
                       Icons.arrow_drop_down,
                       size: 24.0,
@@ -78,10 +118,6 @@ class _DetailPageState extends State<DetailPage> {
             null,
             _dateTime?.toMMMEd(context.l10n) ?? '日時を追加',
             onSelect: (date) {
-              if (date == null) {
-                return;
-              }
-
               final now = DateTime.now();
               setState(() {
                 _dateTime = DateTime(
