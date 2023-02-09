@@ -116,7 +116,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   void didUpdateWidget(covariant KeyboardMods oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.visibleKeyboard) {
+    if (widget.visibleKeyboard) {
       FocusScope.of(context).requestFocus(_node);
     } else {
       FocusScope.of(context).unfocus();

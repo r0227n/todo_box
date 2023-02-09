@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:todo_box/controller/todo_controller.dart';
 import 'components/emoji_text.dart';
 import '../provider/tables_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -42,9 +43,15 @@ class _DetailPageState extends State<DetailPage> {
     return Scaffold(
       appBar: AppBar(
         actions: <Widget>[
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.delete_outlined),
+          Consumer(
+            builder: (context, ref, _) => IconButton(
+              onPressed: () async {
+                final table = ref.read(todoControllerProvider.notifier);
+                table.remove(widget.todo);
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.delete_outlined),
+            ),
           ),
           const SizedBox(width: 12.0),
         ],

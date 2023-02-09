@@ -21,7 +21,7 @@ class HomePage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(tableControllerProvider);
-    final showKeyboard = useState<bool>(true);
+    final showKeyboard = useState<bool>(false);
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
@@ -113,11 +113,11 @@ class HomePage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
           ),
-          bottomNavigationBar: showKeyboard.value ? navigationBar() : null,
-          floatingActionButtonLocation: showKeyboard.value ? buttonLocation() : null,
+          bottomNavigationBar: showKeyboard.value ? null : navigationBar(),
+          floatingActionButtonLocation: showKeyboard.value ? null : buttonLocation(),
           floatingActionButton: showKeyboard.value
-              ? actionButton(() => showKeyboard.value = !showKeyboard.value)
-              : null,
+              ? null
+              : actionButton(() => showKeyboard.value = !showKeyboard.value),
         );
       },
     );
