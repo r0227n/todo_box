@@ -3,6 +3,7 @@ import 'package:todo_box/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'mod_tool.dart';
 import 'mod_button.dart';
+import 'mod_tool_picker.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
@@ -365,27 +366,56 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                 ),
               // if (_node.hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
               if (_node.hasFocus && topModButtonTool is ModButton)
-                ElevatedButton(
-                    onPressed: () {
-                      // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
-                      FocusScope.of(context).unfocus();
+                ModToolPicker(
+                  item: [
+                    PickerItem(
+                        onPressed: () {
+                          // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+                          FocusScope.of(context).unfocus();
 
-                      _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
-                        // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
-                        FocusScope.of(context).requestFocus(_node);
+                          _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
+                            // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+                            FocusScope.of(context).requestFocus(_node);
 
-                        setState(() {
-                          modButtons = modButtons.map((e) {
-                            if (e.select) {
-                              return e.copyWith(select: !e.select);
-                            }
+                            setState(() {
+                              modButtons = modButtons.map((e) {
+                                if (e.select) {
+                                  return e.copyWith(select: !e.select);
+                                }
 
-                            return e;
-                          }).toList();
-                        });
-                      });
-                    },
-                    child: const Icon(Icons.abc)),
+                                return e;
+                              }).toList();
+                            });
+                          });
+                        },
+                        icon: const Icon(
+                          Icons.abc,
+                          size: 36.0,
+                        ),
+                        title: 'test'),
+                  ],
+                ),
+              // ElevatedButton(
+              //     onPressed: () {
+              //       // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+              //       FocusScope.of(context).unfocus();
+
+              //       _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
+              //         // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+              //         FocusScope.of(context).requestFocus(_node);
+
+              //         setState(() {
+              //           modButtons = modButtons.map((e) {
+              //             if (e.select) {
+              //               return e.copyWith(select: !e.select);
+              //             }
+
+              //             return e;
+              //           }).toList();
+              //         });
+              //       });
+              //     },
+              //     child: const Icon(Icons.abc)),
               if (_node.hasFocus && widget.mods.isNotEmpty)
                 Container(
                   color: Colors.grey,
