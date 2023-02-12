@@ -1,9 +1,11 @@
+import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:todo_box/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'mod_tool.dart';
 import 'mod_button.dart';
 import 'mod_tool_picker.dart';
+import 'detail_image.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
@@ -78,6 +80,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   late String _menuLabel;
 
   late final ImagePicker _picker;
+  final List<File> _pickFiles = <File>[];
 
   @override
   void initState() {
@@ -224,7 +227,49 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
     final topModButtonTool = _visibleModButton(ModPositioned.top);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        actions: [
+          SingleChildScrollView(
+            child: SizedBox(
+              height: kBottomNavigationBarHeight,
+              width: 150,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  for (final file in _pickFiles)
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DetailImage(files: _pickFiles, index: 0),
+                            fullscreenDialog: true,
+                          ),
+                        );
+                      },
+                      onLongPress: () {
+                        _picker.pickImage(source: ImageSource.gallery).then((newState) {
+                          if (newState == null) {
+                            return;
+                          }
+
+                          final index = _pickFiles.indexOf(file);
+                          setState(() {
+                            _pickFiles[index] = File(newState.path);
+                          });
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 6.0),
+                        child: Image.file(file),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Stack(
         children: <Widget>[
           Opacity(
@@ -385,6 +430,9 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
                                 return e;
                               }).toList();
+                              if (pickedFile != null) {
+                                _pickFiles.add(File(pickedFile.path));
+                              }
                             });
                           });
                         },
