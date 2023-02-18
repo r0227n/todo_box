@@ -61,7 +61,9 @@ class _PinchZoomState extends State<PinchZoom> with SingleTickerProviderStateMix
     if (widget.animationController == null) {
       _animationController.dispose();
     }
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     super.dispose();
   }
 
@@ -76,16 +78,8 @@ class _PinchZoomState extends State<PinchZoom> with SingleTickerProviderStateMix
             return;
           }
 
-          Matrix4? endTweenMatrix4;
           final Offset position = _controller.toScene(_doubleTapDetails!.localPosition);
-
-          if (_controller.value != Matrix4.identity()) {
-            endTweenMatrix4 = Matrix4.identity();
-          } else {
-            endTweenMatrix4 = Matrix4.identity()
-              ..translate(-position.dx * widget.scale, -position.dy * widget.scale)
-              ..scale(widget.scale);
-          }
+          final Matrix4 endTweenMatrix4 = _controller.animationScale(position, widget.scale);
 
           _controller.animationState = Matrix4Tween(
             begin: _controller.value,
@@ -125,12 +119,6 @@ class PinchZoomController extends TransformationController {
   /// Value of [Matrix4] that is animated.
   Animation<Matrix4>? animationState;
 
-  @override
-  void dispose() {
-    animationState?.removeListener(_onAnimateReset);
-    super.dispose();
-  }
-
   /// Called when the user pan or scale gesture on the widget.
   /// Overwrite the value of [value] with [animationState]
   void _onAnimateReset() {
@@ -140,6 +128,21 @@ class PinchZoomController extends TransformationController {
       animationState = null;
       animationController.reset();
     }
+  }
+
+  /// [PinhZoom]'s animation scale
+  Matrix4 animationScale(Offset offset, double scale, {bool reverse = false}) {
+    if (value != Matrix4.identity()) {
+      return Matrix4.identity();
+    } else if (reverse) {
+      return Matrix4.identity()
+        ..translate(offset.dx * scale, offset.dy * scale)
+        ..scale(scale);
+    }
+
+    return Matrix4.identity()
+      ..translate(-offset.dx * scale, -offset.dy * scale)
+      ..scale(scale);
   }
 
   /// Reset [PinchZoomController] values.
