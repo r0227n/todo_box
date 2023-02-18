@@ -13,6 +13,9 @@ class PinchZoom extends StatefulWidget {
     this.scale = 3.0,
     this.animationController,
     this.curve = Curves.easeOut,
+    this.onTap,
+    this.onTapDown,
+    this.onDoubleTap,
     super.key,
   });
 
@@ -30,6 +33,10 @@ class PinchZoom extends StatefulWidget {
   /// An parametric animation easing curve, i.e. a mapping of the unit interval to
   /// the unit interval.
   final Curve curve;
+
+  final GestureTapCallback? onTap;
+  final GestureTapDownCallback? onTapDown;
+  final GestureTapCallback? onDoubleTap;
 
   @override
   State<PinchZoom> createState() => _PinchZoomState();
@@ -72,18 +79,29 @@ class _PinchZoomState extends State<PinchZoom> with SingleTickerProviderStateMix
     return Material(
       color: widget.backgroudColor,
       child: GestureDetector(
-        onTapDown: (details) => _doubleTapDetails = details,
+        onTap: widget.onTap,
+        onTapDown: (details) {
+          _doubleTapDetails = details;
+
+          WidgetsBinding.instance.addPersistentFrameCallback((_) {
+            if (widget.onTapDown is GestureTapDownCallback && mounted) {
+              widget.onTapDown!(details);
+            }
+          });
+        },
         onDoubleTap: () {
+          if (widget.onDoubleTap is GestureTapCallback && mounted) {
+            widget.onDoubleTap!();
+          }
+
           if (_doubleTapDetails == null) {
             return;
           }
-
-          final Offset position = _controller.toScene(_doubleTapDetails!.localPosition);
-          final Matrix4 endTweenMatrix4 = _controller.animationScale(position, widget.scale);
+          _controller.scenePosition = _controller.toScene(_doubleTapDetails!.localPosition);
 
           _controller.animationState = Matrix4Tween(
             begin: _controller.value,
-            end: endTweenMatrix4,
+            end: _controller.animationScale(widget.scale),
           ).animate(
             CurveTween(curve: widget.curve).animate(_controller.animationController),
           );
@@ -118,6 +136,7 @@ class PinchZoomController extends TransformationController {
 
   /// Value of [Matrix4] that is animated.
   Animation<Matrix4>? animationState;
+  Offset? scenePosition;
 
   /// Called when the user pan or scale gesture on the widget.
   /// Overwrite the value of [value] with [animationState]
@@ -131,23 +150,27 @@ class PinchZoomController extends TransformationController {
   }
 
   /// [PinhZoom]'s animation scale
-  Matrix4 animationScale(Offset offset, double scale, {bool reverse = false}) {
-    if (value != Matrix4.identity()) {
+  Matrix4? animationScale(double scale, {bool reverse = false, Offset? position}) {
+    position ??= scenePosition;
+    if (position == null) {
+      return null;
+    } else if (value != Matrix4.identity()) {
       return Matrix4.identity();
     } else if (reverse) {
       return Matrix4.identity()
-        ..translate(offset.dx * scale, offset.dy * scale)
+        ..translate(position.dx * scale, position.dy * scale)
         ..scale(scale);
     }
 
     return Matrix4.identity()
-      ..translate(-offset.dx * scale, -offset.dy * scale)
+      ..translate(-position.dx * scale, -position.dy * scale)
       ..scale(scale);
   }
 
   /// Reset [PinchZoomController] values.
   void reset() {
     animationController.reset();
+    scenePosition = null;
     animationState = Matrix4Tween(
       begin: value,
       end: Matrix4.identity(),

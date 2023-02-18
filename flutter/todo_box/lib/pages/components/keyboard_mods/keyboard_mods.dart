@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'mod_tool.dart';
 import 'mod_button.dart';
 import 'mod_tool_picker.dart';
-import 'detail_image.dart';
+import '../../detail_image.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
@@ -242,7 +242,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => DetailImage(files: _pickFiles, index: 0),
+                            builder: (_) =>
+                                DetailImage(files: _pickFiles, index: _pickFiles.indexOf(file)),
                             fullscreenDialog: true,
                           ),
                         );
