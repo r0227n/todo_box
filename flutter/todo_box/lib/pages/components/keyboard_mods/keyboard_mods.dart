@@ -415,56 +415,36 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                 ModToolPicker(
                   item: [
                     PickerItem(
-                        onPressed: () {
+                      onPressed: () {
+                        // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+                        FocusScope.of(context).unfocus();
+
+                        _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
                           // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
-                          FocusScope.of(context).unfocus();
+                          FocusScope.of(context).requestFocus(_node);
 
-                          _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
-                            // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
-                            FocusScope.of(context).requestFocus(_node);
-
-                            setState(() {
-                              modButtons = modButtons.map((e) {
-                                if (e.select) {
-                                  return e.copyWith(select: !e.select);
-                                }
-
-                                return e;
-                              }).toList();
-                              if (pickedFile != null) {
-                                _pickFiles.add(File(pickedFile.path));
+                          setState(() {
+                            modButtons = modButtons.map((e) {
+                              if (e.select) {
+                                return e.copyWith(select: !e.select);
                               }
-                            });
+
+                              return e;
+                            }).toList();
+                            if (pickedFile != null) {
+                              _pickFiles.add(File(pickedFile.path));
+                            }
                           });
-                        },
-                        icon: const Icon(
-                          Icons.abc,
-                          size: 36.0,
-                        ),
-                        title: 'test'),
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.abc,
+                        size: 36.0,
+                      ),
+                      title: 'test',
+                    ),
                   ],
                 ),
-              // ElevatedButton(
-              //     onPressed: () {
-              //       // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
-              //       FocusScope.of(context).unfocus();
-
-              //       _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
-              //         // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
-              //         FocusScope.of(context).requestFocus(_node);
-
-              //         setState(() {
-              //           modButtons = modButtons.map((e) {
-              //             if (e.select) {
-              //               return e.copyWith(select: !e.select);
-              //             }
-
-              //             return e;
-              //           }).toList();
-              //         });
-              //       });
-              //     },
-              //     child: const Icon(Icons.abc)),
               if (_node.hasFocus && widget.mods.isNotEmpty)
                 Container(
                   color: Colors.grey,
