@@ -1,7 +1,11 @@
+import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:todo_box/l10n/app_localizations.dart';
+import 'package:image_picker/image_picker.dart';
 import 'mod_tool.dart';
 import 'mod_button.dart';
+import 'mod_tool_picker.dart';
+import '../../detail_image.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
@@ -75,6 +79,9 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   final _menuKey = GlobalKey<PopupMenuButtonState>();
   late String _menuLabel;
 
+  final ImagePicker _picker = ImagePicker();
+  final List<File> _pickFiles = <File>[];
+
   @override
   void initState() {
     super.initState();
@@ -133,7 +140,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   }
 
   /// Update　when ModButton's pressed.
-  void _updateState(ModButton newModButton, int? index) {
+  Future<void> _updateState(ModButton newModButton, int? index) async {
     switch (newModButton.tool.category) {
       case ModCategory.calendar:
         _restorableDatePickerRouteFuture.present();
@@ -153,7 +160,12 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         });
         break;
       case ModCategory.image:
-        // TODO: Handle this case.
+        if (index == null) {
+          break;
+        }
+        setState(() {
+          modButtons[index] = newModButton.copyWith(select: !newModButton.select);
+        });
         break;
       case ModCategory.action:
         // TODO: Handle this case.
@@ -212,158 +224,240 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   Widget build(BuildContext context) {
     final topModButtonTool = _visibleModButton(ModPositioned.top);
 
-    return Stack(
-      children: <Widget>[
-        Opacity(
-          opacity: _node.hasFocus ? 0.8 : 1.0,
-          child: widget.child,
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Offstage(
-              offstage: !_node.hasFocus,
-              child: GestureDetector(
-                onVerticalDragUpdate: (detail) {
-                  if (((detail.primaryDelta ?? -1.0) < 0.0) || !_node.hasFocus) {
-                    return;
-                  } else if (_controller.text.isNotEmpty) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(
-                          SnackBar(
-                            showCloseIcon: true,
-                            action: SnackBarAction(
-                              label: 'Restore',
-                              onPressed: () {},
+    return Scaffold(
+      appBar: AppBar(
+        actions: [
+          SingleChildScrollView(
+            child: SizedBox(
+              height: kBottomNavigationBarHeight,
+              width: 150,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  for (final file in _pickFiles)
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DetailImage(
+                              files: _pickFiles,
+                              index: _pickFiles.indexOf(file),
                             ),
-                            content: const Text('Discard current task'),
-                            duration: const Duration(milliseconds: 3000),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
+                            fullscreenDialog: true,
                           ),
-                        )
-                        .closed
-                        .then((closedReason) {
-                      if (closedReason == SnackBarClosedReason.action) {
-                        FocusScope.of(context).requestFocus(_node);
-                      } else {
-                        _controller.clear();
-                      }
-                    });
-                  }
-                  FocusScope.of(context).unfocus();
+                        );
+                      },
+                      onLongPress: () {
+                        _picker.pickImage(source: ImageSource.gallery).then((newState) {
+                          if (newState == null) {
+                            return;
+                          }
 
-                  // Notification dwipe down
-                  if (widget.onSwipeDown is ValueGetter) {
-                    widget.onSwipeDown!();
-                  }
-                },
-                child: TextField(
-                  focusNode: _node,
-                  controller: _controller,
-                  onSubmitted: (text) {
-                    if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                      widget.onSubmitted!(ModInputValue(
-                        text: text,
-                        selectMenu: _menuLabel,
-                        date: _selectDateTime,
-                      ));
-                    }
-                    _controller.clear();
-                  },
-                  decoration: const InputDecoration(
-                    filled: true,
-                    fillColor: Colors.green,
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 0),
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(13),
+                          final index = _pickFiles.indexOf(file);
+                          setState(() {
+                            _pickFiles[index] = File(newState.path);
+                          });
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 6.0),
+                        child: Image.file(file),
                       ),
                     ),
-                    hintText: 'New Todo',
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: <Widget>[
+          Opacity(
+            opacity: _node.hasFocus ? 0.8 : 1.0,
+            child: widget.child,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Offstage(
+                offstage: !_node.hasFocus,
+                child: GestureDetector(
+                  onVerticalDragUpdate: (detail) {
+                    if (((detail.primaryDelta ?? -1.0) < 0.0) || !_node.hasFocus) {
+                      return;
+                    } else if (_controller.text.isNotEmpty) {
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(
+                            SnackBar(
+                              showCloseIcon: true,
+                              action: SnackBarAction(
+                                label: 'Restore',
+                                onPressed: () {},
+                              ),
+                              content: const Text('Discard current task'),
+                              duration: const Duration(milliseconds: 3000),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                            ),
+                          )
+                          .closed
+                          .then((closedReason) {
+                        if (closedReason == SnackBarClosedReason.action) {
+                          FocusScope.of(context).requestFocus(_node);
+                        } else {
+                          _controller.clear();
+                        }
+                      });
+                    }
+                    FocusScope.of(context).unfocus();
+
+                    // Notification dwipe down
+                    if (widget.onSwipeDown is ValueGetter) {
+                      widget.onSwipeDown!();
+                    }
+                  },
+                  child: TextField(
+                    focusNode: _node,
+                    controller: _controller,
+                    onSubmitted: (text) {
+                      if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
+                        widget.onSubmitted!(ModInputValue(
+                          text: text,
+                          selectMenu: _menuLabel,
+                          date: _selectDateTime,
+                        ));
+                      }
+                      _controller.clear();
+                    },
+                    decoration: const InputDecoration(
+                      filled: true,
+                      fillColor: Colors.green,
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(width: 0),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(13),
+                        ),
+                      ),
+                      hintText: 'New Todo',
+                    ),
                   ),
                 ),
               ),
-            ),
-            if (_node.hasFocus && widget.menus.isNotEmpty)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Listener(
-                      onPointerDown: (_) {
-                        Future.delayed(const Duration(milliseconds: 200))
-                            .whenComplete(() => FocusScope.of(context).requestFocus(_node));
-                        _menuKey.currentState?.showButtonMenu();
-                      },
-                      child: PopupMenuButton(
-                        key: _menuKey,
-                        initialValue: widget.initialMenu,
-                        offset: Offset(0, -34.0 * widget.menus.length),
-                        itemBuilder: (context) {
-                          return [
-                            for (final menuItem in widget.menus)
-                              PopupMenuItem(
-                                value: menuItem,
-                                child: Text(menuItem),
-                                onTap: () {
-                                  setState(() {
-                                    _menuLabel = menuItem;
-                                  });
-                                },
-                              ),
-                          ];
+              if (_node.hasFocus && widget.menus.isNotEmpty)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Listener(
+                        onPointerDown: (_) {
+                          Future.delayed(const Duration(milliseconds: 200))
+                              .whenComplete(() => FocusScope.of(context).requestFocus(_node));
+                          _menuKey.currentState?.showButtonMenu();
                         },
-                        child: ListTile(
-                          leading: const Icon(
-                            Icons.all_inbox,
-                            size: 24.0,
-                          ),
-                          title: Transform.translate(
-                            offset: const Offset(-4.0, 0),
-                            child: Text(
-                              _menuLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelLarge,
+                        child: PopupMenuButton(
+                          key: _menuKey,
+                          initialValue: widget.initialMenu,
+                          offset: Offset(0, -34.0 * widget.menus.length),
+                          itemBuilder: (context) {
+                            return [
+                              for (final menuItem in widget.menus)
+                                PopupMenuItem(
+                                  value: menuItem,
+                                  child: Text(menuItem),
+                                  onTap: () {
+                                    setState(() {
+                                      _menuLabel = menuItem;
+                                    });
+                                  },
+                                ),
+                            ];
+                          },
+                          child: ListTile(
+                            leading: const Icon(
+                              Icons.all_inbox,
+                              size: 24.0,
+                            ),
+                            title: Transform.translate(
+                              offset: const Offset(-4.0, 0),
+                              child: Text(
+                                _menuLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelLarge,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  if (_selectDateTime != null)
-                    InputChip(
-                      label: Text(_selectDateTime!.formatLocal(context.l10n)),
-                      onPressed: () {},
-                      onDeleted: () {
-                        setState(() {
-                          _selectDateTime = null;
+                    if (_selectDateTime != null)
+                      InputChip(
+                        label: Text(_selectDateTime!.formatLocal(context.l10n)),
+                        onPressed: () {},
+                        onDeleted: () {
+                          setState(() {
+                            _selectDateTime = null;
+                          });
+                        },
+                      ),
+                    const Spacer(),
+                  ],
+                ),
+              // if (_node.hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
+              if (_node.hasFocus && topModButtonTool is ModButton)
+                ModToolPicker(
+                  item: [
+                    PickerItem(
+                      onPressed: () {
+                        // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+                        FocusScope.of(context).unfocus();
+
+                        _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
+                          // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+                          FocusScope.of(context).requestFocus(_node);
+
+                          setState(() {
+                            modButtons = modButtons.map((e) {
+                              if (e.select) {
+                                return e.copyWith(select: !e.select);
+                              }
+
+                              return e;
+                            }).toList();
+                            if (pickedFile != null) {
+                              _pickFiles.add(File(pickedFile.path));
+                            }
+                          });
                         });
                       },
+                      icon: const Icon(
+                        Icons.abc,
+                        size: 36.0,
+                      ),
+                      title: 'test',
                     ),
-                  const Spacer(),
-                ],
-              ),
-            if (_node.hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
-            if (_node.hasFocus && widget.mods.isNotEmpty)
-              Container(
-                color: Colors.grey,
-                height: widget.height,
-                width: widget.width,
-                child: Row(
-                  children: modButtons,
+                  ],
                 ),
-              ),
-          ],
-        ),
-      ],
+              if (_node.hasFocus && widget.mods.isNotEmpty)
+                Container(
+                  color: Colors.grey,
+                  height: widget.height,
+                  width: widget.width,
+                  child: Row(
+                    children: modButtons,
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

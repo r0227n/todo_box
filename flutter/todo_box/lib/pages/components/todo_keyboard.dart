@@ -19,6 +19,13 @@ class TodoKeyboard extends KeyboardMods {
         ),
         tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
       ),
+      ModButton.outline(
+        icon: Icon(Icons.camera_alt_outlined),
+        selectedIcon: Icon(
+          Icons.camera_alt,
+        ),
+        tool: ModTool(position: ModPositioned.top, category: ModCategory.image),
+      ),
     ],
     required super.child,
     required super.menus,
