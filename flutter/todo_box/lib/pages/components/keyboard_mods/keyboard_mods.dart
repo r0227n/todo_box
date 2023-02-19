@@ -79,7 +79,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   final _menuKey = GlobalKey<PopupMenuButtonState>();
   late String _menuLabel;
 
-  late final ImagePicker _picker;
+  final ImagePicker _picker = ImagePicker();
   final List<File> _pickFiles = <File>[];
 
   @override
@@ -116,8 +116,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
     );
 
     _menuLabel = widget.menus.isEmpty ? '' : widget.initialMenu ?? widget.menus.first;
-
-    _picker = ImagePicker();
   }
 
   /// 親Widgetが再描画したタイミングで呼び出される
@@ -242,8 +240,10 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                DetailImage(files: _pickFiles, index: _pickFiles.indexOf(file)),
+                            builder: (_) => DetailImage(
+                              files: _pickFiles,
+                              index: _pickFiles.indexOf(file),
+                            ),
                             fullscreenDialog: true,
                           ),
                         );

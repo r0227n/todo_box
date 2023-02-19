@@ -4,10 +4,10 @@ import 'components/pinch_zoom.dart';
 
 class DetailImage extends StatefulWidget {
   const DetailImage({
+    super.key,
     required this.files,
     required this.index,
     this.duration = const Duration(milliseconds: 400),
-    super.key,
   });
 
   final List<File> files;
@@ -21,7 +21,7 @@ class DetailImage extends StatefulWidget {
 class _DetailImageState extends State<DetailImage>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late final AnimationController _animatedController;
-  late final TabController _tabController;
+  late TabController _tabController;
   late final PinchZoomController _controller;
 
   /// [AppBar]'s height
@@ -85,7 +85,29 @@ class _DetailImageState extends State<DetailImage>
         child: AnimatedOpacity(
           opacity: _visibleAppBar ? 1.0 : 0.0,
           duration: const Duration(milliseconds: 100),
-          child: _visibleAppBar ? AppBar() : SizedBox(height: _appBarHeight),
+          child: _visibleAppBar
+              ? AppBar(
+                  actions: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          widget.files.removeAt(_tabController.index);
+                          _tabController = TabController(
+                            initialIndex: widget.index == 0 ? widget.index : widget.index - 1,
+                            length: widget.files.length,
+                            vsync: this,
+                          );
+                        });
+                        if (_tabController.length == 0) {
+                          Navigator.pop(context);
+                        }
+                      },
+                      icon: const Icon(Icons.delete),
+                    ),
+                    const SizedBox(width: 8.0)
+                  ],
+                )
+              : SizedBox(height: _appBarHeight),
         ),
       ),
       body: TabBarView(
