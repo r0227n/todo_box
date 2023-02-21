@@ -33,8 +33,12 @@ class HomePage extends HookConsumerWidget {
           appBar: AppBar(),
           body: TodoKeyboard(
             visibleKeyboard: showKeyboard.value,
-            menus: tables.map((e) => e.title).toList(),
-            initialMenu: DefaultTable.name,
+            chips: tables
+                .map((e) => ModActionChip(
+                      icon: EmojiText(e.icon),
+                      label: e.title,
+                    ))
+                .toList(),
             child: Column(
               children: <Widget>[
                 ListTile(

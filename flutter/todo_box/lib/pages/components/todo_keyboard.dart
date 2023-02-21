@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart' show Icons, Icon;
 import 'mods.dart';
 
+export 'mods.dart';
+
 class TodoKeyboard extends KeyboardMods {
   const TodoKeyboard({
     required super.visibleKeyboard,
     super.mods = const [
+      ModButton.outline(
+        icon: Icon(Icons.list),
+        selectedIcon: Icon(
+          Icons.event_available,
+        ),
+        tool: ModTool(position: ModPositioned.top, category: ModCategory.chips),
+      ),
       ModButton.outline(
         icon: Icon(Icons.event_available_outlined),
         selectedIcon: Icon(
@@ -28,8 +37,7 @@ class TodoKeyboard extends KeyboardMods {
       ),
     ],
     required super.child,
-    required super.menus,
-    required super.initialMenu,
+    required super.chips,
     required super.onSwipeDown,
     required super.onSubmitted,
     super.key,

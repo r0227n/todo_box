@@ -1,6 +1,5 @@
 import 'dart:io' show File;
 import 'package:flutter/material.dart';
-import 'package:todo_box/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'mod_tool.dart';
 import 'mod_button.dart';
@@ -13,8 +12,7 @@ class KeyboardMods extends StatefulWidget {
     required this.visibleKeyboard,
     this.autofocus = false,
     required this.mods,
-    this.menus = const <String>[],
-    this.initialMenu,
+    this.chips = const <ModActionChip>[],
     required this.child,
     this.height = 50.0,
     this.width,
@@ -29,9 +27,7 @@ class KeyboardMods extends StatefulWidget {
   /// Widget displayed above the keyboard
   final List<ModButton> mods;
 
-  final List<String> menus;
-
-  final String? initialMenu;
+  final List<ModActionChip> chips;
 
   /// The widget below this widget in the tree.
   ///
@@ -76,11 +72,11 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   DateTime? _selectDateTime;
 
-  final _menuKey = GlobalKey<PopupMenuButtonState>();
-  late String _menuLabel;
-
   final ImagePicker _picker = ImagePicker();
   final List<File> _pickFiles = <File>[];
+
+  bool _visibleToolBar = false;
+  Widget? _modToolWidgetState;
 
   @override
   void initState() {
@@ -114,8 +110,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         );
       },
     );
-
-    _menuLabel = widget.menus.isEmpty ? '' : widget.initialMenu ?? widget.menus.first;
   }
 
   /// 親Widgetが再描画したタイミングで呼び出される
@@ -141,7 +135,25 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   /// Update　when ModButton's pressed.
   Future<void> _updateState(ModButton newModButton, int? index) async {
+    // [_modToolWidgetState] reset state
+    if (_modToolWidgetState != null) {
+      _modToolWidgetState = null;
+    }
+
     switch (newModButton.tool.category) {
+      case ModCategory.chips:
+        print('push');
+        _modToolWidgetState = _ModActionChipTool(
+          chips: widget.chips,
+          onPressed: (chip) {
+            // TODO: Chipの選択肢を更新するようにする
+            print(chip.label);
+          },
+        );
+        setState(() {
+          _visibleToolBar = !_visibleToolBar;
+        });
+        break;
       case ModCategory.calendar:
         _restorableDatePickerRouteFuture.present();
         break;
@@ -330,7 +342,7 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                       if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
                         widget.onSubmitted!(ModInputValue(
                           text: text,
-                          selectMenu: _menuLabel,
+                          selectMenu: '', // TODO: ActionChipで選択されているラベルを入れる
                           date: _selectDateTime,
                         ));
                       }
@@ -350,65 +362,72 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   ),
                 ),
               ),
-              if (_node.hasFocus && widget.menus.isNotEmpty)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Listener(
-                        onPointerDown: (_) {
-                          Future.delayed(const Duration(milliseconds: 200))
-                              .whenComplete(() => FocusScope.of(context).requestFocus(_node));
-                          _menuKey.currentState?.showButtonMenu();
-                        },
-                        child: PopupMenuButton(
-                          key: _menuKey,
-                          initialValue: widget.initialMenu,
-                          offset: Offset(0, -34.0 * widget.menus.length),
-                          itemBuilder: (context) {
-                            return [
-                              for (final menuItem in widget.menus)
-                                PopupMenuItem(
-                                  value: menuItem,
-                                  child: Text(menuItem),
-                                  onTap: () {
-                                    setState(() {
-                                      _menuLabel = menuItem;
-                                    });
-                                  },
-                                ),
-                            ];
-                          },
-                          child: ListTile(
-                            leading: const Icon(
-                              Icons.all_inbox,
-                              size: 24.0,
-                            ),
-                            title: Transform.translate(
-                              offset: const Offset(-4.0, 0),
-                              child: Text(
-                                _menuLabel,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (_selectDateTime != null)
-                      InputChip(
-                        label: Text(_selectDateTime!.formatLocal(context.l10n)),
-                        onPressed: () {},
-                        onDeleted: () {
-                          setState(() {
-                            _selectDateTime = null;
-                          });
-                        },
-                      ),
-                    const Spacer(),
-                  ],
+              // if (_node.hasFocus && widget.chips.isNotEmpty)
+              //   Row(
+              //     mainAxisAlignment: MainAxisAlignment.start,
+              //     children: [
+              //       Expanded(
+              //         child: Listener(
+              //           onPointerDown: (_) {
+              //             Future.delayed(const Duration(milliseconds: 200))
+              //                 .whenComplete(() => FocusScope.of(context).requestFocus(_node));
+              //             _menuKey.currentState?.showButtonMenu();
+              //           },
+              //           child: PopupMenuButton(
+              //             key: _menuKey,
+              //             initialValue: widget.initialMenu,
+              //             offset: Offset(0, -34.0 * widget.chips.length),
+              //             itemBuilder: (context) {
+              //               return [
+              //                 for (final menuItem in widget.chips)
+              //                   PopupMenuItem(
+              //                     value: menuItem,
+              //                     child: Text(menuItem),
+              //                     onTap: () {
+              //                       setState(() {
+              //                         _menuLabel = menuItem;
+              //                       });
+              //                     },
+              //                   ),
+              //               ];
+              //             },
+              //             child: ListTile(
+              //               leading: const Icon(
+              //                 Icons.all_inbox,
+              //                 size: 24.0,
+              //               ),
+              //               title: Transform.translate(
+              //                 offset: const Offset(-4.0, 0),
+              //                 child: Text(
+              //                   _menuLabel,
+              //                   maxLines: 1,
+              //                   overflow: TextOverflow.ellipsis,
+              //                   style: Theme.of(context).textTheme.labelLarge,
+              //                 ),
+              //               ),
+              //             ),
+              //           ),
+              //         ),
+              //       ),
+              //       if (_selectDateTime != null)
+              //         InputChip(
+              //           label: Text(_selectDateTime!.formatLocal(context.l10n)),
+              //           onPressed: () {},
+              //           onDeleted: () {
+              //             setState(() {
+              //               _selectDateTime = null;
+              //             });
+              //           },
+              //         ),
+              //       const Spacer(),
+              //     ],
+              //   ),
+
+              if (_node.hasFocus && _visibleToolBar && _modToolWidgetState != null)
+                SizedBox(
+                  width: double.infinity,
+                  height: 150,
+                  child: _modToolWidgetState,
                 ),
               // if (_node.hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
               if (_node.hasFocus && topModButtonTool is ModButton)
@@ -481,4 +500,40 @@ class ModInputValue {
   final String text;
   final String selectMenu;
   final DateTime? date;
+}
+
+class ModActionChip {
+  const ModActionChip({
+    required this.icon,
+    required this.label,
+  });
+
+  final Widget icon;
+  final String label;
+}
+
+class _ModActionChipTool extends StatelessWidget {
+  const _ModActionChipTool({
+    required this.chips,
+    required this.onPressed,
+  });
+
+  final List<ModActionChip> chips;
+  final ValueChanged<ModActionChip> onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (final chip in chips)
+          ActionChip(
+            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.15),
+            shape: const StadiumBorder(side: BorderSide()),
+            avatar: FittedBox(child: chip.icon),
+            label: Text(chip.label),
+            onPressed: () => onPressed(chip),
+          ),
+      ],
+    );
+  }
 }
