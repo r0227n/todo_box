@@ -12,6 +12,7 @@ class KeyboardMods extends StatefulWidget {
     required this.visibleKeyboard,
     this.autofocus = false,
     required this.mods,
+    required this.selectedChip,
     this.chips = const <ModActionChip>[],
     required this.child,
     this.height = 50.0,
@@ -28,6 +29,7 @@ class KeyboardMods extends StatefulWidget {
   final List<ModButton> mods;
 
   final List<ModActionChip> chips;
+  final ModActionChip selectedChip;
 
   /// The widget below this widget in the tree.
   ///
@@ -75,6 +77,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   final ImagePicker _picker = ImagePicker();
   final List<File> _pickFiles = <File>[];
 
+  late ModActionChip _selectedChip;
+
   bool _visibleToolBar = false;
   Widget? _modToolWidgetState;
 
@@ -110,6 +114,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         );
       },
     );
+
+    _selectedChip = widget.selectedChip;
   }
 
   /// 親Widgetが再描画したタイミングで呼び出される
@@ -136,18 +142,22 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   /// Update　when ModButton's pressed.
   Future<void> _updateState(ModButton newModButton, int? index) async {
     // [_modToolWidgetState] reset state
-    if (_modToolWidgetState != null) {
+    if (index == null) {
+      return;
+    } else if (_modToolWidgetState != null) {
       _modToolWidgetState = null;
     }
 
     switch (newModButton.tool.category) {
       case ModCategory.chips:
-        print('push');
         _modToolWidgetState = _ModActionChipTool(
           chips: widget.chips,
+          selectedChip: _selectedChip,
           onPressed: (chip) {
-            // TODO: Chipの選択肢を更新するようにする
-            print(chip.label);
+            setState(() {
+              modButtons[index] = newModButton.copyWith(select: !newModButton.select, chip: chip);
+              _selectedChip = chip;
+            });
           },
         );
         setState(() {
@@ -172,9 +182,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         });
         break;
       case ModCategory.image:
-        if (index == null) {
-          break;
-        }
         setState(() {
           modButtons[index] = newModButton.copyWith(select: !newModButton.select);
         });
@@ -515,10 +522,12 @@ class ModActionChip {
 class _ModActionChipTool extends StatelessWidget {
   const _ModActionChipTool({
     required this.chips,
+    required this.selectedChip,
     required this.onPressed,
   });
 
   final List<ModActionChip> chips;
+  final ModActionChip selectedChip;
   final ValueChanged<ModActionChip> onPressed;
 
   @override
@@ -527,11 +536,10 @@ class _ModActionChipTool extends StatelessWidget {
       children: [
         for (final chip in chips)
           ActionChip(
-            backgroundColor: Theme.of(context).primaryColor.withOpacity(0.15),
             shape: const StadiumBorder(side: BorderSide()),
             avatar: FittedBox(child: chip.icon),
             label: Text(chip.label),
-            onPressed: () => onPressed(chip),
+            onPressed: chips.contains(selectedChip) ? () => onPressed(chip) : null,
           ),
       ],
     );

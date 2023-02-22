@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart' show Icons, Icon;
 import 'mods.dart';
 
-export 'mods.dart';
-
 class TodoKeyboard extends KeyboardMods {
   const TodoKeyboard({
     required super.visibleKeyboard,
@@ -37,7 +35,8 @@ class TodoKeyboard extends KeyboardMods {
       ),
     ],
     required super.child,
-    required super.chips,
+    required super.menus,
+    required super.initialMenu,
     required super.onSwipeDown,
     required super.onSubmitted,
     super.key,

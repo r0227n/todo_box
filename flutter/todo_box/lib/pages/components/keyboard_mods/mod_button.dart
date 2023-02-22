@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'keyboard_mods.dart';
 import 'mod_tool.dart';
 
 enum ModButtonType {
@@ -16,8 +17,9 @@ enum ModButtonType {
 
 class ModButton extends StatefulWidget {
   const ModButton({
-    required this.icon,
-    required this.selectedIcon,
+    this.icon,
+    this.selectedIcon,
+    this.chip,
     required this.type,
     required this.tool,
     this.enable = true,
@@ -29,8 +31,9 @@ class ModButton extends StatefulWidget {
   });
 
   const ModButton.fillted({
-    required this.icon,
-    required this.selectedIcon,
+    this.icon,
+    this.selectedIcon,
+    this.chip,
     required this.tool,
     this.enable = true,
     this.onTap,
@@ -41,8 +44,9 @@ class ModButton extends StatefulWidget {
         type = enable ? ModButtonType.fillted : ModButtonType.disabledFillted;
 
   const ModButton.filledTonal({
-    required this.icon,
-    required this.selectedIcon,
+    this.icon,
+    this.selectedIcon,
+    this.chip,
     required this.tool,
     this.enable = true,
     this.onTap,
@@ -53,8 +57,9 @@ class ModButton extends StatefulWidget {
         type = enable ? ModButtonType.filledTonal : ModButtonType.disabledFilledTonal;
 
   const ModButton.outline({
-    required this.icon,
-    required this.selectedIcon,
+    this.icon,
+    this.selectedIcon,
+    this.chip,
     required this.tool,
     this.enable = true,
     this.onTap,
@@ -64,8 +69,9 @@ class ModButton extends StatefulWidget {
         callback = null,
         type = enable ? ModButtonType.outline : ModButtonType.disabledOutline;
 
-  final Icon icon;
-  final Icon selectedIcon;
+  final Icon? icon;
+  final Icon? selectedIcon;
+  final ModActionChip? chip;
   final ModButtonType type;
   final ModTool tool;
   final bool enable;
@@ -80,6 +86,7 @@ class ModButton extends StatefulWidget {
   ModButton copyWith({
     Icon? icon,
     Icon? selectedIcon,
+    ModActionChip? chip,
     ModButtonType? type,
     ModTool? tool,
     bool? select,
@@ -90,6 +97,7 @@ class ModButton extends StatefulWidget {
       ModButton(
         icon: icon ?? this.icon,
         selectedIcon: selectedIcon ?? this.selectedIcon,
+        chip: chip ?? this.chip,
         type: type ?? this.type,
         tool: tool ?? this.tool,
         select: select ?? this.select,
@@ -128,13 +136,27 @@ class _ModButtonState extends State<ModButton> {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      isSelected: widget.select,
-      icon: widget.icon,
-      selectedIcon: widget.selectedIcon,
-      onPressed: onPressed,
-      style: _buttonStyle(context),
-    );
+    if (widget.icon != null) {
+      return IconButton(
+        isSelected: widget.select,
+        icon: widget.icon!,
+        selectedIcon: widget.selectedIcon,
+        onPressed: onPressed,
+        style: _buttonStyle(context),
+      );
+    } else if (widget.chip != null) {
+      return InputChip(
+        shape: const StadiumBorder(side: BorderSide()),
+        avatar: SizedBox.expand(
+            child: FittedBox(
+          child: widget.chip!.icon,
+        )),
+        label: Text(widget.chip!.label),
+        onPressed: onPressed,
+      );
+    }
+
+    throw FlutterError('build widget unknown');
   }
 
   ButtonStyle _buttonStyle(BuildContext context) {
