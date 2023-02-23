@@ -1,6 +1,7 @@
 import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'mod_tool.dart';
 import 'mod_button.dart';
 import 'mod_tool_picker.dart';
@@ -63,7 +64,8 @@ class KeyboardMods extends StatefulWidget {
   State<KeyboardMods> createState() => _KeyboardModsState();
 }
 
-class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
+class _KeyboardModsState extends State<KeyboardMods> {
+// class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   late final FocusNode _node;
 
   late List<ModButton> modButtons;
@@ -81,6 +83,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
   bool _visibleToolBar = false;
   Widget? _modToolWidgetState;
+
+  late final _now;
 
   @override
   void initState() {
@@ -103,19 +107,8 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
       });
     });
 
-    /// DatePicker's initialize
-    _selectedDate = RestorableDateTime(DateTime.now());
-    _restorableDatePickerRouteFuture = RestorableRouteFuture<DateTime?>(
-      onComplete: _selectDate,
-      onPresent: (NavigatorState navigator, Object? arguments) {
-        return navigator.restorablePush(
-          _showDatePickerRoute,
-          arguments: _selectedDate.value.millisecondsSinceEpoch,
-        );
-      },
-    );
-
     _selectedChip = widget.selectedChip;
+    _now = DateTime.now();
   }
 
   /// 親Widgetが再描画したタイミングで呼び出される
@@ -134,10 +127,11 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   void dispose() {
     _node.dispose();
     _controller.dispose();
-    _selectedDate.dispose();
-    _restorableDatePickerRouteFuture.dispose();
     super.dispose();
   }
+
+  final ValueNotifier<DateTime?> _time = ValueNotifier<DateTime?>(null);
+  int? modCategoryState;
 
   /// Update　when ModButton's pressed.
   Future<void> _updateState(ModButton newModButton, int? index) async {
@@ -150,22 +144,47 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
 
     switch (newModButton.tool.category) {
       case ModCategory.chips:
-        _modToolWidgetState = _ModActionChipTool(
-          chips: widget.chips,
-          selectedChip: _selectedChip,
-          onPressed: (chip) {
-            setState(() {
-              modButtons[index] = newModButton.copyWith(select: !newModButton.select, chip: chip);
-              _selectedChip = chip;
-            });
-          },
-        );
         setState(() {
-          _visibleToolBar = !_visibleToolBar;
+          _modToolWidgetState = _ModActionChipTool(
+            chips: widget.chips,
+            selectedChip: _selectedChip,
+            onPressed: (chip) {
+              setState(() {
+                modButtons[index] = newModButton.copyWith(chip: chip);
+                _selectedChip = chip;
+              });
+            },
+          );
         });
+
         break;
       case ModCategory.calendar:
-        _restorableDatePickerRouteFuture.present();
+        setState(() {
+          _modToolWidgetState = ValueListenableBuilder(
+            valueListenable: _time,
+            builder: (context, value, child) {
+              return _ModActionDateTime(
+                initDateTime: _now,
+                dateTime: value,
+                onDatePicker: (value) {
+                  print(value);
+                  setState(() {
+                    _time.value = value;
+                  });
+                },
+                onTimePicker: (value) {
+                  setState(() {
+                    _time.value = value;
+                  });
+                },
+                onApply: () {
+                  print('object');
+                },
+              );
+            },
+          );
+        });
+
         break;
       case ModCategory.time:
         showTimePicker(
@@ -182,23 +201,25 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
         });
         break;
       case ModCategory.image:
-        setState(() {
-          modButtons[index] = newModButton.copyWith(select: !newModButton.select);
-        });
+        // setState(() {
+        //   modButtons[index] = newModButton.copyWith(select: !newModButton.select);
+        // });
         break;
       case ModCategory.action:
         // TODO: Handle this case.
         break;
     }
-  }
 
-  @override
-  String? get restorationId => widget.restorationId;
-
-  @override
-  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-    registerForRestoration(_selectedDate, 'selected_date');
-    registerForRestoration(_restorableDatePickerRouteFuture, 'date_picker_route_future');
+    setState(() {
+      _visibleToolBar = !_visibleToolBar;
+      modCategoryState = index;
+      modButtons = modButtons.map((e) {
+        if (e.modIndex == index) {
+          return e.copyWith(select: !e.select);
+        }
+        return e;
+      }).toList();
+    });
   }
 
   /// Show DateTimePicker
@@ -369,67 +390,6 @@ class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
                   ),
                 ),
               ),
-              // if (_node.hasFocus && widget.chips.isNotEmpty)
-              //   Row(
-              //     mainAxisAlignment: MainAxisAlignment.start,
-              //     children: [
-              //       Expanded(
-              //         child: Listener(
-              //           onPointerDown: (_) {
-              //             Future.delayed(const Duration(milliseconds: 200))
-              //                 .whenComplete(() => FocusScope.of(context).requestFocus(_node));
-              //             _menuKey.currentState?.showButtonMenu();
-              //           },
-              //           child: PopupMenuButton(
-              //             key: _menuKey,
-              //             initialValue: widget.initialMenu,
-              //             offset: Offset(0, -34.0 * widget.chips.length),
-              //             itemBuilder: (context) {
-              //               return [
-              //                 for (final menuItem in widget.chips)
-              //                   PopupMenuItem(
-              //                     value: menuItem,
-              //                     child: Text(menuItem),
-              //                     onTap: () {
-              //                       setState(() {
-              //                         _menuLabel = menuItem;
-              //                       });
-              //                     },
-              //                   ),
-              //               ];
-              //             },
-              //             child: ListTile(
-              //               leading: const Icon(
-              //                 Icons.all_inbox,
-              //                 size: 24.0,
-              //               ),
-              //               title: Transform.translate(
-              //                 offset: const Offset(-4.0, 0),
-              //                 child: Text(
-              //                   _menuLabel,
-              //                   maxLines: 1,
-              //                   overflow: TextOverflow.ellipsis,
-              //                   style: Theme.of(context).textTheme.labelLarge,
-              //                 ),
-              //               ),
-              //             ),
-              //           ),
-              //         ),
-              //       ),
-              //       if (_selectDateTime != null)
-              //         InputChip(
-              //           label: Text(_selectDateTime!.formatLocal(context.l10n)),
-              //           onPressed: () {},
-              //           onDeleted: () {
-              //             setState(() {
-              //               _selectDateTime = null;
-              //             });
-              //           },
-              //         ),
-              //       const Spacer(),
-              //     ],
-              //   ),
-
               if (_node.hasFocus && _visibleToolBar && _modToolWidgetState != null)
                 SizedBox(
                   width: double.infinity,
@@ -543,5 +503,139 @@ class _ModActionChipTool extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+class _ModActionDateTime extends StatelessWidget {
+  const _ModActionDateTime({
+    required this.initDateTime,
+    this.dateTime,
+    required this.onDatePicker,
+    required this.onTimePicker,
+    required this.onApply,
+  });
+
+  final DateTime initDateTime;
+  final DateTime? dateTime;
+  final ValueChanged<DateTime> onDatePicker;
+  final ValueChanged<DateTime> onTimePicker;
+  final VoidCallback onApply;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _padding,
+          Expanded(
+            flex: 4,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.all(20.0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                side: const BorderSide(width: 0.5),
+              ),
+              onPressed: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime(2024),
+                );
+                if (date == null) {
+                  return;
+                }
+                print(dateTime?.compareTo(date));
+
+                onDatePicker(DateTime(
+                  date.year,
+                  date.month,
+                  date.day,
+                  date.hour == 0 ? initDateTime.hour : 0,
+                  date.minute == 0 ? initDateTime.minute : 0,
+                  date.second == 0 ? initDateTime.second : 0,
+                  date.millisecond == 0 ? initDateTime.millisecond : 0,
+                ));
+              },
+              child: Text(dateTime?.toYYYYMMdd(context.l10n) ?? 'null'),
+            ),
+          ),
+          _padding,
+          Expanded(
+            flex: 4,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.all(20.0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                side: const BorderSide(width: 0.5),
+              ),
+              onPressed: () async {
+                final time = await showTimePicker(
+                  initialTime: TimeOfDay.now(),
+                  context: context,
+                  builder: (BuildContext context, Widget? child) {
+                    return MediaQuery(
+                      data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                      child: child!,
+                    );
+                  },
+                );
+
+                if (time == null) {
+                  return;
+                }
+
+                onTimePicker(DateTime(
+                  dateTime?.year ?? initDateTime.year,
+                  dateTime?.month ?? initDateTime.month,
+                  dateTime?.day ?? initDateTime.day,
+                  time.hour,
+                  time.minute,
+                  initDateTime.second,
+                  initDateTime.millisecond,
+                ));
+              },
+              child: Text(dateTime?.toHHmm(context.l10n) ?? 'null'),
+            ),
+          ),
+          _padding,
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+            ),
+            onPressed: () => onApply(),
+            child: const Text('Apply'),
+          ),
+          _padding,
+        ],
+      ),
+    );
+  }
+
+  SizedBox get _padding => const SizedBox(width: 15);
+
+  String _visibleDate(BuildContext context, DateTime? date) {
+    if (date == null) {
+      return 'null';
+    }
+
+    // final visible = date.year == initDateTime.year &&
+    //     date.month == initDateTime.month &&
+    //     date.day == initDateTime.day;
+    final visible = date.second != 0 && date.millisecond != 0;
+    return visible ? date.toYYYYMMdd(context.l10n) : 'null';
+  }
+
+  /// Time側での変更が無い限り、初期値を表示
+  String _visibleTime(BuildContext context, DateTime? time) {
+    if (time == null) {
+      return 'null';
+    }
+
+    final visible =
+        time.second == initDateTime.second && time.millisecond == initDateTime.millisecond;
+
+    return visible ? time.toHm(context.l10n) : 'null';
   }
 }
