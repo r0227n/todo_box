@@ -156,28 +156,31 @@ class _ModButtonState extends State<ModButton> {
   @override
   Widget build(BuildContext context) {
     if (widget.chip?.label != null || _selecteDateTime != null) {
-      return InputChip(
-        shape: const StadiumBorder(side: BorderSide()),
-        avatar: SizedBox.expand(
-            child: FittedBox(
-          child: widget.chip!.icon,
-        )),
-        label: Text(widget.chip?.label ?? _selecteDateTime?.formatLocal(context.l10n) ?? ''),
-        onPressed: onPressed,
-        onDeleted: widget.chip?.dateTime == null
-            ? null
-            : () {
-                setState(() {
-                  _selecteDateTime = null;
-                });
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted) {
-                    return;
-                  } else if (widget.onDeleted is VoidCallback) {
-                    widget.onDeleted!();
-                  }
-                });
-              },
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(5.0, 0.0, 2.0, 0.0),
+        child: InputChip(
+          shape: const StadiumBorder(side: BorderSide()),
+          avatar: SizedBox.expand(
+              child: FittedBox(
+            child: widget.chip!.icon,
+          )),
+          label: Text(widget.chip?.label ?? _selecteDateTime?.formatLocal(context.l10n) ?? ''),
+          onPressed: onPressed,
+          onDeleted: widget.chip?.dateTime == null
+              ? null
+              : () {
+                  setState(() {
+                    _selecteDateTime = null;
+                  });
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) {
+                      return;
+                    } else if (widget.onDeleted is VoidCallback) {
+                      widget.onDeleted!();
+                    }
+                  });
+                },
+        ),
       );
     } else if (widget.icon != null) {
       return IconButton(

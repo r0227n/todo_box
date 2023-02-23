@@ -86,7 +86,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
 
     int count = 0;
     modButtons = widget.mods
-        .map((e) => e.copyWith(modIndex: count++, callback: _updateState, onDeleted: delete))
+        .map((e) => e.copyWith(modIndex: count++, callback: _updateState, onDeleted: _deleteAction))
         .toList();
 
     /// [TextEditingController]'s initialize
@@ -125,7 +125,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
   }
 
   final ValueNotifier<DateTime?> _time = ValueNotifier<DateTime?>(null);
-  int? modCategoryState;
 
   /// Update　when ModButton's pressed.
   Future<void> _updateState(ModButton newModButton, int? index) async {
@@ -152,32 +151,36 @@ class _KeyboardModsState extends State<KeyboardMods> {
         });
 
         break;
-      case ModCategory.calendar:
+      case ModCategory.time:
         setState(() {
           _modToolWidgetState = ValueListenableBuilder(
             valueListenable: _time,
             builder: (context, value, child) {
               return _ModActionDateTime(
-                initDateTime: _now,
+                initDateTime: value ?? _now,
                 dateTime: value,
-                onDatePicker: (value) {
+                onDatePicker: (date) {
                   setState(() {
-                    _time.value = value;
+                    _time.value = date;
                   });
                 },
-                onTimePicker: (value) {
+                onTimePicker: (time) {
                   setState(() {
-                    _time.value = value;
+                    _time.value = time;
                   });
                 },
                 onApply: () {
                   setState(() {
+                    _visibleToolBar = !_visibleToolBar;
                     modButtons = modButtons.map((e) {
                       if (e.modIndex != index) {
                         return e;
                       }
 
-                      return e.copyWith(chip: e.chip?.copyWith(dateTime: value));
+                      return e.copyWith(
+                        select: _visibleToolBar,
+                        chip: e.chip?.copyWith(dateTime: value),
+                      );
                     }).toList();
                   });
                 },
@@ -186,20 +189,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
           );
         });
 
-        break;
-      case ModCategory.time:
-        showTimePicker(
-          initialTime: TimeOfDay.now(),
-          context: context,
-        ).then((time) {
-          FocusScope.of(context).requestFocus(_node);
-          if (time == null) {
-            return;
-          }
-
-          final now = _selectDateTime ?? DateTime.now();
-          _selectDateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-        });
         break;
       case ModCategory.image:
         setState(() {
@@ -214,17 +203,12 @@ class _KeyboardModsState extends State<KeyboardMods> {
                     // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
                     FocusScope.of(context).requestFocus(_node);
 
-                    setState(() {
-                      modButtons = modButtons.map((e) {
-                        if (e.select) {
-                          return e.copyWith(select: !e.select);
-                        }
+                    if (pickedFile == null) {
+                      return;
+                    }
 
-                        return e;
-                      }).toList();
-                      if (pickedFile != null) {
-                        _pickFiles.add(File(pickedFile.path));
-                      }
+                    setState(() {
+                      _pickFiles.add(File(pickedFile.path));
                     });
                   });
                 },
@@ -232,7 +216,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
                   Icons.abc,
                   size: 36.0,
                 ),
-                title: 'test',
+                title: 'findDateTime',
               ),
             ],
           );
@@ -245,26 +229,28 @@ class _KeyboardModsState extends State<KeyboardMods> {
 
     setState(() {
       _visibleToolBar = !_visibleToolBar;
-      modCategoryState = index;
       modButtons = modButtons.map((e) {
         if (e.modIndex == index) {
-          return e.copyWith(select: !e.select);
+          return e.copyWith(select: _visibleToolBar);
         }
         return e;
       }).toList();
     });
   }
 
-  void delete() {
-    final test = modButtons.where((element) => element.chip?.dateTime != null).toList();
-    if (test.isNotEmpty) {
-      if (test.length != 1) {
+  void _deleteAction() {
+    final findDateTime = modButtons.where((element) => element.chip?.dateTime != null).toList();
+    if (findDateTime.isNotEmpty) {
+      if (findDateTime.length != 1) {
         throw FlutterError('Error KeyboardMods State');
       }
-      final aaa = modButtons[modButtons.indexOf(test.first)];
+      final index = modButtons.indexOf(findDateTime.first);
+      final button = modButtons[index];
       setState(() {
-        modButtons[modButtons.indexOf(test.first)] =
-            aaa.copyWith(select: !aaa.select, chip: aaa.chip?.copyWith(dateTime: null));
+        modButtons[index] = button.copyWith(
+          select: _visibleToolBar,
+          chip: button.chip?.copyWith(dateTime: null),
+        );
       });
     }
     _time.value = null;
@@ -272,8 +258,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
 
   @override
   Widget build(BuildContext context) {
-    final topModButtonTool = _visibleModButton(ModPositioned.top);
-
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -403,7 +387,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
               if (_node.hasFocus && _visibleToolBar && _modToolWidgetState != null)
                 SizedBox(
                   width: double.infinity,
-                  height: 150,
+                  height: 75,
                   child: _modToolWidgetState,
                 ),
               if (_node.hasFocus && widget.mods.isNotEmpty)
@@ -421,15 +405,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
         ],
       ),
     );
-  }
-
-  ModButton? _visibleModButton(ModPositioned positioned) {
-    final content = modButtons.where((b) => b.select && b.tool.position == positioned);
-    if (content.isEmpty) {
-      return null;
-    }
-
-    return content.first;
   }
 }
 
@@ -532,9 +507,9 @@ class _ModActionDateTime extends StatelessWidget {
               onPressed: () async {
                 final date = await showDatePicker(
                   context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime(2024),
+                  initialDate: dateTime ?? DateTime.now(),
+                  firstDate: DateTime(2023),
+                  lastDate: DateTime(2040),
                 );
                 if (date == null) {
                   return;
@@ -550,7 +525,7 @@ class _ModActionDateTime extends StatelessWidget {
                   date.millisecond == 0 ? initDateTime.millisecond : 0,
                 ));
               },
-              child: Text(dateTime?.toYYYYMMdd(context.l10n) ?? 'null'),
+              child: Text(dateTime?.toYYYYMMdd(context.l10n) ?? 'Date'),
             ),
           ),
           _padding,
@@ -588,7 +563,7 @@ class _ModActionDateTime extends StatelessWidget {
                   initDateTime.millisecond,
                 ));
               },
-              child: Text(dateTime?.toHHmm(context.l10n) ?? 'null'),
+              child: Text(dateTime?.toHHmm(context.l10n) ?? 'Time'),
             ),
           ),
           _padding,
