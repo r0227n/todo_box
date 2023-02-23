@@ -9,7 +9,6 @@ import '../../detail_image.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
-    this.restorationId,
     required this.visibleKeyboard,
     this.autofocus = false,
     required this.mods,
@@ -23,8 +22,6 @@ class KeyboardMods extends StatefulWidget {
     this.onSubmitted,
     super.key,
   });
-
-  final String? restorationId;
 
   /// Widget displayed above the keyboard
   final List<ModButton> mods;
@@ -65,14 +62,10 @@ class KeyboardMods extends StatefulWidget {
 }
 
 class _KeyboardModsState extends State<KeyboardMods> {
-// class _KeyboardModsState extends State<KeyboardMods> with RestorationMixin {
   late final FocusNode _node;
 
   late List<ModButton> modButtons;
   late final TextEditingController _controller;
-
-  late final RestorableDateTime _selectedDate;
-  late final RestorableRouteFuture<DateTime?> _restorableDatePickerRouteFuture;
 
   DateTime? _selectDateTime;
 
@@ -84,7 +77,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
   bool _visibleToolBar = false;
   Widget? _modToolWidgetState;
 
-  late final _now;
+  late final DateTime _now;
 
   @override
   void initState() {
@@ -209,9 +202,41 @@ class _KeyboardModsState extends State<KeyboardMods> {
         });
         break;
       case ModCategory.image:
-        // setState(() {
-        //   modButtons[index] = newModButton.copyWith(select: !newModButton.select);
-        // });
+        setState(() {
+          _modToolWidgetState = ModToolPicker(
+            item: [
+              PickerItem(
+                onPressed: () {
+                  // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+                  FocusScope.of(context).unfocus();
+
+                  _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
+                    // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
+                    FocusScope.of(context).requestFocus(_node);
+
+                    setState(() {
+                      modButtons = modButtons.map((e) {
+                        if (e.select) {
+                          return e.copyWith(select: !e.select);
+                        }
+
+                        return e;
+                      }).toList();
+                      if (pickedFile != null) {
+                        _pickFiles.add(File(pickedFile.path));
+                      }
+                    });
+                  });
+                },
+                icon: const Icon(
+                  Icons.abc,
+                  size: 36.0,
+                ),
+                title: 'test',
+              ),
+            ],
+          );
+        });
         break;
       case ModCategory.action:
         // TODO: Handle this case.
@@ -243,44 +268,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
       });
     }
     _time.value = null;
-  }
-
-  /// Show DateTimePicker
-  static Route<DateTime> _showDatePickerRoute(
-    BuildContext context,
-    Object? arguments,
-  ) {
-    return DialogRoute<DateTime>(
-      context: context,
-      builder: (BuildContext context) {
-        return DatePickerDialog(
-          restorationId: 'date_picker_dialog',
-          initialEntryMode: DatePickerEntryMode.calendarOnly,
-          initialDate: DateTime.fromMillisecondsSinceEpoch(arguments! as int),
-          firstDate: DateTime.now(),
-          lastDate: DateTime(2024),
-        );
-      },
-    );
-  }
-
-  /// [RestorableRouteFuture]'s [onComplete] action
-  /// 日付選択ダイアログが閉じた後のアクション
-  void _selectDate(DateTime? newSelectedDate) {
-    // Cancel Action
-    if (newSelectedDate == null) {
-      return;
-    }
-
-    // Select Action
-    _selectedDate.value = newSelectedDate;
-    _selectDateTime = DateTime(
-      newSelectedDate.year,
-      newSelectedDate.month,
-      newSelectedDate.day,
-      _selectDateTime?.hour ?? newSelectedDate.hour,
-      _selectDateTime?.minute ?? newSelectedDate.minute,
-    );
   }
 
   @override
@@ -418,41 +405,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
                   width: double.infinity,
                   height: 150,
                   child: _modToolWidgetState,
-                ),
-              // if (_node.hasFocus && topModButtonTool is ModButton) topModButtonTool.tool.toWidget(),
-              if (_node.hasFocus && topModButtonTool is ModButton)
-                ModToolPicker(
-                  item: [
-                    PickerItem(
-                      onPressed: () {
-                        // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
-                        FocusScope.of(context).unfocus();
-
-                        _picker.pickImage(source: ImageSource.gallery).then((pickedFile) {
-                          // ModButtonがキーボードに隠れるのを防ぐため、一時的な対応策として実施
-                          FocusScope.of(context).requestFocus(_node);
-
-                          setState(() {
-                            modButtons = modButtons.map((e) {
-                              if (e.select) {
-                                return e.copyWith(select: !e.select);
-                              }
-
-                              return e;
-                            }).toList();
-                            if (pickedFile != null) {
-                              _pickFiles.add(File(pickedFile.path));
-                            }
-                          });
-                        });
-                      },
-                      icon: const Icon(
-                        Icons.abc,
-                        size: 36.0,
-                      ),
-                      title: 'test',
-                    ),
-                  ],
                 ),
               if (_node.hasFocus && widget.mods.isNotEmpty)
                 Container(
