@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'keyboard_mods.dart';
 import 'mod_tool.dart';
 
@@ -27,6 +28,7 @@ class ModButton extends StatefulWidget {
     this.modIndex,
     this.select = false,
     this.callback,
+    this.onDeleted,
     super.key,
   });
 
@@ -41,6 +43,7 @@ class ModButton extends StatefulWidget {
   })  : select = false,
         modIndex = null,
         callback = null,
+        onDeleted = null,
         type = enable ? ModButtonType.fillted : ModButtonType.disabledFillted;
 
   const ModButton.filledTonal({
@@ -54,6 +57,7 @@ class ModButton extends StatefulWidget {
   })  : select = false,
         modIndex = null,
         callback = null,
+        onDeleted = null,
         type = enable ? ModButtonType.filledTonal : ModButtonType.disabledFilledTonal;
 
   const ModButton.outline({
@@ -67,6 +71,7 @@ class ModButton extends StatefulWidget {
   })  : select = false,
         modIndex = null,
         callback = null,
+        onDeleted = null,
         type = enable ? ModButtonType.outline : ModButtonType.disabledOutline;
 
   final Icon? icon;
@@ -79,6 +84,7 @@ class ModButton extends StatefulWidget {
   final bool select;
   final int? modIndex;
   final Function? callback;
+  final VoidCallback? onDeleted;
 
   @override
   State<ModButton> createState() => _ModButtonState();
@@ -93,6 +99,7 @@ class ModButton extends StatefulWidget {
     ValueChanged<bool>? onTap,
     int? modIndex,
     Function? callback,
+    VoidCallback? onDeleted,
   }) =>
       ModButton(
         icon: icon ?? this.icon,
@@ -104,12 +111,14 @@ class ModButton extends StatefulWidget {
         onTap: onTap ?? this.onTap,
         modIndex: modIndex ?? this.modIndex,
         callback: callback ?? this.callback,
+        onDeleted: onDeleted ?? this.onDeleted,
       );
 }
 
 class _ModButtonState extends State<ModButton> {
   late final VoidCallback? onPressed;
 
+  DateTime? _selecteDateTime;
   @override
   void initState() {
     super.initState();
@@ -127,6 +136,16 @@ class _ModButtonState extends State<ModButton> {
             });
           }
         : null;
+
+    _selecteDateTime = widget.chip?.dateTime;
+  }
+
+  @override
+  void didUpdateWidget(covariant ModButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.chip?.dateTime != widget.chip?.dateTime) {
+      _selecteDateTime = widget.chip?.dateTime;
+    }
   }
 
   @override
@@ -136,23 +155,37 @@ class _ModButtonState extends State<ModButton> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.icon != null) {
-      return IconButton(
-        isSelected: widget.select,
-        icon: widget.icon!,
-        selectedIcon: widget.selectedIcon,
-        onPressed: onPressed,
-        style: _buttonStyle(context),
-      );
-    } else if (widget.chip != null) {
+    if (widget.chip?.label != null || _selecteDateTime != null) {
       return InputChip(
         shape: const StadiumBorder(side: BorderSide()),
         avatar: SizedBox.expand(
             child: FittedBox(
           child: widget.chip!.icon,
         )),
-        label: Text(widget.chip!.label),
+        label: Text(widget.chip?.label ?? _selecteDateTime?.formatLocal(context.l10n) ?? ''),
         onPressed: onPressed,
+        onDeleted: widget.chip?.dateTime == null
+            ? null
+            : () {
+                setState(() {
+                  _selecteDateTime = null;
+                });
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) {
+                    return;
+                  } else if (widget.onDeleted is VoidCallback) {
+                    widget.onDeleted!();
+                  }
+                });
+              },
+      );
+    } else if (widget.icon != null) {
+      return IconButton(
+        isSelected: widget.select,
+        icon: widget.icon!,
+        selectedIcon: widget.selectedIcon,
+        onPressed: onPressed,
+        style: _buttonStyle(context),
       );
     }
 

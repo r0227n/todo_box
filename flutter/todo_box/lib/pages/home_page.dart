@@ -51,6 +51,7 @@ class HomePage extends HookConsumerWidget {
                 selectedIcon: Icon(
                   Icons.event_available,
                 ),
+                chip: ModActionChip(icon: Icon(Icons.schedule_outlined), dateTime: null),
                 tool: ModTool(position: ModPositioned.dialog, category: ModCategory.calendar),
               ),
               ModButton.outline(

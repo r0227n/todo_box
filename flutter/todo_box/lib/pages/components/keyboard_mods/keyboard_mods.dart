@@ -92,8 +92,9 @@ class _KeyboardModsState extends State<KeyboardMods> {
     _node = FocusNode(debugLabel: 'KeyboardMods');
 
     int count = 0;
-    modButtons =
-        widget.mods.map((e) => e.copyWith(modIndex: count++, callback: _updateState)).toList();
+    modButtons = widget.mods
+        .map((e) => e.copyWith(modIndex: count++, callback: _updateState, onDeleted: delete))
+        .toList();
 
     /// [TextEditingController]'s initialize
     _controller = TextEditingController();
@@ -167,7 +168,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
                 initDateTime: _now,
                 dateTime: value,
                 onDatePicker: (value) {
-                  print(value);
                   setState(() {
                     _time.value = value;
                   });
@@ -178,7 +178,15 @@ class _KeyboardModsState extends State<KeyboardMods> {
                   });
                 },
                 onApply: () {
-                  print('object');
+                  setState(() {
+                    modButtons = modButtons.map((e) {
+                      if (e.modIndex != index) {
+                        return e;
+                      }
+
+                      return e.copyWith(chip: e.chip?.copyWith(dateTime: value));
+                    }).toList();
+                  });
                 },
               );
             },
@@ -220,6 +228,21 @@ class _KeyboardModsState extends State<KeyboardMods> {
         return e;
       }).toList();
     });
+  }
+
+  void delete() {
+    final test = modButtons.where((element) => element.chip?.dateTime != null).toList();
+    if (test.isNotEmpty) {
+      if (test.length != 1) {
+        throw FlutterError('Error KeyboardMods State');
+      }
+      final aaa = modButtons[modButtons.indexOf(test.first)];
+      setState(() {
+        modButtons[modButtons.indexOf(test.first)] =
+            aaa.copyWith(select: !aaa.select, chip: aaa.chip?.copyWith(dateTime: null));
+      });
+    }
+    _time.value = null;
   }
 
   /// Show DateTimePicker
@@ -436,7 +459,8 @@ class _KeyboardModsState extends State<KeyboardMods> {
                   color: Colors.grey,
                   height: widget.height,
                   width: widget.width,
-                  child: Row(
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
                     children: modButtons,
                   ),
                 ),
@@ -472,11 +496,28 @@ class ModInputValue {
 class ModActionChip {
   const ModActionChip({
     required this.icon,
-    required this.label,
+    this.label,
+    this.dateTime,
+    this.onDeleted,
   });
 
   final Widget icon;
-  final String label;
+  final String? label;
+  final DateTime? dateTime;
+  final VoidCallback? onDeleted;
+
+  ModActionChip copyWith({
+    Widget? icon,
+    String? label,
+    DateTime? dateTime,
+    VoidCallback? onDeleted,
+  }) =>
+      ModActionChip(
+        icon: icon ?? this.icon,
+        label: label ?? this.label,
+        dateTime: dateTime ?? this.dateTime,
+        onDeleted: onDeleted ?? this.onDeleted,
+      );
 }
 
 class _ModActionChipTool extends StatelessWidget {
@@ -498,7 +539,7 @@ class _ModActionChipTool extends StatelessWidget {
           ActionChip(
             shape: const StadiumBorder(side: BorderSide()),
             avatar: FittedBox(child: chip.icon),
-            label: Text(chip.label),
+            label: Text(chip.label ?? chip.dateTime?.formatLocal(context.l10n) ?? ''),
             onPressed: chips.contains(selectedChip) ? () => onPressed(chip) : null,
           ),
       ],
@@ -546,7 +587,6 @@ class _ModActionDateTime extends StatelessWidget {
                 if (date == null) {
                   return;
                 }
-                print(dateTime?.compareTo(date));
 
                 onDatePicker(DateTime(
                   date.year,
