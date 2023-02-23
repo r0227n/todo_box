@@ -363,6 +363,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
                           text: text,
                           selectMenu: '', // TODO: ActionChipで選択されているラベルを入れる
                           date: _selectDateTime.value,
+                          images: _pickFiles,
                         ));
                       }
                       _controller.clear();
@@ -410,11 +411,13 @@ class ModInputValue {
     required this.text,
     required this.selectMenu,
     required this.date,
+    required this.images,
   });
 
   final String text;
   final String selectMenu;
   final DateTime? date;
+  final List<File> images;
 }
 
 class ModActionChip {
