@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 enum ModCategory {
-  calendar,
+  chips,
   time,
   image,
   action;
@@ -28,7 +28,7 @@ class ModTool {
 
   Widget toWidget() {
     switch (category) {
-      case ModCategory.calendar:
+      case ModCategory.chips:
       case ModCategory.time:
       case ModCategory.image:
       case ModCategory.action:

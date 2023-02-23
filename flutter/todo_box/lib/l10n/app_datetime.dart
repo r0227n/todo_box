@@ -18,12 +18,24 @@ extension LocalString on DateTime {
     return DateFormat('MMM, d, E, HH:mm').format(this);
   }
 
+  String toYYYYMMdd(AppLocalizations localizations) {
+    if (isJp(localizations)) {
+      return DateFormat('yyyy/MM/dd').format(this);
+    }
+
+    return DateFormat('dd/MM/yyyy').format(this);
+  }
+
+  String toHm(AppLocalizations localizations) {
+    return DateFormat.Hm().format(this);
+  }
+
   String toMMMEd(AppLocalizations localizations) {
     if (isJp(localizations)) {
       return DateFormat.MMMEd('ja').format(this);
     }
 
-    return DateFormat.MMMEd().format(this);
+    return DateFormat.yMd().format(this);
   }
 
   String toHHmm(AppLocalizations localizations) {

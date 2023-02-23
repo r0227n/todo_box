@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
+import 'keyboard_mods.dart';
 import 'mod_tool.dart';
 
 enum ModButtonType {
@@ -16,8 +18,9 @@ enum ModButtonType {
 
 class ModButton extends StatefulWidget {
   const ModButton({
-    required this.icon,
-    required this.selectedIcon,
+    this.icon,
+    this.selectedIcon,
+    this.chip,
     required this.type,
     required this.tool,
     this.enable = true,
@@ -25,12 +28,14 @@ class ModButton extends StatefulWidget {
     this.modIndex,
     this.select = false,
     this.callback,
+    this.onDeleted,
     super.key,
   });
 
   const ModButton.fillted({
-    required this.icon,
-    required this.selectedIcon,
+    this.icon,
+    this.selectedIcon,
+    this.chip,
     required this.tool,
     this.enable = true,
     this.onTap,
@@ -38,11 +43,13 @@ class ModButton extends StatefulWidget {
   })  : select = false,
         modIndex = null,
         callback = null,
+        onDeleted = null,
         type = enable ? ModButtonType.fillted : ModButtonType.disabledFillted;
 
   const ModButton.filledTonal({
-    required this.icon,
-    required this.selectedIcon,
+    this.icon,
+    this.selectedIcon,
+    this.chip,
     required this.tool,
     this.enable = true,
     this.onTap,
@@ -50,11 +57,13 @@ class ModButton extends StatefulWidget {
   })  : select = false,
         modIndex = null,
         callback = null,
+        onDeleted = null,
         type = enable ? ModButtonType.filledTonal : ModButtonType.disabledFilledTonal;
 
   const ModButton.outline({
-    required this.icon,
-    required this.selectedIcon,
+    this.icon,
+    this.selectedIcon,
+    this.chip,
     required this.tool,
     this.enable = true,
     this.onTap,
@@ -62,10 +71,12 @@ class ModButton extends StatefulWidget {
   })  : select = false,
         modIndex = null,
         callback = null,
+        onDeleted = null,
         type = enable ? ModButtonType.outline : ModButtonType.disabledOutline;
 
-  final Icon icon;
-  final Icon selectedIcon;
+  final Icon? icon;
+  final Icon? selectedIcon;
+  final ModActionChip? chip;
   final ModButtonType type;
   final ModTool tool;
   final bool enable;
@@ -73,6 +84,7 @@ class ModButton extends StatefulWidget {
   final bool select;
   final int? modIndex;
   final Function? callback;
+  final VoidCallback? onDeleted;
 
   @override
   State<ModButton> createState() => _ModButtonState();
@@ -80,28 +92,33 @@ class ModButton extends StatefulWidget {
   ModButton copyWith({
     Icon? icon,
     Icon? selectedIcon,
+    ModActionChip? chip,
     ModButtonType? type,
     ModTool? tool,
     bool? select,
     ValueChanged<bool>? onTap,
     int? modIndex,
     Function? callback,
+    VoidCallback? onDeleted,
   }) =>
       ModButton(
         icon: icon ?? this.icon,
         selectedIcon: selectedIcon ?? this.selectedIcon,
+        chip: chip ?? this.chip,
         type: type ?? this.type,
         tool: tool ?? this.tool,
         select: select ?? this.select,
         onTap: onTap ?? this.onTap,
         modIndex: modIndex ?? this.modIndex,
         callback: callback ?? this.callback,
+        onDeleted: onDeleted ?? this.onDeleted,
       );
 }
 
 class _ModButtonState extends State<ModButton> {
   late final VoidCallback? onPressed;
 
+  DateTime? _selecteDateTime;
   @override
   void initState() {
     super.initState();
@@ -119,6 +136,16 @@ class _ModButtonState extends State<ModButton> {
             });
           }
         : null;
+
+    _selecteDateTime = widget.chip?.dateTime;
+  }
+
+  @override
+  void didUpdateWidget(covariant ModButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.chip?.dateTime != widget.chip?.dateTime) {
+      _selecteDateTime = widget.chip?.dateTime;
+    }
   }
 
   @override
@@ -128,13 +155,44 @@ class _ModButtonState extends State<ModButton> {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      isSelected: widget.select,
-      icon: widget.icon,
-      selectedIcon: widget.selectedIcon,
-      onPressed: onPressed,
-      style: _buttonStyle(context),
-    );
+    if (widget.chip?.label != null || _selecteDateTime != null) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(5.0, 0.0, 2.0, 0.0),
+        child: InputChip(
+          shape: const StadiumBorder(side: BorderSide()),
+          avatar: SizedBox.expand(
+              child: FittedBox(
+            child: widget.chip!.icon,
+          )),
+          label: Text(widget.chip?.label ?? _selecteDateTime?.formatLocal(context.l10n) ?? ''),
+          onPressed: onPressed,
+          onDeleted: widget.chip?.dateTime == null
+              ? null
+              : () {
+                  setState(() {
+                    _selecteDateTime = null;
+                  });
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) {
+                      return;
+                    } else if (widget.onDeleted is VoidCallback) {
+                      widget.onDeleted!();
+                    }
+                  });
+                },
+        ),
+      );
+    } else if (widget.icon != null) {
+      return IconButton(
+        isSelected: widget.select,
+        icon: widget.icon!,
+        selectedIcon: widget.selectedIcon,
+        onPressed: onPressed,
+        style: _buttonStyle(context),
+      );
+    }
+
+    throw FlutterError('build widget unknown');
   }
 
   ButtonStyle _buttonStyle(BuildContext context) {

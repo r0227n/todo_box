@@ -5,10 +5,10 @@ import '../controller/local_notification_controller.dart';
 import '../controller/todo_controller.dart';
 import '../models/default_table.dart';
 import '../models/todo.dart';
+import 'components/mods.dart';
 import 'components/section.dart';
 import 'list_page.dart';
 import 'components/emoji_text.dart';
-import 'components/todo_keyboard.dart';
 import 'components/consumer_widget_extension.dart';
 import '../controller/table_controller.dart';
 import '../models/table.dart' as sql;
@@ -31,10 +31,35 @@ class HomePage extends HookConsumerWidget {
       data: (tables) {
         return Scaffold(
           appBar: AppBar(),
-          body: TodoKeyboard(
+          body: KeyboardMods(
             visibleKeyboard: showKeyboard.value,
-            menus: tables.map((e) => e.title).toList(),
-            initialMenu: DefaultTable.name,
+            chips: tables
+                .map((e) => ModActionChip(
+                      icon: EmojiText(e.icon),
+                      label: e.title,
+                    ))
+                .toList(),
+            selectedChip:
+                const ModActionChip(icon: EmojiText(DefaultTable.emoji), label: DefaultTable.name),
+            mods: const [
+              ModButton.outline(
+                chip: ModActionChip(icon: EmojiText(DefaultTable.emoji), label: DefaultTable.name),
+                tool: ModTool(position: ModPositioned.top, category: ModCategory.chips),
+              ),
+              ModButton.outline(
+                icon: Icon(Icons.schedule_outlined),
+                selectedIcon: Icon(Icons.schedule),
+                chip: ModActionChip(icon: Icon(Icons.schedule_outlined), dateTime: null),
+                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
+              ),
+              ModButton.outline(
+                icon: Icon(Icons.camera_alt_outlined),
+                selectedIcon: Icon(
+                  Icons.camera_alt,
+                ),
+                tool: ModTool(position: ModPositioned.top, category: ModCategory.image),
+              ),
+            ],
             child: Column(
               children: <Widget>[
                 ListTile(

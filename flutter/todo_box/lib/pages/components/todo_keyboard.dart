@@ -6,6 +6,13 @@ class TodoKeyboard extends KeyboardMods {
     required super.visibleKeyboard,
     super.mods = const [
       ModButton.outline(
+        icon: Icon(Icons.list),
+        selectedIcon: Icon(
+          Icons.event_available,
+        ),
+        tool: ModTool(position: ModPositioned.top, category: ModCategory.chips),
+      ),
+      ModButton.outline(
         icon: Icon(Icons.event_available_outlined),
         selectedIcon: Icon(
           Icons.event_available,
