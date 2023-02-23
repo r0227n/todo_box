@@ -67,8 +67,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
   late List<ModButton> modButtons;
   late final TextEditingController _controller;
 
-  DateTime? _selectDateTime;
-
   final ImagePicker _picker = ImagePicker();
   final List<File> _pickFiles = <File>[];
 
@@ -78,6 +76,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
   Widget? _modToolWidgetState;
 
   late final DateTime _now;
+  final ValueNotifier<DateTime?> _selectDateTime = ValueNotifier<DateTime?>(null);
 
   @override
   void initState() {
@@ -124,8 +123,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
     super.dispose();
   }
 
-  final ValueNotifier<DateTime?> _time = ValueNotifier<DateTime?>(null);
-
   /// Update　when ModButton's pressed.
   Future<void> _updateState(ModButton newModButton, int? index) async {
     // [_modToolWidgetState] reset state
@@ -154,19 +151,19 @@ class _KeyboardModsState extends State<KeyboardMods> {
       case ModCategory.time:
         setState(() {
           _modToolWidgetState = ValueListenableBuilder(
-            valueListenable: _time,
+            valueListenable: _selectDateTime,
             builder: (context, value, child) {
               return _ModActionDateTime(
                 initDateTime: value ?? _now,
                 dateTime: value,
                 onDatePicker: (date) {
                   setState(() {
-                    _time.value = date;
+                    _selectDateTime.value = date;
                   });
                 },
                 onTimePicker: (time) {
                   setState(() {
-                    _time.value = time;
+                    _selectDateTime.value = time;
                   });
                 },
                 onApply: () {
@@ -253,7 +250,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
         );
       });
     }
-    _time.value = null;
+    _selectDateTime.value = null;
   }
 
   @override
@@ -365,7 +362,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
                         widget.onSubmitted!(ModInputValue(
                           text: text,
                           selectMenu: '', // TODO: ActionChipで選択されているラベルを入れる
-                          date: _selectDateTime,
+                          date: _selectDateTime.value,
                         ));
                       }
                       _controller.clear();
