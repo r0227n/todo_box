@@ -26,7 +26,7 @@ class SqlHeloper {
   }
 
   /// テーブルを作成
-  Future<void> createTable(String table, Map<String, String> column) async {
+  Future<void> createTable(String table, Map<String, dynamic> column) async {
     String createColumn = "";
     for (final key in column.keys.toList()) {
       createColumn += "$key ${column[key]},";

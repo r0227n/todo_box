@@ -359,9 +359,12 @@ class _KeyboardModsState extends State<KeyboardMods> {
                     controller: _controller,
                     onSubmitted: (text) {
                       if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
+                        _pickFiles.clear();
                         widget.onSubmitted!(ModInputValue(
                           text: text,
-                          selectMenu: '', // TODO: ActionChipで選択されているラベルを入れる
+                          selectMenu: _selectedChip.label ??
+                              widget.selectedChip.label ??
+                              '', // TODO: ActionChipで選択されているラベルを入れる
                           date: _selectDateTime.value,
                           images: _pickFiles,
                         ));

@@ -14,6 +14,8 @@ class ColumnType {
     this.tags = 'tags',
     this.typeNotification = 'TEXT NULL',
     this.notification = 'notification',
+    this.typeAssets = 'TEXT NULL',
+    this.assets = 'assets',
   });
 
   final String typeId;
@@ -28,6 +30,8 @@ class ColumnType {
   final String tags;
   final String typeNotification;
   final String notification;
+  final String typeAssets;
+  final String assets;
 
   Map<String, String> toMap() => {
         id: typeId,
@@ -44,6 +48,7 @@ class ColumnType {
     required DateTime? date,
     required List<String> tags,
     required List<DateTime?> notification,
+    required List<String> assets,
   }) =>
       {
         this.title: title,
@@ -58,6 +63,7 @@ class ColumnType {
                 }
                 return e;
               }).toList()),
+        this.assets: assets.isEmpty ? null : jsonEncode(assets),
       };
 
   Map<String, dynamic> toDecode(Map<String, dynamic> json) => {
@@ -68,6 +74,7 @@ class ColumnType {
         tags: json[tags] == null ? const <String>[] : jsonDecode(json[tags]),
         notification:
             json[notification] == null ? const <DateTime>[] : jsonDecode(json[notification]),
+        assets: json[assets] == null ? const <String>[] : jsonDecode(json[assets]),
       };
 
   Map<String, dynamic> fromJson(Map<String, dynamic> json) => {
@@ -78,5 +85,6 @@ class ColumnType {
         tags: jsonEncode(json[tags]) == 'null' ? null : jsonEncode(json[tags]),
         notification:
             jsonEncode(json[notification]) == 'null' ? null : jsonEncode(json[notification]),
+        assets: jsonEncode(json[assets]) == 'null' ? null : jsonEncode(json[assets]),
       };
 }

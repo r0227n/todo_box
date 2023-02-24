@@ -32,8 +32,9 @@ class TodoController extends _$TodoController {
           title: todo.title,
           done: todo.done,
           date: todo.date,
-          tags: todo.tags ?? [],
-          notification: todo.notification,
+          tags: todo.tags.whereType<String>().toList(),
+          notification: todo.notification.whereType<DateTime>().toList(),
+          assets: todo.assets.whereType<String>().toList(),
         ));
 
     return result.maybeWhen(orElse: (() {
