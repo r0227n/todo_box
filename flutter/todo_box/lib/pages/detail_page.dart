@@ -9,6 +9,7 @@ import '../provider/tables_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/todo.dart';
 import '../models/table.dart' as todo;
+import 'detail_image.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage(this.todo, {super.key});
@@ -194,9 +195,20 @@ class _DetailPageState extends State<DetailPage> {
                       return Card(
                         color: Theme.of(context).colorScheme.onPrimary,
                         child: InkWell(
-                          onTap: () {
-                            // TODO: [DetailImage]に遷移する処理を実装
-                          },
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetailImage(
+                                assets: _images,
+                                index: index,
+                                onDelete: (value) {
+                                  setState(() {
+                                    _images.remove(value);
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
                           child: Image.memory(_images[index]),
                         ),
                       );

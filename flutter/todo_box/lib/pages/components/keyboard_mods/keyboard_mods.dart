@@ -262,18 +262,19 @@ class _KeyboardModsState extends State<KeyboardMods> {
             child: SizedBox(
               height: kBottomNavigationBarHeight,
               width: 150,
-              child: ListView(
+              child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                children: [
-                  for (final file in _pickFiles)
-                    InkWell(
+                itemCount: _pickFiles.length,
+                itemBuilder: (context, index) {
+                  return Material(
+                    child: InkWell(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => DetailImage(
                               files: _pickFiles,
-                              index: _pickFiles.indexOf(file),
+                              index: _pickFiles.indexOf(_pickFiles[index]),
                             ),
                             fullscreenDialog: true,
                           ),
@@ -285,18 +286,19 @@ class _KeyboardModsState extends State<KeyboardMods> {
                             return;
                           }
 
-                          final index = _pickFiles.indexOf(file);
+                          final idx = _pickFiles.indexOf(_pickFiles[index]);
                           setState(() {
-                            _pickFiles[index] = File(newState.path);
+                            _pickFiles[idx] = File(newState.path);
                           });
                         });
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(right: 6.0),
-                        child: Image.file(file),
+                        child: Image.file(_pickFiles[index]),
                       ),
                     ),
-                ],
+                  );
+                },
               ),
             ),
           ),
