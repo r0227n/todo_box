@@ -100,14 +100,17 @@ class _DetailImageState extends State<DetailImage>
                   actions: [
                     IconButton(
                       onPressed: () {
-                        setState(() {
-                          if (widget.onDelete is ValueChanged && mounted) {
-                            widget.onDelete!(_images[_tabController.index]);
-                          } else {
-                            _images.removeAt(_tabController.index);
-                          }
+                        if (widget.onDelete is ValueChanged && mounted) {
+                          widget.onDelete!(_images[_tabController.index]);
+                        }
 
-                          if (_images.isEmpty) {
+                        setState(() {
+                          if (_images.isNotEmpty) {
+                            _images.removeAt(_tabController.index);
+                            if (_images.isEmpty) {
+                              Navigator.pop(context);
+                            }
+                          } else {
                             Navigator.pop(context);
                           }
                           _tabController = TabController(
