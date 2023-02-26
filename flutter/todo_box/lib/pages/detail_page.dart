@@ -1,15 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:todo_box/controller/todo_controller.dart';
+import 'package:image_picker/image_picker.dart';
+import 'detail_image.dart';
 import 'components/emoji_text.dart';
+import '../controller/todo_controller.dart';
 import '../provider/tables_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/todo.dart';
 import '../models/table.dart' as todo;
-import 'detail_image.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage(this.todo, {super.key});
@@ -25,6 +26,7 @@ class _DetailPageState extends State<DetailPage> {
   DateTime? _dateTime;
   late final List<Uint8List> _images;
   late final TextEditingController txtController;
+  late final ImagePicker _picker;
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _DetailPageState extends State<DetailPage> {
     _images = widget.todo.assets.whereType<String>().map((e) => base64Decode(e)).toList();
 
     txtController = TextEditingController(text: widget.todo.title);
+    _picker = ImagePicker();
   }
 
   @override
@@ -167,9 +170,7 @@ class _DetailPageState extends State<DetailPage> {
             leading: const Icon(Icons.photo_library),
             title: const Text('Images'),
             trailing: IconButton(
-              onPressed: () {
-                // TODO: ImagePicker(カメラorフォルダ)選択UI実装
-              },
+              onPressed: () => _showImagePicker,
               icon: const Icon(Icons.add_photo_alternate),
               tooltip: 'Add Image',
             ),
@@ -233,6 +234,64 @@ class _DetailPageState extends State<DetailPage> {
         ),
       ),
     );
+  }
+
+  /// [ImagePicker]の選択肢UIを[BottomSheet]で表示する
+  void get _showImagePicker {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (builder) {
+        return Container(
+          height: 200.0,
+          padding: const EdgeInsets.all(30.0),
+          color: Colors.transparent,
+          child: Column(
+            children: [
+              TextButton.icon(
+                onPressed: () => _getImagePicker(ImageSource.camera),
+                icon: const Icon(Icons.add_a_photo),
+                label: const SizedBox(
+                  width: 100,
+                  child: Text(
+                    'Take Photo',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _getImagePicker(ImageSource.gallery),
+                icon: const Icon(Icons.photo_library),
+                label: const SizedBox(
+                  width: 100,
+                  child: Text(
+                    'Select Library',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// [ImagePicker]で取得した画像をUI描画に反映させる
+  void _getImagePicker(ImageSource source) {
+    _picker.pickImage(source: source).then((img) {
+      if (img == null) {
+        return;
+      }
+
+      setState(() {
+        _images.add(File(img.path).readAsBytesSync());
+      });
+    });
   }
 }
 
