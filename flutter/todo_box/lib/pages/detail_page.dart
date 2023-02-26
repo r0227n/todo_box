@@ -1,7 +1,12 @@
+import 'dart:io' show File;
+import 'dart:typed_data' show Uint8List;
+import 'dart:convert' show base64Decode;
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:todo_box/controller/todo_controller.dart';
+import 'package:image_picker/image_picker.dart';
+import 'detail_image.dart';
 import 'components/emoji_text.dart';
+import '../controller/todo_controller.dart';
 import '../provider/tables_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/todo.dart';
@@ -19,7 +24,9 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
   late String _tabelLabel;
   DateTime? _dateTime;
+  late final List<Uint8List> _images;
   late final TextEditingController txtController;
+  late final ImagePicker _picker;
 
   @override
   void initState() {
@@ -28,8 +35,10 @@ class _DetailPageState extends State<DetailPage> {
     if (widget.todo.date != null) {
       _dateTime = widget.todo.date;
     }
+    _images = widget.todo.assets.whereType<String>().map((e) => base64Decode(e)).toList();
 
     txtController = TextEditingController(text: widget.todo.title);
+    _picker = ImagePicker();
   }
 
   @override
@@ -57,61 +66,57 @@ class _DetailPageState extends State<DetailPage> {
           const SizedBox(width: 12.0),
         ],
       ),
-      body: ListView(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.only(left: 1.0),
-            child: Row(
-              children: <Widget>[
-                Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: TextButton.icon(
-                    onPressed: () async {
-                      final table = await showModalBottomSheet<todo.Table>(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Consumer(builder: (context, ref, _) {
-                            final tables = ref.watch(tablesProvider);
-                            return SizedBox(
-                              height: 90.0 + 40.0 * tables.length,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  const Padding(
-                                    padding: EdgeInsets.fromLTRB(0.0, 14.0, 0.0, 10.0),
-                                    child: Text('Move todo to'),
-                                  ),
-                                  for (final table in tables)
-                                    TextButton.icon(
-                                      icon: EmojiText(table.icon),
-                                      label: Text(table.title),
-                                      onPressed: () => Navigator.pop(context, table),
-                                    ),
-                                ],
+            padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: TextButton.icon(
+                onPressed: () async {
+                  final table = await showModalBottomSheet<todo.Table>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Consumer(builder: (context, ref, _) {
+                        final tables = ref.watch(tablesProvider);
+                        return SizedBox(
+                          height: 90.0 + 40.0 * tables.length,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              const Padding(
+                                padding: EdgeInsets.fromLTRB(0.0, 14.0, 0.0, 10.0),
+                                child: Text('Move todo to'),
                               ),
-                            );
-                          });
-                        },
-                      );
-
-                      if (table == null) {
-                        return;
-                      }
-
-                      setState(() {
-                        _tabelLabel = table.title;
+                              for (final table in tables)
+                                TextButton.icon(
+                                  icon: EmojiText(table.icon),
+                                  label: Text(table.title),
+                                  onPressed: () => Navigator.pop(context, table),
+                                ),
+                            ],
+                          ),
+                        );
                       });
                     },
-                    icon: const Icon(
-                      Icons.arrow_drop_down,
-                      size: 24.0,
-                    ),
-                    label: Text(_tabelLabel),
-                  ),
+                  );
+
+                  if (table == null) {
+                    return;
+                  }
+
+                  setState(() {
+                    _tabelLabel = table.title;
+                  });
+                },
+                icon: const Icon(
+                  Icons.arrow_drop_down,
+                  size: 24.0,
                 ),
-                const Spacer(),
-              ],
+                label: Text(_tabelLabel),
+              ),
             ),
           ),
           Padding(
@@ -160,7 +165,60 @@ class _DetailPageState extends State<DetailPage> {
                 });
               }
             },
-          )
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library),
+            title: const Text('Images'),
+            trailing: IconButton(
+              onPressed: () => _showImagePicker,
+              icon: const Icon(Icons.add_photo_alternate),
+              tooltip: 'Add Image',
+            ),
+          ),
+          Expanded(
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: GridView.builder(
+                    physics: const ScrollPhysics(),
+                    primary: false,
+                    shrinkWrap: true,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 5.0,
+                    ),
+                    padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+                    itemCount: _images.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Card(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        child: InkWell(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetailImage(
+                                assets: _images,
+                                index: index,
+                                onDelete: (value) {
+                                  setState(() {
+                                    _images.remove(value);
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          child: Image.memory(_images[index]),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
       floatingActionButton: Consumer(
@@ -176,6 +234,64 @@ class _DetailPageState extends State<DetailPage> {
         ),
       ),
     );
+  }
+
+  /// [ImagePicker]の選択肢UIを[BottomSheet]で表示する
+  void get _showImagePicker {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (builder) {
+        return Container(
+          height: 200.0,
+          padding: const EdgeInsets.all(30.0),
+          color: Colors.transparent,
+          child: Column(
+            children: [
+              TextButton.icon(
+                onPressed: () => _getImagePicker(ImageSource.camera),
+                icon: const Icon(Icons.add_a_photo),
+                label: const SizedBox(
+                  width: 100,
+                  child: Text(
+                    'Take Photo',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _getImagePicker(ImageSource.gallery),
+                icon: const Icon(Icons.photo_library),
+                label: const SizedBox(
+                  width: 100,
+                  child: Text(
+                    'Select Library',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// [ImagePicker]で取得した画像をUI描画に反映させる
+  void _getImagePicker(ImageSource source) {
+    _picker.pickImage(source: source).then((img) {
+      if (img == null) {
+        return;
+      }
+
+      setState(() {
+        _images.add(File(img.path).readAsBytesSync());
+      });
+    });
   }
 }
 

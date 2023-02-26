@@ -67,8 +67,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
   late List<ModButton> modButtons;
   late final TextEditingController _controller;
 
-  DateTime? _selectDateTime;
-
   final ImagePicker _picker = ImagePicker();
   final List<File> _pickFiles = <File>[];
 
@@ -78,6 +76,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
   Widget? _modToolWidgetState;
 
   late final DateTime _now;
+  final ValueNotifier<DateTime?> _selectDateTime = ValueNotifier<DateTime?>(null);
 
   @override
   void initState() {
@@ -124,8 +123,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
     super.dispose();
   }
 
-  final ValueNotifier<DateTime?> _time = ValueNotifier<DateTime?>(null);
-
   /// Update　when ModButton's pressed.
   Future<void> _updateState(ModButton newModButton, int? index) async {
     // [_modToolWidgetState] reset state
@@ -154,19 +151,19 @@ class _KeyboardModsState extends State<KeyboardMods> {
       case ModCategory.time:
         setState(() {
           _modToolWidgetState = ValueListenableBuilder(
-            valueListenable: _time,
+            valueListenable: _selectDateTime,
             builder: (context, value, child) {
               return _ModActionDateTime(
                 initDateTime: value ?? _now,
                 dateTime: value,
                 onDatePicker: (date) {
                   setState(() {
-                    _time.value = date;
+                    _selectDateTime.value = date;
                   });
                 },
                 onTimePicker: (time) {
                   setState(() {
-                    _time.value = time;
+                    _selectDateTime.value = time;
                   });
                 },
                 onApply: () {
@@ -253,7 +250,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
         );
       });
     }
-    _time.value = null;
+    _selectDateTime.value = null;
   }
 
   @override
@@ -265,18 +262,19 @@ class _KeyboardModsState extends State<KeyboardMods> {
             child: SizedBox(
               height: kBottomNavigationBarHeight,
               width: 150,
-              child: ListView(
+              child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                children: [
-                  for (final file in _pickFiles)
-                    InkWell(
+                itemCount: _pickFiles.length,
+                itemBuilder: (context, index) {
+                  return Material(
+                    child: InkWell(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => DetailImage(
                               files: _pickFiles,
-                              index: _pickFiles.indexOf(file),
+                              index: _pickFiles.indexOf(_pickFiles[index]),
                             ),
                             fullscreenDialog: true,
                           ),
@@ -288,18 +286,19 @@ class _KeyboardModsState extends State<KeyboardMods> {
                             return;
                           }
 
-                          final index = _pickFiles.indexOf(file);
+                          final idx = _pickFiles.indexOf(_pickFiles[index]);
                           setState(() {
-                            _pickFiles[index] = File(newState.path);
+                            _pickFiles[idx] = File(newState.path);
                           });
                         });
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(right: 6.0),
-                        child: Image.file(file),
+                        child: Image.file(_pickFiles[index]),
                       ),
                     ),
-                ],
+                  );
+                },
               ),
             ),
           ),
@@ -362,10 +361,14 @@ class _KeyboardModsState extends State<KeyboardMods> {
                     controller: _controller,
                     onSubmitted: (text) {
                       if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
+                        _pickFiles.clear();
                         widget.onSubmitted!(ModInputValue(
                           text: text,
-                          selectMenu: '', // TODO: ActionChipで選択されているラベルを入れる
-                          date: _selectDateTime,
+                          selectMenu: _selectedChip.label ??
+                              widget.selectedChip.label ??
+                              '', // TODO: ActionChipで選択されているラベルを入れる
+                          date: _selectDateTime.value,
+                          images: _pickFiles,
                         ));
                       }
                       _controller.clear();
@@ -413,11 +416,13 @@ class ModInputValue {
     required this.text,
     required this.selectMenu,
     required this.date,
+    required this.images,
   });
 
   final String text;
   final String selectMenu;
   final DateTime? date;
+  final List<File> images;
 }
 
 class ModActionChip {

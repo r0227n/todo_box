@@ -1,18 +1,23 @@
 import 'dart:io' show File;
+import 'dart:typed_data' show Uint8List;
 import 'package:flutter/material.dart';
 import 'components/pinch_zoom.dart';
 
 class DetailImage extends StatefulWidget {
   const DetailImage({
     super.key,
-    required this.files,
+    this.files,
+    this.assets,
     required this.index,
     this.duration = const Duration(milliseconds: 400),
-  });
+    this.onDelete,
+  }) : assert(files != null || assets != null);
 
-  final List<File> files;
+  final List<File>? files;
+  final List<Uint8List>? assets;
   final int index;
   final Duration? duration;
+  final ValueChanged? onDelete;
 
   @override
   State<DetailImage> createState() => _DetailImageState();
@@ -29,13 +34,18 @@ class _DetailImageState extends State<DetailImage>
   late double _appBarHeight;
   bool _visibleAppBar = true;
 
+  late final List _images;
+
   @override
   void initState() {
     super.initState();
+
+    _images = widget.files ?? widget.assets ?? const [];
+
     _animatedController = AnimationController(duration: widget.duration, vsync: this);
     _tabController = TabController(
       initialIndex: widget.index,
-      length: widget.files.length,
+      length: _images.length,
       vsync: this,
     );
     _controller = PinchZoomController(animationController: _animatedController);
@@ -59,7 +69,7 @@ class _DetailImageState extends State<DetailImage>
     _animatedController.duration = widget.duration;
     _tabController = TabController(
       initialIndex: widget.index,
-      length: widget.files.length,
+      length: _images.length,
       vsync: this,
     );
   }
@@ -90,17 +100,25 @@ class _DetailImageState extends State<DetailImage>
                   actions: [
                     IconButton(
                       onPressed: () {
+                        if (widget.onDelete is ValueChanged && mounted) {
+                          widget.onDelete!(_images[_tabController.index]);
+                        }
+
                         setState(() {
-                          widget.files.removeAt(_tabController.index);
+                          if (_images.isNotEmpty) {
+                            _images.removeAt(_tabController.index);
+                            if (_images.isEmpty) {
+                              Navigator.pop(context);
+                            }
+                          } else {
+                            Navigator.pop(context);
+                          }
                           _tabController = TabController(
                             initialIndex: widget.index == 0 ? widget.index : widget.index - 1,
-                            length: widget.files.length,
+                            length: _images.length,
                             vsync: this,
                           );
                         });
-                        if (_tabController.length == 0) {
-                          Navigator.pop(context);
-                        }
                       },
                       icon: const Icon(Icons.delete),
                     ),
@@ -113,10 +131,10 @@ class _DetailImageState extends State<DetailImage>
       body: TabBarView(
         controller: _tabController,
         children: [
-          for (final file in widget.files)
+          for (final file in _images)
             PinchZoom(
               controller: _controller,
-              child: Image.file(file),
+              child: _images is List<File> ? Image.file(file) : Image.memory(file),
               onTap: () {
                 setState(() {
                   _visibleAppBar = !_visibleAppBar;

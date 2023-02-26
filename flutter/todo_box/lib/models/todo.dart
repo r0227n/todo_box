@@ -8,12 +8,13 @@ part 'todo.g.dart';
 class Todo with _$Todo {
   factory Todo({
     @Default(DefaultTable.name) String table,
-    int? id,
+    @JsonKey(name: '_id') int? id,
     required String title,
     required bool done,
     required DateTime? date,
-    required List<String>? tags,
+    required List<String?> tags,
     required List<DateTime?> notification,
+    required List<String?> assets,
   }) = _Todo;
 
   factory Todo.fromJson(Map<String, dynamic> json) => _$TodoFromJson(json);

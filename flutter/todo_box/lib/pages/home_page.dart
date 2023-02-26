@@ -1,3 +1,4 @@
+import 'dart:convert' show base64Encode;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -117,13 +118,17 @@ class HomePage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
-              final todo = await ref.read(todoControllerProvider.notifier).add(Todo(
-                  table: value.selectMenu,
-                  title: value.text,
-                  done: false,
-                  date: value.date,
-                  tags: [],
-                  notification: [value.date]));
+              final todo = await ref.read(todoControllerProvider.notifier).add(
+                    Todo(
+                      table: value.selectMenu,
+                      title: value.text,
+                      done: false,
+                      date: value.date,
+                      tags: [],
+                      notification: [value.date],
+                      assets: value.images.map((e) => base64Encode(e.readAsBytesSync())).toList(),
+                    ),
+                  );
               if (todo != null && (value.date?.isAfter(DateTime.now()) ?? false)) {
                 ref.read(localNotificationProvider.notifier).addNotification(
                       'Notification Title',

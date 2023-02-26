@@ -12,7 +12,8 @@ class DefaultTable extends ColumnType {
       $done $typeDone,
       $date $typeDate,
       $tags $typeTags,
-      $notification $typeNotification
+      $notification $typeNotification,
+      $assets $typeAssets
     )
   ''';
 
@@ -22,6 +23,7 @@ class DefaultTable extends ColumnType {
         super.date: null,
         super.tags: null,
         super.notification: null,
+        super.assets: null
       };
 
   String path(String path) => '${path}todo.db';
