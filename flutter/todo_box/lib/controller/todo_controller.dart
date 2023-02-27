@@ -76,11 +76,32 @@ class TodoController extends _$TodoController {
 
   Future<void> toggle(Todo todo) async {
     final newState = todo.copyWith(done: !todo.done);
-    await AsyncValue.guard(() async => await ref.read(todoQueryProvider).update(newState));
+    await _updateDB(newState);
     state = state.whenData((oldState) => [
           for (final old in oldState)
             if (old == todo) newState else old,
         ]);
+  }
+
+  /// stateを更新する
+  /// [true]: 更新に成功する
+  /// [false]: 更新に失敗する
+  Future<bool> updateState(Todo todo) async {
+    final oldState = await future;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async => oldState.map((t) {
+          if (t.id != todo.id) {
+            return t;
+          }
+          return todo;
+        }).toList());
+    if (state.hasError) {
+      state = AsyncData(oldState);
+      return false;
+    }
+
+    final resultUpdateDB = await _updateDB(todo);
+    return resultUpdateDB.maybeWhen(orElse: () => false, data: (_) => true);
   }
 
   Future<Todo> findMetadata() async {
@@ -94,4 +115,7 @@ class TodoController extends _$TodoController {
       data: (data) => data,
     );
   }
+
+  Future<AsyncValue<int>> _updateDB(Todo todo) async =>
+      await AsyncValue.guard(() async => await ref.read(todoQueryProvider).update(todo));
 }

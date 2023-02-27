@@ -107,7 +107,16 @@ class _ListPageItem extends ConsumerWidget {
           MaterialPageRoute(
             builder: (_) => DetailPage(todo),
           ),
-        ),
+        ).then((todo) async {
+          final todoCtrl = ref.read(todoControllerProvider.notifier);
+          await todoCtrl.updateState(todo).then((success) {
+            if (!success) {
+              // TODO: [snackbar]でエラー表示
+            }
+          }).catchError((_) {
+            // TODO: [snackbar]でエラー表示
+          });
+        }).catchError(print),
       ),
     );
   }
