@@ -109,11 +109,8 @@ class _ListPageItem extends ConsumerWidget {
           ),
         ).then((todo) async {
           final todoCtrl = ref.read(todoControllerProvider.notifier);
-          await todoCtrl.updateState(todo).then((success) {
-            if (!success) {
-              // TODO: [snackbar]でエラー表示
-            }
-          }).catchError((_) {
+          await todoCtrl.updateState(todo).catchError((_) {
+            print('catchError');
             // TODO: [snackbar]でエラー表示
           });
         }).catchError(print),
