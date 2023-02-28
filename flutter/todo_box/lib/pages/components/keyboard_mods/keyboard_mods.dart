@@ -362,16 +362,27 @@ class _KeyboardModsState extends State<KeyboardMods> {
                     onSubmitted: (text) {
                       if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
                         _pickFiles.clear();
+                        final submittedMenu = _selectedChip.label ?? widget.selectedChip.label;
+                        if (submittedMenu == null) {
+                          throw StateError('The State of Menu does not exist.');
+                        }
+
                         widget.onSubmitted!(ModInputValue(
                           text: text,
-                          selectMenu: _selectedChip.label ??
-                              widget.selectedChip.label ??
-                              '', // TODO: ActionChipで選択されているラベルを入れる
+                          selectMenu: submittedMenu,
                           date: _selectDateTime.value,
                           images: _pickFiles,
                         ));
                       }
                       _controller.clear();
+                    },
+                    onEditingComplete: () {
+                      // 呼び出し元で[visibleKeyboard]がEnterキーを押した場合、
+                      // true: キーボードを表示し続ける
+                      // false: キーボードを閉じる
+                      if (widget.visibleKeyboard) {
+                        _node.requestFocus();
+                      }
                     },
                     decoration: const InputDecoration(
                       filled: true,
