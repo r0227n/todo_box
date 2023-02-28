@@ -228,7 +228,7 @@ class _DetailPageState extends State<DetailPage> {
               final todoCtrl = ref.read(todoControllerProvider.notifier);
               todoCtrl.toggle(widget.todo);
               // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
-              Navigator.pop(context);
+              Navigator.pop(context, null);
             },
             label: widget.todo.done ? const Text('Uncomplete') : const Text('Complete'),
             icon: widget.todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
@@ -243,8 +243,8 @@ class _DetailPageState extends State<DetailPage> {
           notification: [_dateTime],
           assets: _images.map((e) => base64Encode(e)).toList(),
         );
-
-        Navigator.pop(context, editTodo);
+        final popValue = editTodo == widget.todo ? null : editTodo;
+        Navigator.pop(context, popValue);
         return Future.value(true);
       },
     );

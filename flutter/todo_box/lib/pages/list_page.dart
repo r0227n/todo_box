@@ -108,12 +108,35 @@ class _ListPageItem extends ConsumerWidget {
             builder: (_) => DetailPage(todo),
           ),
         ).then((todo) async {
+          if (todo == null) {
+            return;
+          } else if (todo is! Todo) {
+            throw FlutterError('$todo is not Todo.');
+          }
+
           final todoCtrl = ref.read(todoControllerProvider.notifier);
           await todoCtrl.updateState(todo).catchError((_) {
-            print('catchError');
-            // TODO: [snackbar]でエラー表示
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                action: SnackBarAction(
+                  label: 'Close',
+                  onPressed: () {},
+                ),
+                content: const Padding(
+                  padding: EdgeInsets.only(left: 16.0),
+                  child: Text('Failed to modify the Todo.'),
+                ),
+                duration: const Duration(milliseconds: 3000),
+                margin: const EdgeInsets.symmetric(horizontal: 15.0),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+            );
           });
-        }).catchError(print),
+        }),
       ),
     );
   }

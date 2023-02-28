@@ -1,6 +1,5 @@
-import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:todo_box/controller/table_controller.dart';
+import '/controller/table_controller.dart';
 import '../models/default_table.dart';
 import '../models/todo.dart';
 import '../provider/todo_query_provider.dart';
@@ -100,7 +99,7 @@ class TodoController extends _$TodoController {
     newState.maybeWhen(
       orElse: () {
         state = AsyncValue.data(oldState);
-        throw FlutterError(newState.asError?.value);
+        throw StateError(newState.asError?.value);
       },
       data: (data) => state = AsyncValue.data(data),
     );
