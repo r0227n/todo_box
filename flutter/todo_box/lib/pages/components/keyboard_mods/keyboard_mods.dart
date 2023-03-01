@@ -9,7 +9,9 @@ import '../../detail_image.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
+    this.visibleAppBar = false,
     required this.visibleKeyboard,
+    this.appBarTitle,
     this.autofocus = false,
     required this.mods,
     required this.selectedChip,
@@ -34,7 +36,11 @@ class KeyboardMods extends StatefulWidget {
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
 
+  final bool visibleAppBar;
+
   final bool visibleKeyboard;
+
+  final Widget? appBarTitle;
 
   /// [TextField]'s [autofocus] property
   ///
@@ -256,54 +262,57 @@ class _KeyboardModsState extends State<KeyboardMods> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          SingleChildScrollView(
-            child: SizedBox(
-              height: kBottomNavigationBarHeight,
-              width: 150,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _pickFiles.length,
-                itemBuilder: (context, index) {
-                  return Material(
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => DetailImage(
-                              files: _pickFiles,
-                              index: _pickFiles.indexOf(_pickFiles[index]),
+      appBar: widget.visibleAppBar
+          ? null
+          : AppBar(
+              title: widget.appBarTitle,
+              actions: [
+                SingleChildScrollView(
+                  child: SizedBox(
+                    height: kBottomNavigationBarHeight,
+                    width: 150,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _pickFiles.length,
+                      itemBuilder: (context, index) {
+                        return Material(
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DetailImage(
+                                    files: _pickFiles,
+                                    index: _pickFiles.indexOf(_pickFiles[index]),
+                                  ),
+                                  fullscreenDialog: true,
+                                ),
+                              );
+                            },
+                            onLongPress: () {
+                              _picker.pickImage(source: ImageSource.gallery).then((newState) {
+                                if (newState == null) {
+                                  return;
+                                }
+
+                                final idx = _pickFiles.indexOf(_pickFiles[index]);
+                                setState(() {
+                                  _pickFiles[idx] = File(newState.path);
+                                });
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 6.0),
+                              child: Image.file(_pickFiles[index]),
                             ),
-                            fullscreenDialog: true,
                           ),
                         );
                       },
-                      onLongPress: () {
-                        _picker.pickImage(source: ImageSource.gallery).then((newState) {
-                          if (newState == null) {
-                            return;
-                          }
-
-                          final idx = _pickFiles.indexOf(_pickFiles[index]);
-                          setState(() {
-                            _pickFiles[idx] = File(newState.path);
-                          });
-                        });
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 6.0),
-                        child: Image.file(_pickFiles[index]),
-                      ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
       body: Stack(
         children: <Widget>[
           Opacity(
@@ -349,6 +358,15 @@ class _KeyboardModsState extends State<KeyboardMods> {
                         }
                       });
                     }
+                    setState(() {
+                      _pickFiles.clear();
+                      modButtons = modButtons.map((e) {
+                        if (e.select) {
+                          return e.copyWith(select: false);
+                        }
+                        return e;
+                      }).toList();
+                    });
                     FocusScope.of(context).unfocus();
 
                     // Notification dwipe down
