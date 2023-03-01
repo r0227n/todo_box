@@ -87,7 +87,7 @@ class TodoQuery {
   /// テーブルを新規作成
   /// [name]はテーブル名を指定
   /// [column]は列の名前を[key]、プロパティを[value]
-  Future<void> create(String table, String emoji, Map<String, String> column) async {
+  Future<void> create(String table, String emoji) async {
     try {
       await sqlHelper.createTable(table, columnType.toMap());
       await add(

@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../controller/local_notification_controller.dart';
 import '../controller/todo_controller.dart';
 import '../models/default_table.dart';
+import '../models/table.dart' as todo;
 import '../models/todo.dart';
 import 'components/mods.dart';
 import 'components/section.dart';
@@ -94,6 +95,18 @@ class HomePage extends HookConsumerWidget {
                   title: Text(
                     'Lists',
                     style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  trailing: IconButton(
+                    onPressed: () {
+                      // TODO: Table作成用のUI作成(showBottomSheetで実装？)
+                      final tableCtrl = ref.read(tableControllerProvider.notifier);
+                      tableCtrl
+                          .create(todo.Table(icon: ' 😆', title: 'test', content: []))
+                          .then((value) => print('fin'))
+                          .catchError(print);
+                    },
+                    tooltip: 'Add a New List',
+                    icon: const Icon(Icons.create_new_folder_outlined),
                   ),
                 ),
                 Section(

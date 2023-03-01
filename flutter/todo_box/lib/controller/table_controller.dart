@@ -37,6 +37,17 @@ class TableController extends _$TableController {
     );
   }
 
+  /// SQLのテーブルを作成
+  Future<void> create(Table table) async {
+    final query = ref.read(todoQueryProvider);
+    update((tables) async {
+      state = const AsyncLoading();
+      await AsyncValue.guard(() async => await query.create(table.title, table.icon));
+      tables.add(table);
+      return tables;
+    });
+  }
+
   Future<void> addTodo(Todo todo) async {
     state = await AsyncValue.guard(() async {
       final tables = await future;
