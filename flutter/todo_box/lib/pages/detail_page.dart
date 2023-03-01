@@ -1,6 +1,6 @@
 import 'dart:io' show File;
 import 'dart:typed_data' show Uint8List;
-import 'dart:convert' show base64Decode;
+import 'dart:convert' show base64Encode, base64Decode;
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -49,190 +49,204 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        actions: <Widget>[
-          Consumer(
-            builder: (context, ref, _) => IconButton(
-              onPressed: () async {
-                final todoCtrl = ref.read(todoControllerProvider.notifier);
-                todoCtrl.remove(widget.todo);
-                // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.delete_outlined),
-            ),
-          ),
-          const SizedBox(width: 12.0),
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: TextButton.icon(
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          actions: <Widget>[
+            Consumer(
+              builder: (context, ref, _) => IconButton(
                 onPressed: () async {
-                  final table = await showModalBottomSheet<todo.Table>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Consumer(builder: (context, ref, _) {
-                        final tables = ref.watch(tablesProvider);
-                        return SizedBox(
-                          height: 90.0 + 40.0 * tables.length,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.fromLTRB(0.0, 14.0, 0.0, 10.0),
-                                child: Text('Move todo to'),
-                              ),
-                              for (final table in tables)
-                                TextButton.icon(
-                                  icon: EmojiText(table.icon),
-                                  label: Text(table.title),
-                                  onPressed: () => Navigator.pop(context, table),
-                                ),
-                            ],
-                          ),
-                        );
-                      });
-                    },
-                  );
-
-                  if (table == null) {
-                    return;
-                  }
-
-                  setState(() {
-                    _tabelLabel = table.title;
-                  });
+                  final todoCtrl = ref.read(todoControllerProvider.notifier);
+                  todoCtrl.remove(widget.todo);
+                  // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
+                  Navigator.pop(context, 'aaa');
                 },
-                icon: const Icon(
-                  Icons.arrow_drop_down,
-                  size: 24.0,
-                ),
-                label: Text(_tabelLabel),
+                icon: const Icon(Icons.delete_outlined),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
-            child: TextField(
-              maxLines: null,
-              controller: txtController,
-              style: const TextStyle(fontSize: 16.0),
-            ),
-          ),
-          _DatePicker(
-            null,
-            _dateTime?.toMMMEd(context.l10n) ?? '日時を追加',
-            onSelect: (date) {
-              final now = DateTime.now();
-              setState(() {
-                _dateTime = DateTime(
-                  date.year,
-                  date.month,
-                  date.day,
-                  _dateTime?.hour ?? now.hour,
-                  _dateTime?.minute ?? now.minute,
-                );
-              });
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.schedule),
-            title: Text(_dateTime?.toHHmm(context.l10n) ?? '時間を追加'),
-            onTap: () async {
-              final selectedTime = await showTimePicker(
-                initialTime: TimeOfDay.now(),
-                context: context,
-              );
-              if (selectedTime != null) {
-                final now = DateTime.now();
+            const SizedBox(width: 12.0),
+          ],
+        ),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: TextButton.icon(
+                  onPressed: () async {
+                    final table = await showModalBottomSheet<todo.Table>(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Consumer(builder: (context, ref, _) {
+                          final tables = ref.watch(tablesProvider);
+                          return SizedBox(
+                            height: 90.0 + 40.0 * tables.length,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                const Padding(
+                                  padding: EdgeInsets.fromLTRB(0.0, 14.0, 0.0, 10.0),
+                                  child: Text('Move todo to'),
+                                ),
+                                for (final table in tables)
+                                  TextButton.icon(
+                                    icon: EmojiText(table.icon),
+                                    label: Text(table.title),
+                                    onPressed: () => Navigator.pop(context, table),
+                                  ),
+                              ],
+                            ),
+                          );
+                        });
+                      },
+                    );
 
+                    if (table == null) {
+                      return;
+                    }
+
+                    setState(() {
+                      _tabelLabel = table.title;
+                    });
+                  },
+                  icon: const Icon(
+                    Icons.arrow_drop_down,
+                    size: 24.0,
+                  ),
+                  label: Text(_tabelLabel),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+              child: TextField(
+                maxLines: null,
+                controller: txtController,
+                style: const TextStyle(fontSize: 16.0),
+              ),
+            ),
+            _DatePicker(
+              null,
+              _dateTime?.toMMMEd(context.l10n) ?? '日時を追加',
+              onSelect: (date) {
+                final now = DateTime.now();
                 setState(() {
                   _dateTime = DateTime(
-                    _dateTime?.year ?? now.year,
-                    _dateTime?.month ?? now.month,
-                    _dateTime?.day ?? now.day,
-                    selectedTime.hour,
-                    selectedTime.minute,
+                    date.year,
+                    date.month,
+                    date.day,
+                    _dateTime?.hour ?? now.hour,
+                    _dateTime?.minute ?? now.minute,
                   );
                 });
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library),
-            title: const Text('Images'),
-            trailing: IconButton(
-              onPressed: () => _showImagePicker,
-              icon: const Icon(Icons.add_photo_alternate),
-              tooltip: 'Add Image',
+              },
             ),
-          ),
-          Expanded(
-            child: Scrollbar(
-              thumbVisibility: true,
-              child: SingleChildScrollView(
-                child: MediaQuery.removePadding(
+            ListTile(
+              leading: const Icon(Icons.schedule),
+              title: Text(_dateTime?.toHHmm(context.l10n) ?? '時間を追加'),
+              onTap: () async {
+                final selectedTime = await showTimePicker(
+                  initialTime: TimeOfDay.now(),
                   context: context,
-                  removeTop: true,
-                  child: GridView.builder(
-                    physics: const ScrollPhysics(),
-                    primary: false,
-                    shrinkWrap: true,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 5.0,
-                    ),
-                    padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
-                    itemCount: _images.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return Card(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        child: InkWell(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => DetailImage(
-                                assets: _images,
-                                index: index,
-                                onDelete: (value) {
-                                  setState(() {
-                                    _images.remove(value);
-                                  });
-                                },
+                );
+                if (selectedTime != null) {
+                  final now = DateTime.now();
+
+                  setState(() {
+                    _dateTime = DateTime(
+                      _dateTime?.year ?? now.year,
+                      _dateTime?.month ?? now.month,
+                      _dateTime?.day ?? now.day,
+                      selectedTime.hour,
+                      selectedTime.minute,
+                    );
+                  });
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Images'),
+              trailing: IconButton(
+                onPressed: () => _showImagePicker,
+                icon: const Icon(Icons.add_photo_alternate),
+                tooltip: 'Add Image',
+              ),
+            ),
+            Expanded(
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeTop: true,
+                    child: GridView.builder(
+                      physics: const ScrollPhysics(),
+                      primary: false,
+                      shrinkWrap: true,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 5.0,
+                      ),
+                      padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+                      itemCount: _images.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Card(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          child: InkWell(
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => DetailImage(
+                                  assets: _images,
+                                  index: index,
+                                  onDelete: (value) {
+                                    setState(() {
+                                      _images.remove(value);
+                                    });
+                                  },
+                                ),
                               ),
                             ),
+                            child: Image.memory(_images[index]),
                           ),
-                          child: Image.memory(_images[index]),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
             ),
+          ],
+        ),
+        floatingActionButton: Consumer(
+          builder: (context, ref, _) => FloatingActionButton.extended(
+            onPressed: () {
+              final todoCtrl = ref.read(todoControllerProvider.notifier);
+              todoCtrl.toggle(widget.todo);
+              // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
+              Navigator.pop(context, null);
+            },
+            label: widget.todo.done ? const Text('Uncomplete') : const Text('Complete'),
+            icon: widget.todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
           ),
-        ],
-      ),
-      floatingActionButton: Consumer(
-        builder: (context, ref, _) => FloatingActionButton.extended(
-          onPressed: () {
-            final todoCtrl = ref.read(todoControllerProvider.notifier);
-            todoCtrl.toggle(widget.todo);
-            // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
-            Navigator.pop(context);
-          },
-          label: widget.todo.done ? const Text('Uncomplete') : const Text('Complete'),
-          icon: widget.todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
         ),
       ),
+      onWillPop: () async {
+        final editTodo = widget.todo.copyWith(
+          table: _tabelLabel,
+          title: txtController.text,
+          date: _dateTime,
+          notification: [_dateTime],
+          assets: _images.map((e) => base64Encode(e)).toList(),
+        );
+        final popValue = editTodo == widget.todo ? null : editTodo;
+        Navigator.pop(context, popValue);
+        return Future.value(true);
+      },
     );
   }
 

@@ -140,6 +140,8 @@ class HomePage extends HookConsumerWidget {
               } else {
                 // TODO: エラーハンドリング
               }
+
+              // TODO: 設定で↓の値を切り替える(条件分岐)する項目を入れる
               showKeyboard.value = !showKeyboard.value;
             },
           ),

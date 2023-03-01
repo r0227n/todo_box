@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:todo_box/controller/table_controller.dart';
+import '/controller/table_controller.dart';
 import '../models/default_table.dart';
 import '../models/todo.dart';
 import '../provider/todo_query_provider.dart';
@@ -76,11 +76,35 @@ class TodoController extends _$TodoController {
 
   Future<void> toggle(Todo todo) async {
     final newState = todo.copyWith(done: !todo.done);
-    await AsyncValue.guard(() async => await ref.read(todoQueryProvider).update(newState));
+    await _updateDB(newState).catchError((e) => throw e);
     state = state.whenData((oldState) => [
           for (final old in oldState)
             if (old == todo) newState else old,
         ]);
+  }
+
+  /// stateを更新する
+  /// [true]: 更新に成功する
+  /// [false]: 更新に失敗する
+  Future<void> updateState(Todo todo) async {
+    final oldState = await future;
+    state = const AsyncLoading();
+    final newState = await AsyncValue.guard(() async => oldState.map((t) {
+          if (t.id != todo.id) {
+            return t;
+          }
+          return todo;
+        }).toList());
+
+    newState.maybeWhen(
+      orElse: () {
+        state = AsyncValue.data(oldState);
+        throw StateError(newState.asError?.value);
+      },
+      data: (data) => state = AsyncValue.data(data),
+    );
+
+    await _updateDB(todo).catchError((e) => throw e);
   }
 
   Future<Todo> findMetadata() async {
@@ -92,6 +116,17 @@ class TodoController extends _$TodoController {
     return metadata.maybeWhen(
       orElse: () => throw StateError('Tabe metadata is not exit'),
       data: (data) => data,
+    );
+  }
+
+  Future<void> _updateDB(Todo todo) async {
+    final newState =
+        await AsyncValue.guard(() async => await ref.read(todoQueryProvider).update(todo));
+
+    newState.when(
+      data: (value) => value,
+      error: (error, stackTrace) => throw error,
+      loading: () => throw StateError('AsyncValue should not be loading'),
     );
   }
 }
