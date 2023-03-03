@@ -2,6 +2,7 @@ import 'dart:convert' show base64Encode;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'table_create_field.dart';
 import 'list_page.dart';
 import 'components/mods.dart';
 import 'components/section.dart';
@@ -98,13 +99,15 @@ class HomePage extends HookConsumerWidget {
                   trailing: IconButton(
                     onPressed: () async {
                       // TODO: Table作成用のUI作成(showBottomSheetで実装？)
-                      final tableInfo = await showModalBottomSheet<String?>(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return const _TableCreateField();
-                        },
-                      );
-                      print(tableInfo);
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const TableCreateField(),
+                        ),
+                      ).then(print);
+
+                      // print(tableInfo);
                       // final tableCtrl = ref.read(tableControllerProvider.notifier);
                       // tableCtrl
                       //     .create(todo.Table(icon: ' 😆', title: 'test', content: []))
@@ -197,34 +200,6 @@ class _TodoItem extends ConsumerWidget {
               table.title,
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// Table 新規作成画面
-class _TableCreateField extends HookWidget {
-  const _TableCreateField();
-
-  @override
-  Widget build(BuildContext context) {
-    final txtController = useTextEditingController();
-
-    return Container(
-      height: 200,
-      color: Colors.amber,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextField(controller: txtController),
-            ElevatedButton(
-              child: const Text('Close BottomSheet'),
-              onPressed: () => Navigator.pop(context, txtController.text),
-            ),
-          ],
         ),
       ),
     );
