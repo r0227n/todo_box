@@ -32,7 +32,6 @@ class HomePage extends HookConsumerWidget {
           )),
       data: (tables) {
         return Scaffold(
-          appBar: AppBar(),
           body: KeyboardMods(
             visibleKeyboard: showKeyboard.value,
             chips: tables
@@ -97,23 +96,38 @@ class HomePage extends HookConsumerWidget {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   trailing: IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const TableCreateField(),
-                        ),
-                      ).then((tableInfo) {
-                        if (tableInfo is! sql.Table) {
-                          return;
-                        }
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TableCreateField(),
+                      ),
+                    ).then((tableInfo) {
+                      if (tableInfo is! sql.Table) {
+                        return;
+                      }
 
-                        final tableCtrl = ref.read(tableControllerProvider.notifier);
-                        tableCtrl.create(tableInfo).catchError((e) {
-                          print(e);
-                        });
+                      final tableCtrl = ref.read(tableControllerProvider.notifier);
+                      tableCtrl.create(tableInfo).catchError((_) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            action: SnackBarAction(
+                              label: 'Close',
+                              onPressed: () {},
+                            ),
+                            content: const Padding(
+                              padding: EdgeInsets.only(left: 16.0),
+                              child: Text('Failed to create the List.'),
+                            ),
+                            duration: const Duration(milliseconds: 3000),
+                            margin: const EdgeInsets.symmetric(horizontal: 15.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            behavior: SnackBarBehavior.floating,
+                            shape:
+                                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                          ),
+                        );
                       });
-                    },
+                    }),
                     tooltip: 'Add a New List',
                     icon: const Icon(Icons.create_new_folder_outlined),
                   ),
