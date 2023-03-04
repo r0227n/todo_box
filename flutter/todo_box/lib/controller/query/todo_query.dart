@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import '../../models/column_type.dart';
 import '../../database/helper/sql_helper.dart';
 import '../../models/todo.dart';
@@ -87,7 +88,7 @@ class TodoQuery {
   /// テーブルを新規作成
   /// [name]はテーブル名を指定
   /// [column]は列の名前を[key]、プロパティを[value]
-  Future<void> create(String table, String emoji, Map<String, String> column) async {
+  Future<void> create(String table, String emoji) async {
     try {
       await sqlHelper.createTable(table, columnType.toMap());
       await add(
@@ -100,7 +101,7 @@ class TodoQuery {
         assets: const <String>[],
       );
     } catch (e) {
-      throw 'Failed create tabel: $e';
+      throw FlutterError('Failed create tabel: $e');
     }
   }
 

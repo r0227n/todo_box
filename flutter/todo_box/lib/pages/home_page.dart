@@ -2,17 +2,18 @@ import 'dart:convert' show base64Encode;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../controller/local_notification_controller.dart';
-import '../controller/todo_controller.dart';
-import '../models/default_table.dart';
-import '../models/todo.dart';
+import 'table_create_field.dart';
+import 'list_page.dart';
 import 'components/mods.dart';
 import 'components/section.dart';
-import 'list_page.dart';
 import 'components/emoji_text.dart';
 import 'components/consumer_widget_extension.dart';
 import '../controller/table_controller.dart';
+import '../controller/todo_controller.dart';
+import '../controller/local_notification_controller.dart';
+import '../models/default_table.dart';
 import '../models/table.dart' as sql;
+import '../models/todo.dart';
 
 final _currentTable = Provider<sql.Table>((ref) => throw UnimplementedError());
 
@@ -31,7 +32,6 @@ class HomePage extends HookConsumerWidget {
           )),
       data: (tables) {
         return Scaffold(
-          appBar: AppBar(),
           body: KeyboardMods(
             visibleKeyboard: showKeyboard.value,
             chips: tables
@@ -94,6 +94,42 @@ class HomePage extends HookConsumerWidget {
                   title: Text(
                     'Lists',
                     style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  trailing: IconButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TableCreateField(),
+                      ),
+                    ).then((tableInfo) {
+                      if (tableInfo is! sql.Table) {
+                        return;
+                      }
+
+                      final tableCtrl = ref.read(tableControllerProvider.notifier);
+                      tableCtrl.create(tableInfo).catchError((_) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            action: SnackBarAction(
+                              label: 'Close',
+                              onPressed: () {},
+                            ),
+                            content: const Padding(
+                              padding: EdgeInsets.only(left: 16.0),
+                              child: Text('Failed to create the List.'),
+                            ),
+                            duration: const Duration(milliseconds: 3000),
+                            margin: const EdgeInsets.symmetric(horizontal: 15.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            behavior: SnackBarBehavior.floating,
+                            shape:
+                                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                          ),
+                        );
+                      });
+                    }),
+                    tooltip: 'Add a New List',
+                    icon: const Icon(Icons.create_new_folder_outlined),
                   ),
                 ),
                 Section(

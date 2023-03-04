@@ -37,7 +37,19 @@ class TableController extends _$TableController {
     );
   }
 
+  /// SQLのテーブルを作成
+  Future<void> create(Table table) async {
+    final query = ref.read(todoQueryProvider);
+    update((tables) async {
+      state = const AsyncLoading();
+      await query.create(table.title, table.icon);
+      tables.add(table);
+      return tables;
+    });
+  }
+
   Future<void> addTodo(Todo todo) async {
+    state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final tables = await future;
       return [
@@ -83,18 +95,19 @@ class TableController extends _$TableController {
 
   Future<Table?> _findTable(TodoQuery query, TodoController controller, String table) async {
     final result = await AsyncValue.guard(() async => await query.findAll(table: table));
+
     return result.maybeWhen(
       orElse: (() => null),
       data: ((data) {
         final metadata = data.firstWhere((Todo todo) {
           return todo.title.startsWith('_');
         }, orElse: () => throw StateError('Table metadata is not exist'));
-        final decodeTitle = metadata.title.characters.toString();
+        final decodeTitle = metadata.title.characters.string;
 
         data.remove(metadata);
 
         return Table(
-          icon: decodeTitle.substring(1, 3),
+          icon: String.fromCharCodes(decodeTitle.runes, 1, 3),
           title: table,
           content: data.map((e) => e.id ?? -1).toList(),
         );
