@@ -146,8 +146,15 @@ class _KeyboardModsState extends State<KeyboardMods> {
             selectedChip: _selectedChip,
             onPressed: (chip) {
               setState(() {
-                modButtons[index] = newModButton.copyWith(chip: chip);
+                modButtons = modButtons.map((e) {
+                  if (e.modIndex != index) {
+                    return e;
+                  }
+
+                  return e.copyWith(chip: chip);
+                }).toList();
                 _selectedChip = chip;
+                _visibleToolBar = !_visibleToolBar;
               });
             },
           );
@@ -494,14 +501,15 @@ class _ModActionChipTool extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return ListView(
+      scrollDirection: Axis.horizontal,
       children: [
         for (final chip in chips)
           ActionChip(
             shape: const StadiumBorder(side: BorderSide()),
             avatar: FittedBox(child: chip.icon),
             label: Text(chip.label ?? chip.dateTime?.formatLocal(context.l10n) ?? ''),
-            onPressed: chips.contains(selectedChip) ? () => onPressed(chip) : null,
+            onPressed: () => onPressed(chip),
           ),
       ],
     );
