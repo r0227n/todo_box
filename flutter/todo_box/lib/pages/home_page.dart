@@ -97,22 +97,22 @@ class HomePage extends HookConsumerWidget {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   trailing: IconButton(
-                    onPressed: () async {
-                      // TODO: Table作成用のUI作成(showBottomSheetで実装？)
-
+                    onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const TableCreateField(),
                         ),
-                      ).then(print);
+                      ).then((tableInfo) {
+                        if (tableInfo is! sql.Table) {
+                          return;
+                        }
 
-                      // print(tableInfo);
-                      // final tableCtrl = ref.read(tableControllerProvider.notifier);
-                      // tableCtrl
-                      //     .create(todo.Table(icon: ' 😆', title: 'test', content: []))
-                      //     .then((value) => print('fin'))
-                      //     .catchError(print);
+                        final tableCtrl = ref.read(tableControllerProvider.notifier);
+                        tableCtrl.create(tableInfo).catchError((e) {
+                          print(e);
+                        });
+                      });
                     },
                     tooltip: 'Add a New List',
                     icon: const Icon(Icons.create_new_folder_outlined),

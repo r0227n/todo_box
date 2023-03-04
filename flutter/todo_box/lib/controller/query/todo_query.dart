@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import '../../models/column_type.dart';
 import '../../database/helper/sql_helper.dart';
 import '../../models/todo.dart';
@@ -100,7 +101,7 @@ class TodoQuery {
         assets: const <String>[],
       );
     } catch (e) {
-      throw 'Failed create tabel: $e';
+      throw FlutterError('Failed create tabel: $e');
     }
   }
 

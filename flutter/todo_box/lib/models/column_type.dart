@@ -40,6 +40,7 @@ class ColumnType {
         date: typeDate,
         tags: typeTags,
         notification: typeNotification,
+        assets: typeAssets,
       };
 
   Map<String, dynamic> toInsert({
