@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import '../../models/default_table.dart';
 import '../../models/table.dart' as sql;
 
 class TableCreateField extends StatefulWidget {
@@ -13,17 +14,11 @@ class TableCreateField extends StatefulWidget {
 class _TableCreateFieldState extends State<TableCreateField> {
   final TextEditingController _txtController = TextEditingController();
   final TextEditingController _emojiController = TextEditingController();
-  bool emojiShowing = false;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    _txtController.addListener(() {
-      // カーソルを末尾に移動
-      _txtController.selection = TextSelection.fromPosition(
-        TextPosition(offset: _txtController.text.length), // 末尾にカーソルを移動
-      );
-    });
   }
 
   @override
@@ -44,8 +39,12 @@ class _TableCreateFieldState extends State<TableCreateField> {
           actions: <Widget>[
             TextButton(
               onPressed: _txtController.text.isNotEmpty
-                  ? () => Navigator.pop(context, sql.Table(
-                        icon: _emojiController.text,
+                  ? () => Navigator.pop(
+                      context,
+                      sql.Table(
+                        icon: _emojiController.text.isNotEmpty
+                            ? _emojiController.text
+                            : DefaultTable.emoji,
                         title: _txtController.text,
                         content: const <int>[],
                       ))
@@ -64,11 +63,21 @@ class _TableCreateFieldState extends State<TableCreateField> {
           onHorizontalDragUpdate: (details) {
             // 左にスワイプ
             if (details.localPosition.dx < 45.0) {
-              Navigator.pop(context, sql.Table(
-                        icon: _emojiController.text,
-                        title: _txtController.text,
-                        content: const <int>[],
-                      ));
+              if (_txtController.text.isNotEmpty) {
+                Navigator.pop(
+                  context,
+                  sql.Table(
+                    icon: _emojiController.text.isNotEmpty
+                        ? _emojiController.text
+                        : DefaultTable.emoji,
+                    title: _txtController.text,
+                    content: const <int>[],
+                  ),
+                );
+              } else {
+                // Titleがからの場合、nullを返す
+                Navigator.pop(context);
+              }
             }
           },
           child: Column(
@@ -89,21 +98,34 @@ class _TableCreateFieldState extends State<TableCreateField> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 15.0),
-                child: TextField(
-                  controller: _txtController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter list title',
-                    suffixIcon: IconButton(
-                      onPressed: _txtController.clear,
-                      icon: const Icon(Icons.cancel_outlined),
+                child: Form(
+                  key: _formKey,
+                  child: TextFormField(
+                    controller: _txtController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter list title',
+                      isDense: true,
+                      suffixIcon: IconButton(
+                        onPressed: () => setState(() => _txtController.clear()),
+                        icon: const Icon(Icons.cancel_outlined),
+                      ),
                     ),
+                    keyboardType: TextInputType.text,
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter list title';
+                      } else if (value.startsWith('_') || value.startsWith('＿')) {
+                        return 'Do not put _ at the beginning';
+                      }
+                      return null;
+                    },
+                    onChanged: (_) => setState(() {}), // setStateを宣言し、再描画することでリアルタイムでボタンの有効化を行う
+                    onEditingComplete: () {
+                      if (_formKey.currentState!.validate()) {
+                        FocusScope.of(context).unfocus();
+                      }
+                    },
                   ),
-                  keyboardType: TextInputType.text,
-                  onChanged: (text) {
-                    setState(() {
-                      _txtController.text = text;
-                    });
-                  },
                 ),
               ),
               Expanded(
