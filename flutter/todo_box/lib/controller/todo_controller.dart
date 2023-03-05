@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '/controller/table_controller.dart';
-import '../models/default_table.dart';
 import '../models/todo.dart';
 import '../provider/todo_query_provider.dart';
 
@@ -9,10 +8,10 @@ part 'todo_controller.g.dart';
 @riverpod
 class TodoController extends _$TodoController {
   @override
-  FutureOr<List<Todo>> build() async {
+  FutureOr<List<Todo>> build(String table) async {
     final query = ref.watch(todoQueryProvider);
     state = const AsyncLoading();
-    final todos = await AsyncValue.guard(() => query.findAll(table: DefaultTable.name));
+    final todos = await AsyncValue.guard(() => query.findAll(table: table));
     return todos.maybeWhen(
       orElse: (() {
         // TODO: エラーハンドリングを実装する

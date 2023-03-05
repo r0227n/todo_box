@@ -56,7 +56,7 @@ class _DetailPageState extends State<DetailPage> {
               Consumer(
                 builder: (context, ref, _) => IconButton(
                   onPressed: () async {
-                    final todoCtrl = ref.read(todoControllerProvider.notifier);
+                    final todoCtrl = ref.read(todoControllerProvider(widget.todo.table).notifier);
                     todoCtrl.remove(widget.todo);
                     // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
                     Navigator.pop(context, 'aaa');
@@ -244,7 +244,7 @@ class _DetailPageState extends State<DetailPage> {
           floatingActionButton: Consumer(
             builder: (context, ref, _) => FloatingActionButton.extended(
               onPressed: () {
-                final todoCtrl = ref.read(todoControllerProvider.notifier);
+                final todoCtrl = ref.read(todoControllerProvider(widget.todo.table).notifier);
                 todoCtrl.toggle(widget.todo);
                 // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
                 Navigator.pop(context, null);

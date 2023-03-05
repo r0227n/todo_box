@@ -154,7 +154,7 @@ class HomePage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
-              final todo = await ref.read(todoControllerProvider.notifier).add(
+              final todo = await ref.read(todoControllerProvider(value.selectMenu).notifier).add(
                     Todo(
                       table: value.selectMenu,
                       title: value.text,

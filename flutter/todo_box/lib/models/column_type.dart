@@ -69,6 +69,7 @@ class ColumnType {
 
   Map<String, dynamic> toDecode(Map<String, dynamic> json) => {
         '_id': json[id],
+        'table': json['table'],
         title: json[title],
         done: json[done] == 0 ? false : true,
         date: json[date],

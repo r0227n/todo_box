@@ -29,11 +29,11 @@ class ListPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final config = ref.watch(todoControllerProvider);
+    final config = ref.watch(todoControllerProvider(table));
     final tables = ref.watch(tablesProvider);
     final showKeyboard = useState<bool>(false);
 
-    final filterTable = tables.firstWhere((t) => t.title == table, orElse: () => tables.first);
+    // final filterTable = tables.firstWhere((t) => t.title == table, orElse: () => tables.first);
 
     return config.when(
       error: (error, stackTrace) => Center(child: Text(error.toString())),
@@ -54,22 +54,30 @@ class ListPage extends HookConsumerWidget {
                       label: e.title,
                     ))
                 .toList(),
-            selectedChip: ModActionChip(
-              icon: EmojiText(filterTable.icon),
-              label: filterTable.title,
+            // selectedChip: ModActionChip(
+            //   icon: EmojiText(filterTable.icon),
+            //   label: filterTable.title,
+            // ),
+            selectedChip: const ModActionChip(
+              icon: EmojiText('a'),
+              label: 'test',
             ),
-            mods: [
+            mods: const [
+              // ModButton.outline(
+              //   chip: ModActionChip(icon: EmojiText(filterTable.icon), label: filterTable.title),
+              //   tool: const ModTool(position: ModPositioned.top, category: ModCategory.chips),
+              // ),
               ModButton.outline(
-                chip: ModActionChip(icon: EmojiText(filterTable.icon), label: filterTable.title),
-                tool: const ModTool(position: ModPositioned.top, category: ModCategory.chips),
+                chip: ModActionChip(icon: EmojiText('a'), label: 'test'),
+                tool: ModTool(position: ModPositioned.top, category: ModCategory.chips),
               ),
-              const ModButton.outline(
+              ModButton.outline(
                 icon: Icon(Icons.schedule_outlined),
                 selectedIcon: Icon(Icons.schedule),
                 chip: ModActionChip(icon: Icon(Icons.schedule_outlined), dateTime: null),
                 tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
               ),
-              const ModButton.outline(
+              ModButton.outline(
                 icon: Icon(Icons.camera_alt_outlined),
                 selectedIcon: Icon(
                   Icons.camera_alt,
@@ -104,7 +112,9 @@ class ListPage extends HookConsumerWidget {
                     ),
                   ),
                   onDismissed: (_) async {
-                    await ref.read(todoControllerProvider.notifier).remove(selectTable[index]);
+                    await ref
+                        .read(todoControllerProvider(table).notifier)
+                        .remove(selectTable[index]);
                   },
                   child: ProviderScope(
                     overrides: [_currentTodo.overrideWithValue(selectTable[index])],
@@ -117,7 +127,7 @@ class ListPage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
-              final todo = await ref.read(todoControllerProvider.notifier).add(
+              final todo = await ref.read(todoControllerProvider(table).notifier).add(
                     Todo(
                       table: value.selectMenu,
                       title: value.text,
@@ -169,7 +179,7 @@ class _ListPageItem extends ConsumerWidget {
         leading: Checkbox(
           checkColor: Colors.white,
           value: todo.done,
-          onChanged: (_) => ref.read(todoControllerProvider.notifier).toggle(todo),
+          onChanged: (_) => ref.read(todoControllerProvider(todo.table).notifier).toggle(todo),
         ),
         title: Text(
           todo.title,
@@ -191,7 +201,7 @@ class _ListPageItem extends ConsumerWidget {
             throw FlutterError('$todo is not Todo.');
           }
 
-          final todoCtrl = ref.read(todoControllerProvider.notifier);
+          final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
           await todoCtrl.updateState(todo).catchError((_) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
