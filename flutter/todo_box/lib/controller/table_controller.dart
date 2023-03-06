@@ -46,6 +46,17 @@ class TableController extends _$TableController {
     });
   }
 
+  /// SQLのテーブルを削除s
+  Future<void> delete(Table table) async {
+    final query = ref.read(todoQueryProvider);
+    update((tables) async {
+      state = const AsyncLoading();
+      query.delete(table.title); // awaitをつけると処理に時間がかかるためつけない(再描画が目立つ)
+      tables.remove(table);
+      return tables;
+    });
+  }
+
   Future<void> addTodo(Todo todo) async {
     state = await AsyncValue.guard(() async {
       final tables = await future;
