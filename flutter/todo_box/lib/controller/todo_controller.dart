@@ -42,6 +42,7 @@ class TodoController extends _$TodoController {
     }), data: (data) async {
       await table.addTodo(data);
       await update((p0) async {
+        state = const AsyncLoading();
         p0.add(data);
 
         return p0;

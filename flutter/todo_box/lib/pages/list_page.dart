@@ -33,7 +33,7 @@ class ListPage extends HookConsumerWidget {
     final tables = ref.watch(tablesProvider);
     final showKeyboard = useState<bool>(false);
 
-    // final filterTable = tables.firstWhere((t) => t.title == table, orElse: () => tables.first);
+    final filterTable = tables.firstWhere((t) => t.title == table, orElse: () => tables.first);
 
     return config.when(
       error: (error, stackTrace) => Center(child: Text(error.toString())),
@@ -54,30 +54,22 @@ class ListPage extends HookConsumerWidget {
                       label: e.title,
                     ))
                 .toList(),
-            // selectedChip: ModActionChip(
-            //   icon: EmojiText(filterTable.icon),
-            //   label: filterTable.title,
-            // ),
-            selectedChip: const ModActionChip(
-              icon: EmojiText('a'),
-              label: 'test',
+            selectedChip: ModActionChip(
+              icon: EmojiText(filterTable.icon),
+              label: filterTable.title,
             ),
-            mods: const [
-              // ModButton.outline(
-              //   chip: ModActionChip(icon: EmojiText(filterTable.icon), label: filterTable.title),
-              //   tool: const ModTool(position: ModPositioned.top, category: ModCategory.chips),
-              // ),
+            mods: <ModButton>[
               ModButton.outline(
-                chip: ModActionChip(icon: EmojiText('a'), label: 'test'),
-                tool: ModTool(position: ModPositioned.top, category: ModCategory.chips),
+                chip: ModActionChip(icon: EmojiText(filterTable.icon), label: filterTable.title),
+                tool: const ModTool(position: ModPositioned.top, category: ModCategory.chips),
               ),
-              ModButton.outline(
+              const ModButton.outline(
                 icon: Icon(Icons.schedule_outlined),
                 selectedIcon: Icon(Icons.schedule),
                 chip: ModActionChip(icon: Icon(Icons.schedule_outlined), dateTime: null),
                 tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
               ),
-              ModButton.outline(
+              const ModButton.outline(
                 icon: Icon(Icons.camera_alt_outlined),
                 selectedIcon: Icon(
                   Icons.camera_alt,
@@ -127,7 +119,7 @@ class ListPage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
-              final todo = await ref.read(todoControllerProvider(table).notifier).add(
+              final todo = await ref.read(todoControllerProvider(value.selectMenu).notifier).add(
                     Todo(
                       table: value.selectMenu,
                       title: value.text,
