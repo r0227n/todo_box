@@ -178,6 +178,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
               return _ModActionDateTime(
                 initDateTime: value ?? _now,
                 dateTime: value,
+                focusNode: _node,
                 onDatePicker: (date) {
                   setState(() {
                     _selectDateTime.value = date;
@@ -540,6 +541,7 @@ class _ModActionDateTime extends StatelessWidget {
   const _ModActionDateTime({
     required this.initDateTime,
     this.dateTime,
+    required this.focusNode,
     required this.onDatePicker,
     required this.onTimePicker,
     required this.onApply,
@@ -547,6 +549,7 @@ class _ModActionDateTime extends StatelessWidget {
 
   final DateTime initDateTime;
   final DateTime? dateTime;
+  final FocusNode focusNode;
   final ValueChanged<DateTime> onDatePicker;
   final ValueChanged<DateTime> onTimePicker;
   final VoidCallback onApply;
@@ -624,6 +627,8 @@ class _ModActionDateTime extends StatelessWidget {
                   initDateTime.second,
                   initDateTime.millisecond,
                 ));
+
+                focusNode.requestFocus();
               },
               child: Text(dateTime?.toHHmm(context.l10n) ?? 'Time'),
             ),
