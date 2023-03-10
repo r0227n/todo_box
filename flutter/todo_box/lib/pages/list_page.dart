@@ -29,7 +29,7 @@ class ListPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final config = ref.watch(todoControllerProvider);
+    final config = ref.watch(todoControllerProvider(table));
     final tables = ref.watch(tablesProvider);
     final showKeyboard = useState<bool>(false);
 
@@ -58,7 +58,7 @@ class ListPage extends HookConsumerWidget {
               icon: EmojiText(filterTable.icon),
               label: filterTable.title,
             ),
-            mods: [
+            mods: <ModButton>[
               ModButton.outline(
                 chip: ModActionChip(icon: EmojiText(filterTable.icon), label: filterTable.title),
                 tool: const ModTool(position: ModPositioned.top, category: ModCategory.chips),
@@ -104,7 +104,9 @@ class ListPage extends HookConsumerWidget {
                     ),
                   ),
                   onDismissed: (_) async {
-                    await ref.read(todoControllerProvider.notifier).remove(selectTable[index]);
+                    await ref
+                        .read(todoControllerProvider(table).notifier)
+                        .remove(selectTable[index]);
                   },
                   child: ProviderScope(
                     overrides: [_currentTodo.overrideWithValue(selectTable[index])],
@@ -117,7 +119,7 @@ class ListPage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
-              final todo = await ref.read(todoControllerProvider.notifier).add(
+              final todo = await ref.read(todoControllerProvider(value.selectMenu).notifier).add(
                     Todo(
                       table: value.selectMenu,
                       title: value.text,
@@ -169,7 +171,7 @@ class _ListPageItem extends ConsumerWidget {
         leading: Checkbox(
           checkColor: Colors.white,
           value: todo.done,
-          onChanged: (_) => ref.read(todoControllerProvider.notifier).toggle(todo),
+          onChanged: (_) => ref.read(todoControllerProvider(todo.table).notifier).toggle(todo),
         ),
         title: Text(
           todo.title,
@@ -191,7 +193,7 @@ class _ListPageItem extends ConsumerWidget {
             throw FlutterError('$todo is not Todo.');
           }
 
-          final todoCtrl = ref.read(todoControllerProvider.notifier);
+          final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
           await todoCtrl.updateState(todo).catchError((_) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

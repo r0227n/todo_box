@@ -61,15 +61,14 @@ class TodoQuery {
   /// [id] はプライマリーキーである[Todo]のid
   Future<Todo> finad(String table, int id) async {
     final content = await sqlHelper.select(table, id: id);
-
-    return _decode(content.first);
+    return _decode(table, content.first);
   }
 
   /// テーブル内の[Todo]を全て取得
   /// [name]はテーブル名を指定
   Future<List<Todo>> findAll({required String table, List<String>? where}) async {
     final content = await listFields(table, where: where);
-    return content.map((e) => _decode(e)).toList();
+    return content.map((e) => _decode(table, e)).toList();
   }
 
   Future<List<Map<String, dynamic>>> listFields(String name, {List<String>? where}) =>
@@ -117,5 +116,6 @@ class TodoQuery {
   }
 
   /// SQL用にエンコードされたデータをデコード
-  Todo _decode(Map<String, dynamic> map) => Todo.fromJson(columnType.toDecode(map));
+  Todo _decode(String table, Map<String, dynamic> map) =>
+      Todo.fromJson(columnType.toDecode({...map, 'table': table}));
 }

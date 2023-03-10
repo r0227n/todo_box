@@ -138,11 +138,38 @@ class HomePage extends HookConsumerWidget {
                   child: ListView.builder(
                     itemCount: tables.length,
                     itemBuilder: (context, index) {
-                      return ProviderScope(
-                        overrides: [
-                          _currentTable.overrideWithValue(tables[index]),
-                        ],
-                        child: const _TodoItem(),
+                      return Dismissible(
+                        key: UniqueKey(),
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          color: Colors.red,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: const <Widget>[
+                                Icon(Icons.delete, color: Colors.white),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        onDismissed: (direction) async {
+                          final tableCtrl = ref.read(tableControllerProvider.notifier);
+                          await tableCtrl.delete(tables[index]);
+                        },
+                        child: ProviderScope(
+                          overrides: [
+                            _currentTable.overrideWithValue(tables[index]),
+                          ],
+                          child: const _TodoItem(),
+                        ),
                       );
                     },
                   ),
@@ -154,7 +181,7 @@ class HomePage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
-              final todo = await ref.read(todoControllerProvider.notifier).add(
+              final todo = await ref.read(todoControllerProvider(value.selectMenu).notifier).add(
                     Todo(
                       table: value.selectMenu,
                       title: value.text,

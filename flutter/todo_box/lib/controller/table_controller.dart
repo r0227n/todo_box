@@ -5,7 +5,6 @@ import 'package:characters/characters.dart';
 import 'query/todo_query.dart';
 import '../models/todo.dart';
 import '../models/table.dart';
-import '../controller/todo_controller.dart';
 import '../provider/todo_query_provider.dart';
 
 part 'table_controller.g.dart';
@@ -15,7 +14,6 @@ class TableController extends _$TableController {
   @override
   FutureOr<List<Table>> build() async {
     final query = ref.watch(todoQueryProvider);
-    final todoController = ref.watch(todoControllerProvider.notifier);
     state = const AsyncLoading();
     final result = await AsyncValue.guard(() => query.listAllTable());
 
@@ -25,7 +23,7 @@ class TableController extends _$TableController {
         final List<Table> tables = [];
 
         for (final name in data) {
-          final table = await _findTable(query, todoController, name);
+          final table = await _findTable(query, name);
           if (table == null) {
             continue;
           }
@@ -48,8 +46,18 @@ class TableController extends _$TableController {
     });
   }
 
+  /// SQLのテーブルを削除s
+  Future<void> delete(Table table) async {
+    final query = ref.read(todoQueryProvider);
+    update((tables) async {
+      state = const AsyncLoading();
+      query.delete(table.title); // awaitをつけると処理に時間がかかるためつけない(再描画が目立つ)
+      tables.remove(table);
+      return tables;
+    });
+  }
+
   Future<void> addTodo(Todo todo) async {
-    state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final tables = await future;
       return [
@@ -93,7 +101,7 @@ class TableController extends _$TableController {
     });
   }
 
-  Future<Table?> _findTable(TodoQuery query, TodoController controller, String table) async {
+  Future<Table?> _findTable(TodoQuery query, String table) async {
     final result = await AsyncValue.guard(() async => await query.findAll(table: table));
 
     return result.maybeWhen(

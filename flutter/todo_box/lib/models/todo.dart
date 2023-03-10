@@ -7,7 +7,7 @@ part 'todo.g.dart';
 @freezed
 class Todo with _$Todo {
   factory Todo({
-    @Default(DefaultTable.name) String table,
+    required String table,
     @JsonKey(name: '_id') int? id,
     required String title,
     required bool done,

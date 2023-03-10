@@ -89,10 +89,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
     super.initState();
     _node = FocusNode(debugLabel: 'KeyboardMods');
 
-    int count = 0;
-    modButtons = widget.mods
-        .map((e) => e.copyWith(modIndex: count++, callback: _updateState, onDeleted: _deleteAction))
-        .toList();
+    _initModButtons;
 
     /// [TextEditingController]'s initialize
     _controller = TextEditingController();
@@ -114,6 +111,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
   @override
   void didUpdateWidget(covariant KeyboardMods oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _initModButtons;
 
     if (widget.visibleKeyboard) {
       FocusScope.of(context).requestFocus(_node);
@@ -127,6 +125,17 @@ class _KeyboardModsState extends State<KeyboardMods> {
     _node.dispose();
     _controller.dispose();
     super.dispose();
+  }
+
+  /// [ModButton]'s initialize
+  void get _initModButtons {
+    int count = 0;
+    modButtons = widget.mods
+        .map((e) => e.copyWith(
+            modIndex: count++, select: false, callback: _updateState, onDeleted: _deleteAction))
+        .toList();
+    _selectDateTime.value = null;
+    _modToolWidgetState = null;
   }
 
   /// Update　when ModButton's pressed.
@@ -146,8 +155,15 @@ class _KeyboardModsState extends State<KeyboardMods> {
             selectedChip: _selectedChip,
             onPressed: (chip) {
               setState(() {
-                modButtons[index] = newModButton.copyWith(chip: chip);
+                modButtons = modButtons.map((e) {
+                  if (e.modIndex != index) {
+                    return e;
+                  }
+
+                  return e.copyWith(chip: chip);
+                }).toList();
                 _selectedChip = chip;
+                _visibleToolBar = !_visibleToolBar;
               });
             },
           );
@@ -230,13 +246,24 @@ class _KeyboardModsState extends State<KeyboardMods> {
         break;
     }
 
+    // [ModButton]のStateを更新
     setState(() {
       _visibleToolBar = !_visibleToolBar;
       modButtons = modButtons.map((e) {
+        // 選択された[ModButton]のStateを更新
         if (e.modIndex == index) {
+          // oldStateとnewStateで異なる[ModButton]を選択された場合、[_modToolWidgetState]を表示
+          if (_visibleToolBar == e.select) {
+            _visibleToolBar = true;
+            return e.copyWith(select: true);
+          }
+
+          // oldStateとnewStateで同じ[ModButton]を選択された場合、[_modToolWidgetState]を非表示
           return e.copyWith(select: _visibleToolBar);
         }
-        return e;
+
+        // 選択されていない[ModButton]を非選択の状態にする
+        return e.copyWith(select: false);
       }).toList();
     });
   }
@@ -494,14 +521,15 @@ class _ModActionChipTool extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return ListView(
+      scrollDirection: Axis.horizontal,
       children: [
         for (final chip in chips)
           ActionChip(
             shape: const StadiumBorder(side: BorderSide()),
             avatar: FittedBox(child: chip.icon),
             label: Text(chip.label ?? chip.dateTime?.formatLocal(context.l10n) ?? ''),
-            onPressed: chips.contains(selectedChip) ? () => onPressed(chip) : null,
+            onPressed: () => onPressed(chip),
           ),
       ],
     );
