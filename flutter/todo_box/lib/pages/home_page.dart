@@ -25,6 +25,27 @@ class HomePage extends HookConsumerWidget {
     final config = ref.watch(tableControllerProvider);
     final showKeyboard = useState<bool>(false);
 
+    useEffect(() {
+      // アプリ起動時に一度だけ実行
+      ref.read(localNotificationProvider.notifier).launchNotificationResponse().then((details) {
+        if (details == null) {
+          return;
+        }
+
+        // TODO: 通知でアプリを起動した場合、そのTodoの詳細画面を表示する
+
+        // 通知でアプリを起動した場合、そのTodoの詳細画面を表示する
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => Scaffold(
+                    body: Center(child: Text(details.toString())),
+                  )),
+        );
+      });
+      return;
+    }, const []);
+
     return config.when(
       loading: () => const CircularProgressIndicator(),
       error: ((error, stackTrace) => Center(
@@ -192,6 +213,7 @@ class HomePage extends HookConsumerWidget {
                       assets: value.images.map((e) => base64Encode(e.readAsBytesSync())).toList(),
                     ),
                   );
+
               if (todo != null && (value.date?.isAfter(DateTime.now()) ?? false)) {
                 ref.read(localNotificationProvider.notifier).addNotification(
                       'Notification Title',
