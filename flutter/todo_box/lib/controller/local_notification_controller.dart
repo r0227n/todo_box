@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -7,6 +5,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 // ignore: depend_on_referenced_packages
 import 'package:timezone/data/latest.dart' as tz;
+import '../models/todo.dart';
+import '../pages/detail_page.dart';
 
 final localNotificationPluguinProvider =
     Provider<FlutterLocalNotificationsPlugin>((_) => throw UnimplementedError());
@@ -17,7 +17,7 @@ final localNotificationProvider =
 );
 
 class NotificationInitilizer {
-  NotificationInitilizer({this.foregroundResponse}) {
+  NotificationInitilizer() {
     const androidSetting = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSetting = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -38,19 +38,22 @@ class NotificationInitilizer {
             (e) => throw FlutterError('FlutterLocalNotificationsPlugin initialize error: $e'));
   }
 
+  // [FlutterLocalNotificationsPlugin]'s [GlobalKey]
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey(debugLabel: "Main Navigator");
-  final plugin = FlutterLocalNotificationsPlugin();
 
-  /// アプリが起動中、通知をタップしたときに遷移する画面
-  final Widget? foregroundResponse;
+  // [FlutterLocalNotificationsPlugin] instance
+  final plugin = FlutterLocalNotificationsPlugin();
 
   /// アプリが起動中、通知をタップしたときの処理
   void _notificationTapForeground(NotificationResponse notificationResponse) {
-    if (navigatorKey.currentContext != null && foregroundResponse != null) {
-      Navigator.push(
-        navigatorKey.currentState!.context,
+    if (notificationResponse.payload == null) {
+      throw StateError('payload is null');
+    }
+
+    if (navigatorKey.currentState != null) {
+      navigatorKey.currentState?.push(
         MaterialPageRoute(
-          builder: (_) => foregroundResponse!,
+          builder: (_) => DetailPage(Todo.fromString(notificationResponse.payload ?? '')),
         ),
       );
     }
@@ -62,16 +65,6 @@ class NotificationInitilizer {
 void notificationTapBackground(NotificationResponse notificationResponse) {
   debugPrint('onDidReceiveBackgroundNotificationResponse');
   debugPrint('notificationResponse');
-  // // 現在のウィジェットツリーのBuildContextを取得する
-  // final BuildContext? context =
-  //     WidgetsBinding.instance.getFlutterEngine?.binding?.buildOwner?.rootBuildContext;
-
-  // handle action
-
-  // if (key.currentState?.context == null) {
-  //   return;
-  // }
-  // // TODO: いい感じにTODOの詳細画面に遷移するようにする
 }
 
 class LocalNotificationController extends StateNotifier<FlutterLocalNotificationsPlugin> {
@@ -79,8 +72,14 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
 
   final FlutterLocalNotificationsPlugin pluguin;
 
-  Future<void> addNotification(String title, String body, DateTime endTime, int id,
-      {required String channel}) async {
+  Future<void> addNotification(
+    String title,
+    String body,
+    DateTime endTime,
+    int id, {
+    required String channel,
+    Map<String, dynamic>? payload,
+  }) async {
     tz.initializeTimeZones();
 
     final scheduleTime =
@@ -108,6 +107,7 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
         noticeDetail,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         androidAllowWhileIdle: true,
+        payload: payload.toString(),
       ),
     );
   }

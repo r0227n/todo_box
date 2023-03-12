@@ -213,7 +213,6 @@ class HomePage extends HookConsumerWidget {
                       assets: value.images.map((e) => base64Encode(e.readAsBytesSync())).toList(),
                     ),
                   );
-
               if (todo != null && (value.date?.isAfter(DateTime.now()) ?? false)) {
                 ref.read(localNotificationProvider.notifier).addNotification(
                       'Notification Title',
@@ -221,6 +220,8 @@ class HomePage extends HookConsumerWidget {
                       todo.date!,
                       todo.id ?? -1,
                       channel: 'testing',
+                      // payload: todo.toJson(),
+                      payload: todo.toJson().map((key, value) => MapEntry('"$key"', '"$value"')),
                     );
               } else {
                 // TODO: エラーハンドリング

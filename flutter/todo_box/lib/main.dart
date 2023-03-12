@@ -14,10 +14,7 @@ void main() async {
 
   // 通知の初期化
   // TODO: foregroundResponseで指定する画面を[DetailPage]にする
-  final notificationSetting = NotificationInitilizer(
-      foregroundResponse: const Scaffold(
-    body: Center(child: Text('ts')),
-  ));
+  final notificationSetting = NotificationInitilizer();
 
   final databasesPath = await getDatabasesPath();
   const defaultTable = DefaultTable();

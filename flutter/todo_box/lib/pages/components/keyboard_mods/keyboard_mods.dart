@@ -407,7 +407,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
                     controller: _controller,
                     onSubmitted: (text) {
                       if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                        _pickFiles.clear();
                         final submittedMenu = _selectedChip.label ?? widget.selectedChip.label;
                         if (submittedMenu == null) {
                           throw StateError('The State of Menu does not exist.');
@@ -419,6 +418,8 @@ class _KeyboardModsState extends State<KeyboardMods> {
                           date: _selectDateTime.value,
                           images: _pickFiles,
                         ));
+
+                        _pickFiles.clear();
                       }
                       _controller.clear();
                     },
