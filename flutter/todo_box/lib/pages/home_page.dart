@@ -2,6 +2,7 @@ import 'dart:convert' show base64Encode;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'detail_page.dart';
 import 'table_create_field.dart';
 import 'list_page.dart';
 import 'components/mods.dart';
@@ -32,18 +33,13 @@ class HomePage extends HookConsumerWidget {
           return;
         }
 
-        // TODO: 通知でアプリを起動した場合、そのTodoの詳細画面を表示する
-
-        // 通知でアプリを起動した場合、そのTodoの詳細画面を表示する
+        // アプリ終了状態で通知を開き、でアプリを起動したら詳細画面を表示する
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (_) => Scaffold(
-                    body: Center(child: Text(details.toString())),
-                  )),
+          MaterialPageRoute(builder: (_) => DetailPage(Todo.fromString(details.payload ?? ''))),
         );
       });
-      return;
+      return null;
     }, const []);
 
     return config.when(
@@ -220,7 +216,6 @@ class HomePage extends HookConsumerWidget {
                       todo.date!,
                       todo.id ?? -1,
                       channel: 'testing',
-                      // payload: todo.toJson(),
                       payload: todo.toJson().map((key, value) => MapEntry('"$key"', '"$value"')),
                     );
               } else {
