@@ -67,6 +67,28 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
   debugPrint('notificationResponse');
 }
 
+/// 通知のスケジュール
+enum NotificationSchedule {
+  dailly, // 毎日
+  weekly, // 毎週
+  monthly; // 毎月
+
+  /// [NotificationSchedule]を[DateTimeComponents]に変換する
+  DateTimeComponents toDateTimeComponents() {
+    switch (this) {
+      case NotificationSchedule.dailly:
+        // 毎日同じ時間に通知を出す
+        return DateTimeComponents.time;
+      case NotificationSchedule.weekly:
+        // 毎週同じ曜日と時間に通知を出す
+        return DateTimeComponents.dayOfWeekAndTime;
+      case NotificationSchedule.monthly:
+        // 毎月同じ日と時間に通知を出す
+        return DateTimeComponents.dayOfMonthAndTime;
+    }
+  }
+}
+
 class LocalNotificationController extends StateNotifier<FlutterLocalNotificationsPlugin> {
   LocalNotificationController(this.pluguin) : super(pluguin);
 
@@ -79,6 +101,7 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
     int id, {
     required String channel,
     Map<String, dynamic>? payload,
+    NotificationSchedule? schedule,
   }) async {
     tz.initializeTimeZones();
 
@@ -102,14 +125,20 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
         id,
         title,
         body,
-        // scheduleTime,
-        tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+        scheduleTime,
         noticeDetail,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         androidAllowWhileIdle: true,
         payload: payload.toString(),
+        matchDateTimeComponents: schedule?.toDateTimeComponents(),
       ),
     );
+  }
+
+  /// 通知をキャンセルする
+  Future<bool> cancelNotification(int id) async {
+    final result = await AsyncValue.guard(() async => await state.cancel(id));
+    return result.hasValue;
   }
 
   /// 通知をタップし、アプリを起動した時の詳細を取得する
@@ -120,7 +149,21 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
     return details.asData?.value?.notificationResponse;
   }
 
-  Future<List<PendingNotificationRequest>> showPendingNotifications() async {
-    return await state.pendingNotificationRequests();
+  /// 指定時刻前の通知を取得(予約された通知を取得する)
+  Future<List<PendingNotificationRequest>?> getPendingNotifications() async {
+    final pendings = await AsyncValue.guard(() async => await state.pendingNotificationRequests());
+    return pendings.maybeWhen(
+      orElse: () => null,
+      data: (notifications) => notifications.isEmpty ? null : notifications,
+    );
+  }
+
+  /// 指定時刻を過ぎた通知を取得(通知された通知を取得する)
+  Future<List<ActiveNotification>?> getActiveNotifications() async {
+    final actives = await AsyncValue.guard(() async => await state.getActiveNotifications());
+    return actives.maybeWhen(
+      orElse: () => null,
+      data: (notifications) => notifications.isEmpty ? null : notifications,
+    );
   }
 }
