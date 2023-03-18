@@ -96,6 +96,14 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
 
   final FlutterLocalNotificationsPlugin pluguin;
 
+  /// 既存に登録されている通知のidを取得する
+  Future<List<int>> get existingIds async {
+    final pendings = await getPendingNotifications();
+    final actives = await getActiveNotifications();
+
+    return [...?pendings?.map((e) => e.id), ...?actives?.map((e) => e.id)];
+  }
+
   // 0 ~ 2147483647の乱数を生成する
   // 32bit = -2147483647 ~ 2147483647
   int get randomId => Random().nextInt(2147483647);
@@ -103,15 +111,11 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
   /// create a [zonedSchedule]'s id
   /// 既に存在するidは生成しない
   Future<int> get scheduleId async {
-    final pendings = await getPendingNotifications();
-    final actives = await getActiveNotifications();
-
-    // 既に存在するidのリスト
-    final List<int> existingIds = [...?pendings?.map((e) => e.id), ...?actives?.map((e) => e.id)];
+    final ids = await existingIds;
 
     do {
       final id = randomId;
-      if (!existingIds.contains(id)) {
+      if (!ids.contains(id)) {
         return id;
       }
     } while (true);
