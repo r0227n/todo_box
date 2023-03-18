@@ -120,19 +120,21 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
       android: androidDetail,
     );
 
-    AsyncValue.guard(
-      () async => await state.zonedSchedule(
-        id,
-        title,
-        body,
-        scheduleTime,
-        noticeDetail,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        androidAllowWhileIdle: true,
-        payload: payload.toString(),
-        matchDateTimeComponents: schedule?.toDateTimeComponents(),
-      ),
-    );
+    await AsyncValue.guard(() async => await state.zonedSchedule(
+          id,
+          title,
+          body,
+          scheduleTime,
+          noticeDetail,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          androidAllowWhileIdle: true,
+          payload: payload.toString(),
+          matchDateTimeComponents: schedule?.toDateTimeComponents(),
+        )).then((e) {
+      if (e.hasError) {
+        throw e.asError?.value;
+      }
+    });
   }
 
   /// 通知をキャンセルする
