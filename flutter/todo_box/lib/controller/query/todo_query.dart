@@ -15,7 +15,7 @@ class TodoQuery {
 
   /// [Todo] をテーブルに追加
   Future<Todo> add({
-    required int id,
+    int? id,
     required String table,
     required String title,
     required bool done,

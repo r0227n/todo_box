@@ -28,7 +28,6 @@ class TodoController extends _$TodoController {
     final table = ref.read(tableControllerProvider.notifier);
 
     final result = await AsyncValue.guard(() async => await query.add(
-          id: todo.id ?? -1,
           table: todo.table,
           title: todo.title,
           done: todo.done,

@@ -44,16 +44,16 @@ class ColumnType {
       };
 
   Map<String, dynamic> toInsert({
-    required int id,
+    int? id,
     required String title,
     required bool done,
     required DateTime? date,
     required List<String> tags,
     required List<int> notification,
     required List<String> assets,
-  }) =>
-      {
-        this.id: id,
+  }) {
+    if (id == null) {
+      return {
         this.title: title,
         this.done: done ? 1 : 0,
         this.date: date is DateTime ? date.toIso8601String() : null,
@@ -61,6 +61,18 @@ class ColumnType {
         this.notification: notification.isEmpty ? null : jsonEncode(notification),
         this.assets: assets.isEmpty ? null : jsonEncode(assets),
       };
+    }
+
+    return {
+      this.id: id,
+      this.title: title,
+      this.done: done ? 1 : 0,
+      this.date: date is DateTime ? date.toIso8601String() : null,
+      this.tags: tags.isEmpty ? null : jsonEncode(tags),
+      this.notification: notification.isEmpty ? null : jsonEncode(notification),
+      this.assets: assets.isEmpty ? null : jsonEncode(assets),
+    };
+  }
 
   Map<String, dynamic> toDecode(Map<String, dynamic> json) => {
         '_id': json[id],
