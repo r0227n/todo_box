@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -94,11 +96,34 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
 
   final FlutterLocalNotificationsPlugin pluguin;
 
-  Future<void> addNotification(
+  // 0 ~ 2147483647の乱数を生成する
+  // 32bit = -2147483647 ~ 2147483647
+  int get randomId => Random().nextInt(2147483647);
+
+  /// create a [zonedSchedule]'s id
+  /// 既に存在するidは生成しない
+  Future<int> get scheduleId async {
+    final pendings = await getPendingNotifications();
+    final actives = await getActiveNotifications();
+
+    // 既に存在するidのリスト
+    final List<int> existingIds = [...?pendings?.map((e) => e.id), ...?actives?.map((e) => e.id)];
+
+    do {
+      final id = randomId;
+      if (!existingIds.contains(id)) {
+        return id;
+      }
+    } while (true);
+  }
+
+  /// 通知を登録する
+  /// [id]は32bitの整数である必要がある(flutter_local_notificationの仕様)
+  Future<int> addNotification(
     String title,
     String body,
-    DateTime endTime,
-    int id, {
+    DateTime endTime, {
+    int? id,
     required String channel,
     Map<String, dynamic>? payload,
     NotificationSchedule? schedule,
@@ -120,8 +145,10 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
       android: androidDetail,
     );
 
+    final zoneScheduleId = id ?? await scheduleId;
+
     await AsyncValue.guard(() async => await state.zonedSchedule(
-          id,
+          zoneScheduleId,
           title,
           body,
           scheduleTime,
@@ -135,6 +162,8 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
         throw e.asError?.value;
       }
     });
+
+    return zoneScheduleId;
   }
 
   /// 通知をキャンセルする

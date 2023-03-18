@@ -198,6 +198,9 @@ class HomePage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
+              final notificationCtrl = ref.read(localNotificationProvider.notifier);
+              final scheduleId = await notificationCtrl.scheduleId;
+
               final todo = await ref.read(todoControllerProvider(value.selectMenu).notifier).add(
                     Todo(
                       table: value.selectMenu,
@@ -205,19 +208,19 @@ class HomePage extends HookConsumerWidget {
                       done: false,
                       date: value.date,
                       tags: [],
-                      notification: [value.date],
+                      notification: [scheduleId],
                       assets: value.images.map((e) => base64Encode(e.readAsBytesSync())).toList(),
                     ),
                   );
               if (todo != null && (value.date?.isAfter(DateTime.now()) ?? false)) {
-                ref.read(localNotificationProvider.notifier).addNotification(
-                      'Notification Title',
-                      todo.title,
-                      todo.date!,
-                      todo.id ?? -1,
-                      channel: 'testing',
-                      payload: todo.toJson().map((key, value) => MapEntry('"$key"', '"$value"')),
-                    );
+                notificationCtrl.addNotification(
+                  'Notification Title',
+                  todo.title,
+                  todo.date!,
+                  id: scheduleId,
+                  channel: 'testing',
+                  payload: todo.toJson().map((key, value) => MapEntry('"$key"', '"$value"')),
+                );
               } else {
                 // TODO: エラーハンドリング
               }

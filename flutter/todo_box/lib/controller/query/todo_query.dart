@@ -15,17 +15,19 @@ class TodoQuery {
 
   /// [Todo] をテーブルに追加
   Future<Todo> add({
+    required int id,
     required String table,
     required String title,
     required bool done,
     required DateTime? date,
     required List<String> tags,
-    required List<DateTime> notification,
+    required List<int> notification,
     required List<String> assets,
   }) async {
     final key = await sqlHelper.insert(
       table,
       columnType.toInsert(
+        id: id,
         title: title,
         done: done,
         date: date,
@@ -91,12 +93,13 @@ class TodoQuery {
     try {
       await sqlHelper.createTable(table, columnType.toMap());
       await add(
+        id: 0,
         table: table,
         title: '_$emoji' '_$table',
         done: false,
-        date: null,
+        date: DateTime.now(),
         tags: const <String>[],
-        notification: const <DateTime>[],
+        notification: const <int>[],
         assets: const <String>[],
       );
     } catch (e) {
