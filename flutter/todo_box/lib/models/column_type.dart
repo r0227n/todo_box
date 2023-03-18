@@ -44,26 +44,21 @@ class ColumnType {
       };
 
   Map<String, dynamic> toInsert({
+    required int id,
     required String title,
     required bool done,
     required DateTime? date,
     required List<String> tags,
-    required List<DateTime?> notification,
+    required List<int> notification,
     required List<String> assets,
   }) =>
       {
+        this.id: id,
         this.title: title,
         this.done: done ? 1 : 0,
         this.date: date is DateTime ? date.toIso8601String() : null,
         this.tags: tags.isEmpty ? null : jsonEncode(tags),
-        this.notification: notification.isEmpty
-            ? null
-            : jsonEncode(notification.map((e) {
-                if (e != null) {
-                  return e.toIso8601String();
-                }
-                return e;
-              }).toList()),
+        this.notification: notification.isEmpty ? null : jsonEncode(notification),
         this.assets: assets.isEmpty ? null : jsonEncode(assets),
       };
 
@@ -74,8 +69,7 @@ class ColumnType {
         done: json[done] == 0 ? false : true,
         date: json[date],
         tags: json[tags] == null ? const <String>[] : jsonDecode(json[tags]),
-        notification:
-            json[notification] == null ? const <DateTime>[] : jsonDecode(json[notification]),
+        notification: json[notification] == null ? const <int>[] : jsonDecode(json[notification]),
         assets: json[assets] == null ? const <String>[] : jsonDecode(json[assets]),
       };
 

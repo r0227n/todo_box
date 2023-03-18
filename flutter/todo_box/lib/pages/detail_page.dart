@@ -79,7 +79,6 @@ class _DetailPageState extends State<DetailPage> {
                   table: _tabelLabel,
                   title: txtController.text,
                   date: _dateTime,
-                  notification: [_dateTime],
                   assets: _images.map((e) => base64Encode(e)).toList(),
                 );
                 final popValue = editTodo == widget.todo ? null : editTodo;

@@ -13,7 +13,7 @@ class Todo with _$Todo {
     required bool done,
     required DateTime? date,
     required List<String?> tags,
-    required List<DateTime?> notification,
+    required List<int> notification,
     required List<String> assets,
   }) = _Todo;
 
@@ -29,7 +29,7 @@ class Todo with _$Todo {
       done: json['done'] == 'true',
       date: DateTime.tryParse(json['date']),
       tags: json['tags'].replaceAll('[', '').replaceAll(']', '').split(','),
-      notification: notification.map((e) => DateTime.tryParse(e)).toList(),
+      notification: notification.map((e) => int.parse(e)).toList(),
       assets: json['assets'].replaceAll('[', '').replaceAll(']', '').split(','),
     );
   }

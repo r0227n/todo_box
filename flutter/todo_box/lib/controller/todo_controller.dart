@@ -27,12 +27,13 @@ class TodoController extends _$TodoController {
     final table = ref.read(tableControllerProvider.notifier);
 
     final result = await AsyncValue.guard(() async => await query.add(
+          id: todo.id ?? -1,
           table: todo.table,
           title: todo.title,
           done: todo.done,
           date: todo.date,
           tags: todo.tags.whereType<String>().toList(),
-          notification: todo.notification.whereType<DateTime>().toList(),
+          notification: todo.notification,
           assets: todo.assets.whereType<String>().toList(),
         ));
 
