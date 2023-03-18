@@ -1,5 +1,4 @@
-import 'dart:math';
-
+import 'dart:math' show Random;
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -92,7 +91,9 @@ enum NotificationSchedule {
 }
 
 class LocalNotificationController extends StateNotifier<FlutterLocalNotificationsPlugin> {
-  LocalNotificationController(this.pluguin) : super(pluguin);
+  LocalNotificationController(this.pluguin) : super(pluguin) {
+    tz.initializeTimeZones();
+  }
 
   final FlutterLocalNotificationsPlugin pluguin;
 
@@ -128,14 +129,13 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
     String body,
     DateTime endTime, {
     int? id,
+    required String timezoneId,
     required String channel,
     Map<String, dynamic>? payload,
     NotificationSchedule? schedule,
   }) async {
-    tz.initializeTimeZones();
-
-    final scheduleTime =
-        tz.TZDateTime.fromMillisecondsSinceEpoch(tz.local, endTime.millisecondsSinceEpoch);
+    final scheduleTime = tz.TZDateTime.fromMillisecondsSinceEpoch(
+        tz.getLocation(timezoneId), endTime.millisecondsSinceEpoch);
 
     final androidDetail = AndroidNotificationDetails(
       channel, // channel Id

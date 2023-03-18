@@ -2,6 +2,7 @@ import 'dart:convert' show base64Encode;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'detail_page.dart';
 import 'components/mods.dart';
 import 'components/emoji_text.dart';
@@ -119,6 +120,7 @@ class ListPage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
+              final timezonId = context.l10n.timezoneId;
               final notificationCtrl = ref.read(localNotificationProvider.notifier);
               final scheduleId = await notificationCtrl.scheduleId;
 
@@ -139,6 +141,7 @@ class ListPage extends HookConsumerWidget {
                       todo.title,
                       todo.date!,
                       id: scheduleId,
+                      timezoneId: timezonId,
                       channel: 'testing',
                       payload: todo.toJson().map((key, value) => MapEntry('"$key"', '"$value"')),
                     );
