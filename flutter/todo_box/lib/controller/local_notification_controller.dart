@@ -8,6 +8,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import '../models/todo.dart';
 import '../pages/detail_page.dart';
+import '../types/notification_type.dart';
 
 final localNotificationPluguinProvider =
     Provider<FlutterLocalNotificationsPlugin>((_) => throw UnimplementedError());
@@ -66,28 +67,6 @@ class NotificationInitilizer {
 void notificationTapBackground(NotificationResponse notificationResponse) {
   debugPrint('onDidReceiveBackgroundNotificationResponse');
   debugPrint('notificationResponse');
-}
-
-/// 通知のスケジュール
-enum NotificationSchedule {
-  dailly, // 毎日
-  weekly, // 毎週
-  monthly; // 毎月
-
-  /// [NotificationSchedule]を[DateTimeComponents]に変換する
-  DateTimeComponents toDateTimeComponents() {
-    switch (this) {
-      case NotificationSchedule.dailly:
-        // 毎日同じ時間に通知を出す
-        return DateTimeComponents.time;
-      case NotificationSchedule.weekly:
-        // 毎週同じ曜日と時間に通知を出す
-        return DateTimeComponents.dayOfWeekAndTime;
-      case NotificationSchedule.monthly:
-        // 毎月同じ日と時間に通知を出す
-        return DateTimeComponents.dayOfMonthAndTime;
-    }
-  }
 }
 
 class LocalNotificationController extends StateNotifier<FlutterLocalNotificationsPlugin> {
