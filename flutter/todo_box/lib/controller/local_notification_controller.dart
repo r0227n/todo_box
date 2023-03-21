@@ -134,8 +134,7 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
     Map<String, dynamic>? payload,
     NotificationSchedule? schedule,
   }) async {
-    final scheduleTime = tz.TZDateTime.fromMillisecondsSinceEpoch(
-        tz.getLocation(timezoneId), endTime.millisecondsSinceEpoch);
+    final scheduleTime = tz.TZDateTime.from(endTime, tz.getLocation(timezoneId));
 
     final androidDetail = AndroidNotificationDetails(
       channel, // channel Id
