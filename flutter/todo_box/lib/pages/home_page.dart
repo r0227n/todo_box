@@ -1,7 +1,9 @@
-import 'dart:convert' show base64Encode;
+import 'dart:convert' show base64Encode, jsonDecode;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
+import 'detail_page.dart';
 import 'table_create_field.dart';
 import 'list_page.dart';
 import 'components/mods.dart';
@@ -24,6 +26,24 @@ class HomePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(tableControllerProvider);
     final showKeyboard = useState<bool>(false);
+
+    useEffect(() {
+      // アプリ起動時に一度だけ実行
+      ref.read(localNotificationProvider.notifier).launchNotificationResponse().then((details) {
+        if (details == null) {
+          return;
+        }
+
+        // アプリ終了状態で通知を開き、でアプリを起動したら詳細画面を表示する
+        Navigator.push(
+          context,
+          // MaterialPageRoute(builder: (_) => DetailPage(Todo.fromString(details.payload ?? ''))),
+          MaterialPageRoute(
+              builder: (_) => DetailPage(Todo.fromJson(jsonDecode(details.payload ?? '')))),
+        );
+      });
+      return null;
+    }, const []);
 
     return config.when(
       loading: () => const CircularProgressIndicator(),
@@ -181,6 +201,10 @@ class HomePage extends HookConsumerWidget {
               showKeyboard.value = !showKeyboard.value;
             },
             onSubmitted: (value) async {
+              final timezonId = context.l10n.timezoneId;
+              final notificationCtrl = ref.read(localNotificationProvider.notifier);
+              final scheduleId = await notificationCtrl.scheduleId;
+
               final todo = await ref.read(todoControllerProvider(value.selectMenu).notifier).add(
                     Todo(
                       table: value.selectMenu,
@@ -188,18 +212,21 @@ class HomePage extends HookConsumerWidget {
                       done: false,
                       date: value.date,
                       tags: [],
-                      notification: [value.date],
+                      notification: [NotificationType(id: scheduleId, schedule: value.schedule)],
                       assets: value.images.map((e) => base64Encode(e.readAsBytesSync())).toList(),
                     ),
                   );
               if (todo != null && (value.date?.isAfter(DateTime.now()) ?? false)) {
-                ref.read(localNotificationProvider.notifier).addNotification(
-                      'Notification Title',
-                      todo.title,
-                      todo.date!,
-                      todo.id ?? -1,
-                      channel: 'testing',
-                    );
+                notificationCtrl.addNotification(
+                  'Notification Title',
+                  todo.title,
+                  todo.date!,
+                  id: scheduleId,
+                  timezoneId: timezonId,
+                  channel: 'testing',
+                  payload: todo.toJson(),
+                  schedule: value.schedule,
+                );
               } else {
                 // TODO: エラーハンドリング
               }

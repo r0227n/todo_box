@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:todo_box/controller/local_notification_controller.dart';
 import '/controller/table_controller.dart';
 import '../models/todo.dart';
 import '../provider/todo_query_provider.dart';
@@ -32,7 +33,7 @@ class TodoController extends _$TodoController {
           done: todo.done,
           date: todo.date,
           tags: todo.tags.whereType<String>().toList(),
-          notification: todo.notification.whereType<DateTime>().toList(),
+          notification: todo.notification,
           assets: todo.assets.whereType<String>().toList(),
         ));
 
@@ -58,12 +59,36 @@ class TodoController extends _$TodoController {
       });
 
   Future<void> remove(Todo todo) async {
-    AsyncValue.guard(() => ref.read(todoQueryProvider).remove(todo));
-    AsyncValue.guard(() => ref.read(tableControllerProvider.notifier).removeTodo(todo));
+    AsyncValue.guard(() => ref.read(todoQueryProvider).remove(todo)).then((query) {
+      if (query.hasError) {
+        throw query.asError?.value;
+      }
+    });
+    AsyncValue.guard(() => ref.read(tableControllerProvider.notifier).removeTodo(todo))
+        .then((tableCtrl) {
+      if (tableCtrl.hasError) {
+        throw tableCtrl.asError?.value;
+      }
+    });
 
     await update((p0) {
       p0.remove(todo);
       return p0;
+    });
+
+    // 通知を削除する
+    final localNotificationCtrl = ref.read(localNotificationProvider.notifier);
+    AsyncValue.guard(() async {
+      final ids = await localNotificationCtrl.existingIds;
+      for (var notification in todo.notification) {
+        if (ids.contains(notification.id)) {
+          localNotificationCtrl.cancelNotification(notification.id);
+        }
+      }
+    }).then((notification) {
+      if (notification.hasError) {
+        throw notification.asError?.value;
+      }
     });
   }
 

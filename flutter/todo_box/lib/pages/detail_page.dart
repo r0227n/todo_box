@@ -4,13 +4,13 @@ import 'dart:convert' show base64Encode, base64Decode;
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'detail_image.dart';
 import 'components/emoji_text.dart';
 import '../controller/todo_controller.dart';
 import '../provider/tables_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/todo.dart';
 import '../models/table.dart' as todo;
+import 'detail_image.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage(this.todo, {super.key});
@@ -35,7 +35,8 @@ class _DetailPageState extends State<DetailPage> {
     if (widget.todo.date != null) {
       _dateTime = widget.todo.date;
     }
-    _images = widget.todo.assets.whereType<String>().map((e) => base64Decode(e)).toList();
+    _images =
+        widget.todo.assets.isEmpty ? widget.todo.assets.map((e) => base64Decode(e)).toList() : [];
 
     txtController = TextEditingController(text: widget.todo.title);
     _picker = ImagePicker();
@@ -59,7 +60,7 @@ class _DetailPageState extends State<DetailPage> {
                     final todoCtrl = ref.read(todoControllerProvider(widget.todo.table).notifier);
                     todoCtrl.remove(widget.todo);
                     // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
-                    Navigator.pop(context, 'aaa');
+                    Navigator.pop(context);
                   },
                   icon: const Icon(Icons.delete_outlined),
                 ),
@@ -78,7 +79,6 @@ class _DetailPageState extends State<DetailPage> {
                   table: _tabelLabel,
                   title: txtController.text,
                   date: _dateTime,
-                  notification: [_dateTime],
                   assets: _images.map((e) => base64Encode(e)).toList(),
                 );
                 final popValue = editTodo == widget.todo ? null : editTodo;

@@ -6,6 +6,8 @@ import 'mod_tool.dart';
 import 'mod_button.dart';
 import 'mod_tool_picker.dart';
 import '../../detail_image.dart';
+import '../../../types/notification_type.dart';
+import '../../../extensions/string_ext.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
@@ -77,6 +79,8 @@ class _KeyboardModsState extends State<KeyboardMods> {
   final List<File> _pickFiles = <File>[];
 
   late ModActionChip _selectedChip;
+
+  NotificationSchedule _notificationSchedule = NotificationSchedule.none;
 
   bool _visibleToolBar = false;
   Widget? _modToolWidgetState;
@@ -178,30 +182,38 @@ class _KeyboardModsState extends State<KeyboardMods> {
               return _ModActionDateTime(
                 initDateTime: value ?? _now,
                 dateTime: value,
+                schedule: _notificationSchedule,
+                focusNode: _node,
                 onDatePicker: (date) {
                   setState(() {
                     _selectDateTime.value = date;
-                  });
-                },
-                onTimePicker: (time) {
-                  setState(() {
-                    _selectDateTime.value = time;
-                  });
-                },
-                onApply: () {
-                  setState(() {
-                    _visibleToolBar = !_visibleToolBar;
                     modButtons = modButtons.map((e) {
                       if (e.modIndex != index) {
                         return e;
                       }
 
-                      return e.copyWith(
-                        select: _visibleToolBar,
-                        chip: e.chip?.copyWith(dateTime: value),
-                      );
+                      return e.copyWith(chip: e.chip?.copyWith(dateTime: date));
                     }).toList();
                   });
+                },
+                onTimePicker: (time) {
+                  setState(() {
+                    _selectDateTime.value = time;
+                    modButtons = modButtons.map((e) {
+                      if (e.modIndex != index) {
+                        return e;
+                      }
+
+                      return e.copyWith(chip: e.chip?.copyWith(dateTime: time));
+                    }).toList();
+                  });
+                },
+                onSelectRepeat: (reqeat) {
+                  if (reqeat != null) {
+                    setState(() {
+                      _notificationSchedule = reqeat;
+                    });
+                  }
                 },
               );
             },
@@ -406,7 +418,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
                     controller: _controller,
                     onSubmitted: (text) {
                       if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                        _pickFiles.clear();
                         final submittedMenu = _selectedChip.label ?? widget.selectedChip.label;
                         if (submittedMenu == null) {
                           throw StateError('The State of Menu does not exist.');
@@ -417,7 +428,10 @@ class _KeyboardModsState extends State<KeyboardMods> {
                           selectMenu: submittedMenu,
                           date: _selectDateTime.value,
                           images: _pickFiles,
+                          schedule: _notificationSchedule,
                         ));
+
+                        _pickFiles.clear();
                       }
                       _controller.clear();
                     },
@@ -473,12 +487,23 @@ class ModInputValue {
     required this.selectMenu,
     required this.date,
     required this.images,
+    required this.schedule,
   });
 
+  /// 入力されたテキスト
   final String text;
+
+  /// 選択されたメニュー
   final String selectMenu;
+
+  /// 期限
   final DateTime? date;
+
+  /// 画像ファイル
   final List<File> images;
+
+  /// 通知スケジュール
+  final NotificationSchedule schedule;
 }
 
 class ModActionChip {
@@ -540,16 +565,20 @@ class _ModActionDateTime extends StatelessWidget {
   const _ModActionDateTime({
     required this.initDateTime,
     this.dateTime,
+    required this.schedule,
+    required this.focusNode,
     required this.onDatePicker,
     required this.onTimePicker,
-    required this.onApply,
+    required this.onSelectRepeat,
   });
 
   final DateTime initDateTime;
   final DateTime? dateTime;
+  final NotificationSchedule schedule;
+  final FocusNode focusNode;
   final ValueChanged<DateTime> onDatePicker;
   final ValueChanged<DateTime> onTimePicker;
-  final VoidCallback onApply;
+  final ValueChanged<NotificationSchedule?> onSelectRepeat;
 
   @override
   Widget build(BuildContext context) {
@@ -583,8 +612,6 @@ class _ModActionDateTime extends StatelessWidget {
                   date.day,
                   date.hour == 0 ? initDateTime.hour : 0,
                   date.minute == 0 ? initDateTime.minute : 0,
-                  date.second == 0 ? initDateTime.second : 0,
-                  date.millisecond == 0 ? initDateTime.millisecond : 0,
                 ));
               },
               child: Text(dateTime?.toYYYYMMdd(context.l10n) ?? 'Date'),
@@ -621,20 +648,43 @@ class _ModActionDateTime extends StatelessWidget {
                   dateTime?.day ?? initDateTime.day,
                   time.hour,
                   time.minute,
-                  initDateTime.second,
-                  initDateTime.millisecond,
                 ));
+
+                focusNode.requestFocus();
               },
               child: Text(dateTime?.toHHmm(context.l10n) ?? 'Time'),
             ),
           ),
           _padding,
-          ElevatedButton(
+          ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
             ),
-            onPressed: () => onApply(),
-            child: const Text('Apply'),
+            onPressed: () {
+              showDialog<NotificationSchedule>(
+                context: context,
+                builder: (childContext) {
+                  return SimpleDialog(
+                    title: const Text("Title"),
+                    insetPadding: const EdgeInsets.all(15.0),
+                    children: <Widget>[
+                      for (final schedule in NotificationSchedule.values)
+                        ListTile(
+                          title: Text(schedule.name.capitalize),
+                          trailing: schedule == this.schedule ? const Icon(Icons.check) : null,
+                          onTap: () {
+                            Navigator.pop(childContext, schedule);
+                          },
+                        ),
+                    ],
+                  );
+                },
+              ).then((repeat) => onSelectRepeat(repeat));
+            },
+            icon: const Icon(Icons.repeat),
+            label: (schedule == NotificationSchedule.none)
+                ? const SizedBox.shrink()
+                : Text(schedule.name.capitalize),
           ),
           _padding,
         ],
@@ -642,29 +692,6 @@ class _ModActionDateTime extends StatelessWidget {
     );
   }
 
+  /// ボタン間の余白
   SizedBox get _padding => const SizedBox(width: 15);
-
-  String _visibleDate(BuildContext context, DateTime? date) {
-    if (date == null) {
-      return 'null';
-    }
-
-    // final visible = date.year == initDateTime.year &&
-    //     date.month == initDateTime.month &&
-    //     date.day == initDateTime.day;
-    final visible = date.second != 0 && date.millisecond != 0;
-    return visible ? date.toYYYYMMdd(context.l10n) : 'null';
-  }
-
-  /// Time側での変更が無い限り、初期値を表示
-  String _visibleTime(BuildContext context, DateTime? time) {
-    if (time == null) {
-      return 'null';
-    }
-
-    final visible =
-        time.second == initDateTime.second && time.millisecond == initDateTime.millisecond;
-
-    return visible ? time.toHm(context.l10n) : 'null';
-  }
 }
