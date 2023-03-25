@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' show Random;
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -52,10 +53,12 @@ class NotificationInitilizer {
       throw StateError('payload is null');
     }
 
-    if (navigatorKey.currentState != null) {
+    if (navigatorKey.currentState != null && notificationResponse.payload != null) {
       navigatorKey.currentState?.push(
         MaterialPageRoute(
-          builder: (_) => DetailPage(Todo.fromString(notificationResponse.payload ?? '')),
+          builder: (_) => DetailPage(
+            Todo.fromJson(jsonDecode(notificationResponse.payload!)),
+          ),
         ),
       );
     }
@@ -137,7 +140,7 @@ class LocalNotificationController extends StateNotifier<FlutterLocalNotification
           noticeDetail,
           uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
           androidAllowWhileIdle: true,
-          payload: payload.toString(),
+          payload: payload != null ? jsonEncode(payload) : null,
           matchDateTimeComponents: schedule?.toDateTimeComponents(),
         )).then((e) {
       if (e.hasError) {

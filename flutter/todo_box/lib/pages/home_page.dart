@@ -224,7 +224,7 @@ class HomePage extends HookConsumerWidget {
                   id: scheduleId,
                   timezoneId: timezonId,
                   channel: 'testing',
-                  payload: todo.toJson().map((key, value) => MapEntry('"$key"', '"$value"')),
+                  payload: todo.toJson(),
                   schedule: value.schedule,
                 );
               } else {

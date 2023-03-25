@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'notification_type.dart';
 
@@ -20,23 +18,6 @@ class Todo with _$Todo {
     @NotificationTypeConverter() required List<NotificationType> notification,
     required List<String> assets,
   }) = _Todo;
-
-  factory Todo.fromString(String jsonString) {
-    final Map<String, dynamic> json = jsonDecode(jsonString);
-    final List<String> notification =
-        json['notification'].replaceAll('[', '').replaceAll(']', '').split(',');
-
-    return Todo(
-      table: json['table'],
-      id: int.tryParse(json['_id']),
-      title: json['title'],
-      done: json['done'] == 'true',
-      date: DateTime.tryParse(json['date']),
-      tags: json['tags'].replaceAll('[', '').replaceAll(']', '').split(','),
-      notification: notification.map((e) => NotificationType.fromJson(jsonDecode(e))).toList(),
-      assets: json['assets'].replaceAll('[', '').replaceAll(']', '').split(','),
-    );
-  }
 
   factory Todo.fromJson(Map<String, dynamic> json) => _$TodoFromJson(json);
 }
