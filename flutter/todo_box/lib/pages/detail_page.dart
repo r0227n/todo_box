@@ -146,21 +146,35 @@ class _DetailPageState extends State<DetailPage> {
                     style: const TextStyle(fontSize: 16.0),
                   ),
                 ),
-                _DatePicker(
-                  null,
-                  _dateTime?.toMMMEd(context.l10n) ?? '日時を追加',
-                  onSelect: (date) {
-                    final now = DateTime.now();
-                    setState(() {
-                      _dateTime = DateTime(
-                        date.year,
-                        date.month,
-                        date.day,
-                        _dateTime?.hour ?? now.hour,
-                        _dateTime?.minute ?? now.minute,
-                      );
-                    });
-                  },
+                ListTile(
+                  leading: const Icon(Icons.event_available),
+                  title: Text(_dateTime?.toMMMEd(context.l10n) ?? '日時を追加'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.abc),
+                    onPressed: () {},
+                  ),
+                  onTap: () => showDatePicker(
+                    context: context,
+                    initialDate: _dateTime ?? DateTime.now(),
+                    firstDate: DateTime(2023),
+                    lastDate: DateTime(2040),
+                  ).then(
+                    (date) {
+                      if (date == null) {
+                        return;
+                      }
+                      final now = DateTime.now();
+                      setState(() {
+                        _dateTime = DateTime(
+                          date.year,
+                          date.month,
+                          date.day,
+                          _dateTime?.hour ?? now.hour,
+                          _dateTime?.minute ?? now.minute,
+                        );
+                      });
+                    },
+                  ),
                 ),
                 ListTile(
                   leading: const Icon(Icons.schedule),
@@ -313,88 +327,5 @@ class _DetailPageState extends State<DetailPage> {
         _images.add(File(img.path).readAsBytesSync());
       });
     });
-  }
-}
-
-class _DatePicker extends StatefulWidget {
-  const _DatePicker(
-    this.restorationId,
-    this.data, {
-    required this.onSelect,
-  });
-
-  final String? restorationId;
-  final String data;
-  final ValueChanged<DateTime>? onSelect;
-
-  @override
-  State<_DatePicker> createState() => __DatePickerState();
-}
-
-class __DatePickerState extends State<_DatePicker> with RestorationMixin {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  String? get restorationId => widget.restorationId;
-
-  final RestorableDateTime _selectedDate = RestorableDateTime(DateTime(2021, 7, 25));
-  late final RestorableRouteFuture<DateTime?> _restorableDatePickerRouteFuture =
-      RestorableRouteFuture<DateTime?>(
-    onComplete: _selectDate,
-    onPresent: (NavigatorState navigator, Object? arguments) {
-      return navigator.restorablePush(
-        _datePickerRoute,
-        arguments: _selectedDate.value.millisecondsSinceEpoch,
-      );
-    },
-  );
-
-  static Route<DateTime> _datePickerRoute(
-    BuildContext context,
-    Object? arguments,
-  ) {
-    return DialogRoute<DateTime>(
-      context: context,
-      builder: (BuildContext context) {
-        return DatePickerDialog(
-          restorationId: 'date_picker_dialog',
-          initialEntryMode: DatePickerEntryMode.calendarOnly,
-          initialDate: DateTime.fromMillisecondsSinceEpoch(arguments! as int),
-          firstDate: DateTime(2021),
-          lastDate: DateTime(2022),
-        );
-      },
-    );
-  }
-
-  @override
-  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-    registerForRestoration(_selectedDate, 'selected_date');
-    registerForRestoration(_restorableDatePickerRouteFuture, 'date_picker_route_future');
-  }
-
-  void _selectDate(DateTime? newSelectedDate) {
-    if (newSelectedDate != null) {
-      setState(() {
-        _selectedDate.value = newSelectedDate;
-      });
-      if (widget.onSelect is ValueChanged<DateTime>) {
-        widget.onSelect!(newSelectedDate);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      child: ListTile(
-        leading: const Icon(Icons.event_available),
-        title: Text(widget.data),
-        onTap: () => _restorableDatePickerRouteFuture.present(),
-      ),
-    );
   }
 }
