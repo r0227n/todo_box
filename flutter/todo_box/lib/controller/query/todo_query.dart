@@ -21,7 +21,7 @@ class TodoQuery {
     required bool done,
     required DateTime? date,
     required List<String> tags,
-    required List<int> notification,
+    required List<NotificationType> notification,
     required List<String> assets,
   }) async {
     final key = await sqlHelper.insert(
@@ -99,7 +99,7 @@ class TodoQuery {
         done: false,
         date: DateTime.now(),
         tags: const <String>[],
-        notification: const <int>[],
+        notification: const <NotificationType>[],
         assets: const <String>[],
       );
     } catch (e) {
@@ -119,6 +119,8 @@ class TodoQuery {
   }
 
   /// SQL用にエンコードされたデータをデコード
-  Todo _decode(String table, Map<String, dynamic> map) =>
-      Todo.fromJson(columnType.toDecode({...map, 'table': table}));
+  Todo _decode(String table, Map<String, dynamic> map) {
+    final json = {...map, 'table': table};
+    return Todo.fromJson(columnType.toDecode(json));
+  }
 }

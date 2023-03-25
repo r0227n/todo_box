@@ -60,7 +60,7 @@ class _DetailPageState extends State<DetailPage> {
                     final todoCtrl = ref.read(todoControllerProvider(widget.todo.table).notifier);
                     todoCtrl.remove(widget.todo);
                     // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
-                    Navigator.pop(context, 'aaa');
+                    Navigator.pop(context);
                   },
                   icon: const Icon(Icons.delete_outlined),
                 ),

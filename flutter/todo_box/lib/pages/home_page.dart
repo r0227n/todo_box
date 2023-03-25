@@ -1,4 +1,4 @@
-import 'dart:convert' show base64Encode;
+import 'dart:convert' show base64Encode, jsonDecode;
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -37,7 +37,9 @@ class HomePage extends HookConsumerWidget {
         // アプリ終了状態で通知を開き、でアプリを起動したら詳細画面を表示する
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => DetailPage(Todo.fromString(details.payload ?? ''))),
+          // MaterialPageRoute(builder: (_) => DetailPage(Todo.fromString(details.payload ?? ''))),
+          MaterialPageRoute(
+              builder: (_) => DetailPage(Todo.fromJson(jsonDecode(details.payload ?? '')))),
         );
       });
       return null;
@@ -210,7 +212,7 @@ class HomePage extends HookConsumerWidget {
                       done: false,
                       date: value.date,
                       tags: [],
-                      notification: [scheduleId],
+                      notification: [NotificationType(id: scheduleId, schedule: value.schedule)],
                       assets: value.images.map((e) => base64Encode(e.readAsBytesSync())).toList(),
                     ),
                   );

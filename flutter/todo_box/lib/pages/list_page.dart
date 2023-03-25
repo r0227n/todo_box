@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:todo_box/l10n/app_localizations.dart';
+import 'package:todo_box/models/notification_type.dart';
 import 'detail_page.dart';
 import 'components/mods.dart';
 import 'components/emoji_text.dart';
@@ -131,7 +132,7 @@ class ListPage extends HookConsumerWidget {
                       done: false,
                       date: value.date,
                       tags: [],
-                      notification: [scheduleId],
+                      notification: [NotificationType(id: scheduleId, schedule: value.schedule)],
                       assets: value.images.map((e) => base64Encode(e.readAsBytesSync())).toList(),
                     ),
                   );

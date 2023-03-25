@@ -1,5 +1,7 @@
 import 'dart:convert' show jsonDecode, jsonEncode;
 
+import 'package:todo_box/models/notification_type.dart';
+
 class ColumnType {
   const ColumnType({
     this.typeId = 'INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL',
@@ -49,7 +51,7 @@ class ColumnType {
     required bool done,
     required DateTime? date,
     required List<String> tags,
-    required List<int> notification,
+    required List<NotificationType> notification,
     required List<String> assets,
   }) {
     if (id == null) {
@@ -58,7 +60,8 @@ class ColumnType {
         this.done: done ? 1 : 0,
         this.date: date is DateTime ? date.toIso8601String() : null,
         this.tags: tags.isEmpty ? null : jsonEncode(tags),
-        this.notification: notification.isEmpty ? null : jsonEncode(notification),
+        this.notification:
+            notification.isEmpty ? null : jsonEncode(notification.map((e) => e.toJson()).toList()),
         this.assets: assets.isEmpty ? null : jsonEncode(assets),
       };
     }
@@ -69,7 +72,8 @@ class ColumnType {
       this.done: done ? 1 : 0,
       this.date: date is DateTime ? date.toIso8601String() : null,
       this.tags: tags.isEmpty ? null : jsonEncode(tags),
-      this.notification: notification.isEmpty ? null : jsonEncode(notification),
+      this.notification:
+          notification.isEmpty ? null : jsonEncode(notification.map((e) => e.toJson()).toList()),
       this.assets: assets.isEmpty ? null : jsonEncode(assets),
     };
   }
@@ -81,7 +85,7 @@ class ColumnType {
         done: json[done] == 0 ? false : true,
         date: json[date],
         tags: json[tags] == null ? const <String>[] : jsonDecode(json[tags]),
-        notification: json[notification] == null ? const <int>[] : jsonDecode(json[notification]),
+        notification: json[notification] == null ? null : jsonDecode(json[notification]),
         assets: json[assets] == null ? const <String>[] : jsonDecode(json[assets]),
       };
 

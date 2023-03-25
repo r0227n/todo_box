@@ -80,9 +80,9 @@ class TodoController extends _$TodoController {
     final localNotificationCtrl = ref.read(localNotificationProvider.notifier);
     AsyncValue.guard(() async {
       final ids = await localNotificationCtrl.existingIds;
-      for (var id in todo.notification) {
-        if (ids.contains(id)) {
-          localNotificationCtrl.cancelNotification(id);
+      for (var notification in todo.notification) {
+        if (ids.contains(notification.id)) {
+          localNotificationCtrl.cancelNotification(notification.id);
         }
       }
     }).then((notification) {
