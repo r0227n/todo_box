@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'components/emoji_text.dart';
+import '../extensions/string_ext.dart';
+import '../types/notification_type.dart';
 import '../controller/todo_controller.dart';
 import '../provider/tables_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -27,6 +29,7 @@ class _DetailPageState extends State<DetailPage> {
   late final List<Uint8List> _images;
   late final TextEditingController txtController;
   late final ImagePicker _picker;
+  late NotificationSchedule _schedule;
 
   @override
   void initState() {
@@ -40,6 +43,7 @@ class _DetailPageState extends State<DetailPage> {
 
     txtController = TextEditingController(text: widget.todo.title);
     _picker = ImagePicker();
+    _schedule = widget.todo.notification.first.schedule;
   }
 
   @override
@@ -74,11 +78,20 @@ class _DetailPageState extends State<DetailPage> {
             onDoubleTap: null,
             onHorizontalDragUpdate: (details) {
               if (details.localPosition.dx < 45.0) {
+                // 画面右端をスワイプした場合は戻る
+
+                // 日時指定が[null]の場合、通知を[none]にする
+                if (_dateTime == null) {
+                  _schedule = NotificationSchedule.none;
+                }
+
                 // スワイプ方向が左の場合
                 final editTodo = widget.todo.copyWith(
                   table: _tabelLabel,
                   title: txtController.text,
                   date: _dateTime,
+                  notification:
+                      widget.todo.notification.map((e) => e.copyWith(schedule: _schedule)).toList(),
                   assets: _images.map((e) => base64Encode(e)).toList(),
                 );
                 final popValue = editTodo == widget.todo ? null : editTodo;
@@ -149,10 +162,35 @@ class _DetailPageState extends State<DetailPage> {
                 ListTile(
                   leading: const Icon(Icons.event_available),
                   title: Text(_dateTime?.toMMMEd(context.l10n) ?? '日時を追加'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.abc),
-                    onPressed: () {},
-                  ),
+                  trailing: _schedule == NotificationSchedule.none
+                      ? IconButton(
+                          onPressed: () {
+                            _showNotificationSchedule(context).then((repeat) {
+                              if (repeat == null) {
+                                return;
+                              }
+                              setState(() {
+                                _schedule = repeat;
+                              });
+                            });
+                          },
+                          icon: const Icon(Icons.repeat))
+                      : TextButton.icon(
+                          onPressed: () {
+                            _showNotificationSchedule(context).then((repeat) {
+                              if (repeat == null) {
+                                return;
+                              }
+                              setState(() {
+                                _schedule = repeat;
+                              });
+                            });
+                          },
+                          icon: const Icon(Icons.repeat),
+                          label: (_schedule == NotificationSchedule.none)
+                              ? const SizedBox.shrink()
+                              : Text(_schedule.name.capitalize),
+                        ),
                   onTap: () => showDatePicker(
                     context: context,
                     initialDate: _dateTime ?? DateTime.now(),
@@ -311,6 +349,29 @@ class _DetailPageState extends State<DetailPage> {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  /// [NotificationSchedule]の選択肢UIを[SimpleDialog]で表示する
+  Future<NotificationSchedule?> _showNotificationSchedule(BuildContext context) async {
+    return showDialog<NotificationSchedule>(
+      context: context,
+      builder: (childContext) {
+        return SimpleDialog(
+          title: const Text("Title"),
+          insetPadding: const EdgeInsets.all(15.0),
+          children: <Widget>[
+            for (final schedule in NotificationSchedule.values)
+              ListTile(
+                title: Text(schedule.name.capitalize),
+                trailing: schedule == _schedule ? const Icon(Icons.check) : null,
+                onTap: () {
+                  Navigator.pop(childContext, schedule);
+                },
+              ),
+          ],
         );
       },
     );
