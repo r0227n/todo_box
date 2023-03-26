@@ -3,7 +3,9 @@ import 'dart:typed_data' show Uint8List;
 import 'dart:convert' show base64Encode, base64Decode;
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:image_picker/image_picker.dart';
+import 'detail_image.dart';
 import 'components/emoji_text.dart';
 import '../extensions/string_ext.dart';
 import '../types/notification_type.dart';
@@ -11,49 +13,23 @@ import '../controller/todo_controller.dart';
 import '../provider/tables_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/todo.dart';
-import '../models/table.dart' as todo;
-import 'detail_image.dart';
+import '../models/table.dart' as sql;
 
-class DetailPage extends StatefulWidget {
-  const DetailPage(this.todo, {super.key});
+class DetailPage extends HookConsumerWidget {
+  DetailPage(this.todo, {super.key});
 
   final Todo todo;
+  final ImagePicker _picker = ImagePicker();
 
   @override
-  State<DetailPage> createState() => _DetailPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tableLabel = useState<String>(todo.table);
+    final dateTime = useState<DateTime?>(todo.date);
+    final images = useState<List<Uint8List>>(
+        todo.assets.isEmpty ? todo.assets.map((e) => base64Decode(e)).toList() : []);
+    final schedule = useState<NotificationSchedule>(todo.notification.first.schedule);
+    final txtController = useTextEditingController(text: todo.title);
 
-class _DetailPageState extends State<DetailPage> {
-  late String _tabelLabel;
-  DateTime? _dateTime;
-  late final List<Uint8List> _images;
-  late final TextEditingController txtController;
-  late final ImagePicker _picker;
-  late NotificationSchedule _schedule;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabelLabel = widget.todo.table;
-    if (widget.todo.date != null) {
-      _dateTime = widget.todo.date;
-    }
-    _images =
-        widget.todo.assets.isEmpty ? widget.todo.assets.map((e) => base64Decode(e)).toList() : [];
-
-    txtController = TextEditingController(text: widget.todo.title);
-    _picker = ImagePicker();
-    _schedule = widget.todo.notification.first.schedule;
-  }
-
-  @override
-  void dispose() {
-    txtController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return WillPopScope(
         child: Scaffold(
           appBar: AppBar(
@@ -61,8 +37,8 @@ class _DetailPageState extends State<DetailPage> {
               Consumer(
                 builder: (context, ref, _) => IconButton(
                   onPressed: () async {
-                    final todoCtrl = ref.read(todoControllerProvider(widget.todo.table).notifier);
-                    todoCtrl.remove(widget.todo);
+                    final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
+                    todoCtrl.remove(todo);
                     // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
                     Navigator.pop(context);
                   },
@@ -81,20 +57,20 @@ class _DetailPageState extends State<DetailPage> {
                 // 画面右端をスワイプした場合は戻る
 
                 // 日時指定が[null]の場合、通知を[none]にする
-                if (_dateTime == null) {
-                  _schedule = NotificationSchedule.none;
+                if (dateTime.value == null) {
+                  schedule.value = NotificationSchedule.none;
                 }
 
                 // スワイプ方向が左の場合
-                final editTodo = widget.todo.copyWith(
-                  table: _tabelLabel,
+                final editTodo = todo.copyWith(
+                  table: tableLabel.value,
                   title: txtController.text,
-                  date: _dateTime,
+                  date: dateTime.value,
                   notification:
-                      widget.todo.notification.map((e) => e.copyWith(schedule: _schedule)).toList(),
-                  assets: _images.map((e) => base64Encode(e)).toList(),
+                      todo.notification.map((e) => e.copyWith(schedule: schedule.value)).toList(),
+                  assets: images.value.map((e) => base64Encode(e)).toList(),
                 );
-                final popValue = editTodo == widget.todo ? null : editTodo;
+                final popValue = editTodo == todo ? null : editTodo;
                 Navigator.pop(context, popValue);
               }
             },
@@ -107,7 +83,7 @@ class _DetailPageState extends State<DetailPage> {
                     textDirection: TextDirection.rtl,
                     child: TextButton.icon(
                       onPressed: () async {
-                        final table = await showModalBottomSheet<todo.Table>(
+                        showModalBottomSheet<sql.Table>(
                           context: context,
                           builder: (BuildContext context) {
                             return Consumer(builder: (context, ref, _) {
@@ -133,21 +109,19 @@ class _DetailPageState extends State<DetailPage> {
                               );
                             });
                           },
-                        );
+                        ).then((table) {
+                          if (table == null) {
+                            return;
+                          }
 
-                        if (table == null) {
-                          return;
-                        }
-
-                        setState(() {
-                          _tabelLabel = table.title;
+                          tableLabel.value = table.title;
                         });
                       },
                       icon: const Icon(
                         Icons.arrow_drop_down,
                         size: 24.0,
                       ),
-                      label: Text(_tabelLabel),
+                      label: Text(tableLabel.value),
                     ),
                   ),
                 ),
@@ -161,87 +135,117 @@ class _DetailPageState extends State<DetailPage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.event_available),
-                  title: Text(_dateTime?.toMMMEd(context.l10n) ?? '日時を追加'),
-                  trailing: _schedule == NotificationSchedule.none
+                  title: Text(dateTime.value?.toMMMEd(context.l10n) ?? '日時を追加'),
+                  trailing: schedule.value == NotificationSchedule.none
                       ? IconButton(
                           onPressed: () {
-                            _showNotificationSchedule(context).then((repeat) {
-                              if (repeat == null) {
-                                return;
+                            _showNotificationSchedule(context, schedule.value).then((repeat) {
+                              if (repeat != null) {
+                                schedule.value = repeat;
                               }
-                              setState(() {
-                                _schedule = repeat;
-                              });
                             });
                           },
                           icon: const Icon(Icons.repeat))
                       : TextButton.icon(
                           onPressed: () {
-                            _showNotificationSchedule(context).then((repeat) {
-                              if (repeat == null) {
-                                return;
+                            _showNotificationSchedule(context, schedule.value).then((repeat) {
+                              if (repeat != null) {
+                                schedule.value = repeat;
                               }
-                              setState(() {
-                                _schedule = repeat;
-                              });
                             });
                           },
                           icon: const Icon(Icons.repeat),
-                          label: (_schedule == NotificationSchedule.none)
+                          label: (schedule.value == NotificationSchedule.none)
                               ? const SizedBox.shrink()
-                              : Text(_schedule.name.capitalize),
+                              : Text(schedule.value.name.capitalize),
                         ),
                   onTap: () => showDatePicker(
                     context: context,
-                    initialDate: _dateTime ?? DateTime.now(),
+                    initialDate: dateTime.value ?? DateTime.now(),
                     firstDate: DateTime(2023),
                     lastDate: DateTime(2040),
                   ).then(
                     (date) {
-                      if (date == null) {
-                        return;
-                      }
-                      final now = DateTime.now();
-                      setState(() {
-                        _dateTime = DateTime(
+                      if (date != null) {
+                        final now = DateTime.now();
+                        dateTime.value = DateTime(
                           date.year,
                           date.month,
                           date.day,
-                          _dateTime?.hour ?? now.hour,
-                          _dateTime?.minute ?? now.minute,
+                          dateTime.value?.hour ?? now.hour,
+                          dateTime.value?.minute ?? now.minute,
                         );
-                      });
+                      }
                     },
                   ),
                 ),
                 ListTile(
                   leading: const Icon(Icons.schedule),
-                  title: Text(_dateTime?.toHHmm(context.l10n) ?? '時間を追加'),
+                  title: Text(dateTime.value?.toHHmm(context.l10n) ?? '時間を追加'),
                   onTap: () async {
-                    final selectedTime = await showTimePicker(
+                    showTimePicker(
                       initialTime: TimeOfDay.now(),
                       context: context,
-                    );
-                    if (selectedTime != null) {
-                      final now = DateTime.now();
+                    ).then((selectedTime) {
+                      if (selectedTime != null) {
+                        final now = DateTime.now();
 
-                      setState(() {
-                        _dateTime = DateTime(
-                          _dateTime?.year ?? now.year,
-                          _dateTime?.month ?? now.month,
-                          _dateTime?.day ?? now.day,
+                        dateTime.value = DateTime(
+                          dateTime.value?.year ?? now.year,
+                          dateTime.value?.month ?? now.month,
+                          dateTime.value?.day ?? now.day,
                           selectedTime.hour,
                           selectedTime.minute,
                         );
-                      });
-                    }
+                      }
+                    });
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_library),
                   title: const Text('Images'),
                   trailing: IconButton(
-                    onPressed: () => _showImagePicker,
+                    onPressed: () => showModalBottomSheet<void>(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+                      ),
+                      builder: (builder) {
+                        return Container(
+                          height: 200.0,
+                          padding: const EdgeInsets.all(30.0),
+                          color: Colors.transparent,
+                          child: Column(
+                            children: [
+                              TextButton.icon(
+                                onPressed: () => _getImagePicker(ImageSource.camera, images),
+                                icon: const Icon(Icons.add_a_photo),
+                                label: const SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    'Take Photo',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: () => _getImagePicker(ImageSource.gallery, images),
+                                icon: const Icon(Icons.photo_library),
+                                label: const SizedBox(
+                                  width: 100,
+                                  child: Text(
+                                    'Select Library',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                     icon: const Icon(Icons.add_photo_alternate),
                     tooltip: 'Add Image',
                   ),
@@ -262,7 +266,7 @@ class _DetailPageState extends State<DetailPage> {
                             crossAxisSpacing: 5.0,
                           ),
                           padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
-                          itemCount: _images.length,
+                          itemCount: images.value.length,
                           itemBuilder: (BuildContext context, int index) {
                             return Card(
                               color: Theme.of(context).colorScheme.onPrimary,
@@ -271,17 +275,17 @@ class _DetailPageState extends State<DetailPage> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => DetailImage(
-                                      assets: _images,
+                                      assets: images.value,
                                       index: index,
-                                      onDelete: (value) {
-                                        setState(() {
-                                          _images.remove(value);
-                                        });
+                                      onDelete: (data) {
+                                        final list = List<Uint8List>.from(images.value);
+                                        list.remove(data);
+                                        images.value = list;
                                       },
                                     ),
                                   ),
                                 ),
-                                child: Image.memory(_images[index]),
+                                child: Image.memory(images.value[index]),
                               ),
                             );
                           },
@@ -296,66 +300,22 @@ class _DetailPageState extends State<DetailPage> {
           floatingActionButton: Consumer(
             builder: (context, ref, _) => FloatingActionButton.extended(
               onPressed: () {
-                final todoCtrl = ref.read(todoControllerProvider(widget.todo.table).notifier);
-                todoCtrl.toggle(widget.todo);
+                final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
+                todoCtrl.toggle(todo);
                 // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
                 Navigator.pop(context, null);
               },
-              label: widget.todo.done ? const Text('Uncomplete') : const Text('Complete'),
-              icon: widget.todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
+              label: todo.done ? const Text('Uncomplete') : const Text('Complete'),
+              icon: todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
             ),
           ),
         ),
         onWillPop: () async => true);
   }
 
-  /// [ImagePicker]の選択肢UIを[BottomSheet]で表示する
-  void get _showImagePicker {
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-      ),
-      builder: (builder) {
-        return Container(
-          height: 200.0,
-          padding: const EdgeInsets.all(30.0),
-          color: Colors.transparent,
-          child: Column(
-            children: [
-              TextButton.icon(
-                onPressed: () => _getImagePicker(ImageSource.camera),
-                icon: const Icon(Icons.add_a_photo),
-                label: const SizedBox(
-                  width: 100,
-                  child: Text(
-                    'Take Photo',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => _getImagePicker(ImageSource.gallery),
-                icon: const Icon(Icons.photo_library),
-                label: const SizedBox(
-                  width: 100,
-                  child: Text(
-                    'Select Library',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   /// [NotificationSchedule]の選択肢UIを[SimpleDialog]で表示する
-  Future<NotificationSchedule?> _showNotificationSchedule(BuildContext context) async {
+  Future<NotificationSchedule?> _showNotificationSchedule(
+      BuildContext context, NotificationSchedule notification) async {
     return showDialog<NotificationSchedule>(
       context: context,
       builder: (childContext) {
@@ -366,7 +326,7 @@ class _DetailPageState extends State<DetailPage> {
             for (final schedule in NotificationSchedule.values)
               ListTile(
                 title: Text(schedule.name.capitalize),
-                trailing: schedule == _schedule ? const Icon(Icons.check) : null,
+                trailing: schedule == notification ? const Icon(Icons.check) : null,
                 onTap: () {
                   Navigator.pop(childContext, schedule);
                 },
@@ -378,15 +338,13 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   /// [ImagePicker]で取得した画像をUI描画に反映させる
-  void _getImagePicker(ImageSource source) {
+  void _getImagePicker(ImageSource source, ValueNotifier<List<Uint8List>> images) {
     _picker.pickImage(source: source).then((img) {
       if (img == null) {
         return;
       }
 
-      setState(() {
-        _images.add(File(img.path).readAsBytesSync());
-      });
+      images.value = [...images.value, File(img.path).readAsBytesSync()];
     });
   }
 }
