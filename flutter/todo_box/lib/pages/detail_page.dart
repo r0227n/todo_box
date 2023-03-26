@@ -31,286 +31,282 @@ class DetailPage extends HookConsumerWidget {
     final txtController = useTextEditingController(text: todo.title);
 
     return WillPopScope(
-        child: Scaffold(
-          appBar: AppBar(
-            actions: <Widget>[
-              Consumer(
-                builder: (context, ref, _) => IconButton(
-                  onPressed: () async {
-                    final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
-                    todoCtrl.remove(todo);
-                    // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.delete_outlined),
+      child: Scaffold(
+        appBar: AppBar(
+          actions: <Widget>[
+            IconButton(
+              onPressed: () async {
+                final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
+                todoCtrl.remove(todo);
+                // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.delete_outlined),
+            ),
+            const SizedBox(width: 12.0),
+          ],
+        ),
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          excludeFromSemantics: true,
+          onDoubleTap: null,
+          onHorizontalDragUpdate: (details) {
+            if (details.localPosition.dx < 45.0) {
+              // 画面右端をスワイプした場合は戻る
+
+              // 日時指定が[null]の場合、通知を[none]にする
+              if (dateTime.value == null) {
+                schedule.value = NotificationSchedule.none;
+              }
+
+              // スワイプ方向が左の場合
+              final editTodo = todo.copyWith(
+                table: tableLabel.value,
+                title: txtController.text,
+                date: dateTime.value,
+                notification:
+                    todo.notification.map((e) => e.copyWith(schedule: schedule.value)).toList(),
+                assets: images.value.map((e) => base64Encode(e)).toList(),
+              );
+              final popValue = editTodo == todo ? null : editTodo;
+              Navigator.pop(context, popValue);
+            }
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: TextButton.icon(
+                    onPressed: () async {
+                      showModalBottomSheet<sql.Table>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          final tables = ref.read(tablesProvider);
+
+                          return SizedBox(
+                            height: 90.0 + 40.0 * tables.length,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                const Padding(
+                                  padding: EdgeInsets.fromLTRB(0.0, 14.0, 0.0, 10.0),
+                                  child: Text('Move todo to'),
+                                ),
+                                for (final table in tables)
+                                  TextButton.icon(
+                                    icon: EmojiText(table.icon),
+                                    label: Text(table.title),
+                                    onPressed: () => Navigator.pop(context, table),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ).then((table) {
+                        if (table == null) {
+                          return;
+                        }
+
+                        tableLabel.value = table.title;
+                      });
+                    },
+                    icon: const Icon(
+                      Icons.arrow_drop_down,
+                      size: 24.0,
+                    ),
+                    label: Text(tableLabel.value),
+                  ),
                 ),
               ),
-              const SizedBox(width: 12.0),
-            ],
-          ),
-          body: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            excludeFromSemantics: true,
-            onDoubleTap: null,
-            onHorizontalDragUpdate: (details) {
-              if (details.localPosition.dx < 45.0) {
-                // 画面右端をスワイプした場合は戻る
-
-                // 日時指定が[null]の場合、通知を[none]にする
-                if (dateTime.value == null) {
-                  schedule.value = NotificationSchedule.none;
-                }
-
-                // スワイプ方向が左の場合
-                final editTodo = todo.copyWith(
-                  table: tableLabel.value,
-                  title: txtController.text,
-                  date: dateTime.value,
-                  notification:
-                      todo.notification.map((e) => e.copyWith(schedule: schedule.value)).toList(),
-                  assets: images.value.map((e) => base64Encode(e)).toList(),
-                );
-                final popValue = editTodo == todo ? null : editTodo;
-                Navigator.pop(context, popValue);
-              }
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: TextButton.icon(
-                      onPressed: () async {
-                        showModalBottomSheet<sql.Table>(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Consumer(builder: (context, ref, _) {
-                              final tables = ref.watch(tablesProvider);
-                              return SizedBox(
-                                height: 90.0 + 40.0 * tables.length,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    const Padding(
-                                      padding: EdgeInsets.fromLTRB(0.0, 14.0, 0.0, 10.0),
-                                      child: Text('Move todo to'),
-                                    ),
-                                    for (final table in tables)
-                                      TextButton.icon(
-                                        icon: EmojiText(table.icon),
-                                        label: Text(table.title),
-                                        onPressed: () => Navigator.pop(context, table),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            });
-                          },
-                        ).then((table) {
-                          if (table == null) {
-                            return;
-                          }
-
-                          tableLabel.value = table.title;
-                        });
-                      },
-                      icon: const Icon(
-                        Icons.arrow_drop_down,
-                        size: 24.0,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+                child: TextField(
+                  maxLines: null,
+                  controller: txtController,
+                  style: const TextStyle(fontSize: 16.0),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.event_available),
+                title: Text(dateTime.value?.toMMMEd(context.l10n) ?? '日時を追加'),
+                trailing: schedule.value == NotificationSchedule.none
+                    ? IconButton(
+                        onPressed: () {
+                          _showNotificationSchedule(context, schedule.value).then((repeat) {
+                            if (repeat != null) {
+                              schedule.value = repeat;
+                            }
+                          });
+                        },
+                        icon: const Icon(Icons.repeat))
+                    : TextButton.icon(
+                        onPressed: () {
+                          _showNotificationSchedule(context, schedule.value).then((repeat) {
+                            if (repeat != null) {
+                              schedule.value = repeat;
+                            }
+                          });
+                        },
+                        icon: const Icon(Icons.repeat),
+                        label: (schedule.value == NotificationSchedule.none)
+                            ? const SizedBox.shrink()
+                            : Text(schedule.value.name.capitalize),
                       ),
-                      label: Text(tableLabel.value),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
-                  child: TextField(
-                    maxLines: null,
-                    controller: txtController,
-                    style: const TextStyle(fontSize: 16.0),
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.event_available),
-                  title: Text(dateTime.value?.toMMMEd(context.l10n) ?? '日時を追加'),
-                  trailing: schedule.value == NotificationSchedule.none
-                      ? IconButton(
-                          onPressed: () {
-                            _showNotificationSchedule(context, schedule.value).then((repeat) {
-                              if (repeat != null) {
-                                schedule.value = repeat;
-                              }
-                            });
-                          },
-                          icon: const Icon(Icons.repeat))
-                      : TextButton.icon(
-                          onPressed: () {
-                            _showNotificationSchedule(context, schedule.value).then((repeat) {
-                              if (repeat != null) {
-                                schedule.value = repeat;
-                              }
-                            });
-                          },
-                          icon: const Icon(Icons.repeat),
-                          label: (schedule.value == NotificationSchedule.none)
-                              ? const SizedBox.shrink()
-                              : Text(schedule.value.name.capitalize),
-                        ),
-                  onTap: () => showDatePicker(
-                    context: context,
-                    initialDate: dateTime.value ?? DateTime.now(),
-                    firstDate: DateTime(2023),
-                    lastDate: DateTime(2040),
-                  ).then(
-                    (date) {
-                      if (date != null) {
-                        final now = DateTime.now();
-                        dateTime.value = DateTime(
-                          date.year,
-                          date.month,
-                          date.day,
-                          dateTime.value?.hour ?? now.hour,
-                          dateTime.value?.minute ?? now.minute,
-                        );
-                      }
-                    },
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.schedule),
-                  title: Text(dateTime.value?.toHHmm(context.l10n) ?? '時間を追加'),
-                  onTap: () async {
-                    showTimePicker(
-                      initialTime: TimeOfDay.now(),
-                      context: context,
-                    ).then((selectedTime) {
-                      if (selectedTime != null) {
-                        final now = DateTime.now();
-
-                        dateTime.value = DateTime(
-                          dateTime.value?.year ?? now.year,
-                          dateTime.value?.month ?? now.month,
-                          dateTime.value?.day ?? now.day,
-                          selectedTime.hour,
-                          selectedTime.minute,
-                        );
-                      }
-                    });
+                onTap: () => showDatePicker(
+                  context: context,
+                  initialDate: dateTime.value ?? DateTime.now(),
+                  firstDate: DateTime(2023),
+                  lastDate: DateTime(2040),
+                ).then(
+                  (date) {
+                    if (date != null) {
+                      final now = DateTime.now();
+                      dateTime.value = DateTime(
+                        date.year,
+                        date.month,
+                        date.day,
+                        dateTime.value?.hour ?? now.hour,
+                        dateTime.value?.minute ?? now.minute,
+                      );
+                    }
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.photo_library),
-                  title: const Text('Images'),
-                  trailing: IconButton(
-                    onPressed: () => showModalBottomSheet<void>(
-                      context: context,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-                      ),
-                      builder: (builder) {
-                        return Container(
-                          height: 200.0,
-                          padding: const EdgeInsets.all(30.0),
-                          color: Colors.transparent,
-                          child: Column(
-                            children: [
-                              TextButton.icon(
-                                onPressed: () => _getImagePicker(ImageSource.camera, images),
-                                icon: const Icon(Icons.add_a_photo),
-                                label: const SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    'Take Photo',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                              TextButton.icon(
-                                onPressed: () => _getImagePicker(ImageSource.gallery, images),
-                                icon: const Icon(Icons.photo_library),
-                                label: const SizedBox(
-                                  width: 100,
-                                  child: Text(
-                                    'Select Library',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+              ),
+              ListTile(
+                leading: const Icon(Icons.schedule),
+                title: Text(dateTime.value?.toHHmm(context.l10n) ?? '時間を追加'),
+                onTap: () async {
+                  showTimePicker(
+                    initialTime: TimeOfDay.now(),
+                    context: context,
+                  ).then((selectedTime) {
+                    if (selectedTime != null) {
+                      final now = DateTime.now();
+
+                      dateTime.value = DateTime(
+                        dateTime.value?.year ?? now.year,
+                        dateTime.value?.month ?? now.month,
+                        dateTime.value?.day ?? now.day,
+                        selectedTime.hour,
+                        selectedTime.minute,
+                      );
+                    }
+                  });
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Images'),
+                trailing: IconButton(
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
                     ),
-                    icon: const Icon(Icons.add_photo_alternate),
-                    tooltip: 'Add Image',
-                  ),
-                ),
-                Expanded(
-                  child: Scrollbar(
-                    thumbVisibility: true,
-                    child: SingleChildScrollView(
-                      child: MediaQuery.removePadding(
-                        context: context,
-                        removeTop: true,
-                        child: GridView.builder(
-                          physics: const ScrollPhysics(),
-                          primary: false,
-                          shrinkWrap: true,
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 5.0,
-                          ),
-                          padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
-                          itemCount: images.value.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            return Card(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              child: InkWell(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => DetailImage(
-                                      assets: images.value,
-                                      index: index,
-                                      onDelete: (data) {
-                                        final list = List<Uint8List>.from(images.value);
-                                        list.remove(data);
-                                        images.value = list;
-                                      },
-                                    ),
-                                  ),
+                    builder: (builder) {
+                      return Container(
+                        height: 200.0,
+                        padding: const EdgeInsets.all(30.0),
+                        color: Colors.transparent,
+                        child: Column(
+                          children: [
+                            TextButton.icon(
+                              onPressed: () => _getImagePicker(ImageSource.camera, images),
+                              icon: const Icon(Icons.add_a_photo),
+                              label: const SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Take Photo',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                child: Image.memory(images.value[index]),
                               ),
-                            );
-                          },
+                            ),
+                            TextButton.icon(
+                              onPressed: () => _getImagePicker(ImageSource.gallery, images),
+                              icon: const Icon(Icons.photo_library),
+                              label: const SizedBox(
+                                width: 100,
+                                child: Text(
+                                  'Select Library',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                      );
+                    },
+                  ),
+                  icon: const Icon(Icons.add_photo_alternate),
+                  tooltip: 'Add Image',
+                ),
+              ),
+              Expanded(
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    child: MediaQuery.removePadding(
+                      context: context,
+                      removeTop: true,
+                      child: GridView.builder(
+                        physics: const ScrollPhysics(),
+                        primary: false,
+                        shrinkWrap: true,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 5.0,
+                        ),
+                        padding: const EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 4.0),
+                        itemCount: images.value.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Card(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            child: InkWell(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => DetailImage(
+                                    assets: images.value,
+                                    index: index,
+                                    onDelete: (data) {
+                                      final list = List<Uint8List>.from(images.value);
+                                      list.remove(data);
+                                      images.value = list;
+                                    },
+                                  ),
+                                ),
+                              ),
+                              child: Image.memory(images.value[index]),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          floatingActionButton: Consumer(
-            builder: (context, ref, _) => FloatingActionButton.extended(
-              onPressed: () {
-                final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
-                todoCtrl.toggle(todo);
-                // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
-                Navigator.pop(context, null);
-              },
-              label: todo.done ? const Text('Uncomplete') : const Text('Complete'),
-              icon: todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
-            ),
+              ),
+            ],
           ),
         ),
-        onWillPop: () async => true);
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
+            todoCtrl.toggle(todo);
+            // TODO: 設定でホーム画面に戻るかどうか選択できるようにする
+            Navigator.pop(context, null);
+          },
+          label: todo.done ? const Text('Uncomplete') : const Text('Complete'),
+          icon: todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
+        ),
+      ),
+      onWillPop: () async => true,
+    );
   }
 
   /// [NotificationSchedule]の選択肢UIを[SimpleDialog]で表示する
