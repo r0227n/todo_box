@@ -133,15 +133,15 @@ class DetailPage extends HookConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.event_available),
                 title: Text(dateTime.value?.toMMMEd(context.l10n) ?? '日時を追加'),
-                trailing: dateTime.value?.compareDateTo(todo.date ?? DateTime.now()) == 0
+                trailing: todo.date?.modifiedDateOrNull(dateTime.value) ?? false
                     ? IconButton(
-                        onPressed: () => dateTime.value = dateTime.value?.date,
+                        onPressed: () => dateTime.value = null,
                         icon: const Icon(Icons.cancel_outlined),
                       )
                     : null,
                 onTap: () => showDatePicker(
                   context: context,
-                  initialDate: dateTime.value ?? DateTime.now(),
+                  initialDate: dateTime.value?.date ?? DateTime.now(),
                   firstDate: DateTime(2023),
                   lastDate: DateTime(2040),
                 ).then(
@@ -162,12 +162,6 @@ class DetailPage extends HookConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.schedule),
                 title: Text(dateTime.value?.toHHmm(context.l10n) ?? '時間を追加'),
-                trailing: dateTime.value?.compareTimeTo(todo.date ?? DateTime.now()) == 0
-                    ? IconButton(
-                        onPressed: () => dateTime.value = dateTime.value?.date,
-                        icon: const Icon(Icons.cancel_outlined),
-                      )
-                    : null,
                 onTap: () async {
                   showTimePicker(
                     initialTime: TimeOfDay.now(),
