@@ -195,6 +195,7 @@ class _ListPageItem extends ConsumerWidget {
             builder: (_) => DetailPage(todo),
           ),
         ).then((todo) async {
+          print(todo);
           if (todo == null) {
             return;
           } else if (todo is! Todo) {

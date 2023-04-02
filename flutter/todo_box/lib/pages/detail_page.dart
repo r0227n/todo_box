@@ -54,21 +54,8 @@ class DetailPage extends HookConsumerWidget {
             if (details.localPosition.dx < 45.0) {
               // 画面右端をスワイプした場合は戻る
 
-              // 日時指定が[null]の場合、通知を[none]にする
-              if (dateTime.value == null) {
-                schedule.value = NotificationSchedule.none;
-              }
-
-              // スワイプ方向が左の場合
-              final editTodo = todo.copyWith(
-                table: tableLabel.value,
-                title: txtController.text,
-                date: dateTime.value,
-                notification:
-                    todo.notification.map((e) => e.copyWith(schedule: schedule.value)).toList(),
-                assets: images.value.map((e) => base64Encode(e)).toList(),
-              );
-              final popValue = editTodo == todo ? null : editTodo;
+              final popValue =
+                  _popTodo(todo, txtController.text, dateTime.value, schedule.value, images.value);
               Navigator.pop(context, popValue);
             }
           },
@@ -302,8 +289,37 @@ class DetailPage extends HookConsumerWidget {
           icon: todo.done ? const Icon(Icons.restore_page) : const Icon(Icons.done),
         ),
       ),
-      onWillPop: () async => true,
+      onWillPop: () async {
+        final popValue =
+            _popTodo(todo, txtController.text, dateTime.value, schedule.value, images.value);
+
+        Navigator.pop(context, popValue);
+        return true;
+      },
     );
+  }
+
+  Todo? _popTodo(
+    Todo todo,
+    String title,
+    DateTime? dateTime,
+    NotificationSchedule schedule,
+    List<Uint8List> images,
+  ) {
+    // 日時指定が[null]の場合、通知を[none]にする
+    if (dateTime == null) {
+      schedule = NotificationSchedule.none;
+    }
+
+    // スワイプ方向が左の場合
+    final editTodo = todo.copyWith(
+      table: todo.table,
+      title: title,
+      date: dateTime,
+      notification: todo.notification.map((e) => e.copyWith(schedule: schedule)).toList(),
+      assets: images.map((e) => base64Encode(e)).toList(),
+    );
+    return editTodo == todo ? null : editTodo;
   }
 
   /// [NotificationSchedule]の選択肢UIを[SimpleDialog]で表示する
