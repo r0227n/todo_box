@@ -135,7 +135,7 @@ class DetailPage extends HookConsumerWidget {
                 title: Text(dateTime.value?.toMMMEd(context.l10n) ?? '日時を追加'),
                 trailing: dateTime.value?.compareDateTo(todo.date ?? DateTime.now()) == 0
                     ? IconButton(
-                        onPressed: () => dateTime.value = dateTime.value?.time,
+                        onPressed: () => dateTime.value = dateTime.value?.date,
                         icon: const Icon(Icons.cancel_outlined),
                       )
                     : null,
