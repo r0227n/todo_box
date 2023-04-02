@@ -7,7 +7,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:image_picker/image_picker.dart';
 import 'detail_image.dart';
 import 'components/emoji_text.dart';
-import '../extensions/string_ext.dart';
+import '../extensions/ext.dart';
 import '../types/notification_type.dart';
 import '../controller/todo_controller.dart';
 import '../provider/tables_provider.dart';
@@ -133,29 +133,12 @@ class DetailPage extends HookConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.event_available),
                 title: Text(dateTime.value?.toMMMEd(context.l10n) ?? '日時を追加'),
-                trailing: schedule.value == NotificationSchedule.none
+                trailing: dateTime.value?.compareDateTo(todo.date ?? DateTime.now()) == 0
                     ? IconButton(
-                        onPressed: () {
-                          _showNotificationSchedule(context, schedule.value).then((repeat) {
-                            if (repeat != null) {
-                              schedule.value = repeat;
-                            }
-                          });
-                        },
-                        icon: const Icon(Icons.repeat))
-                    : TextButton.icon(
-                        onPressed: () {
-                          _showNotificationSchedule(context, schedule.value).then((repeat) {
-                            if (repeat != null) {
-                              schedule.value = repeat;
-                            }
-                          });
-                        },
-                        icon: const Icon(Icons.repeat),
-                        label: (schedule.value == NotificationSchedule.none)
-                            ? const SizedBox.shrink()
-                            : Text(schedule.value.name.capitalize),
-                      ),
+                        onPressed: () => dateTime.value = dateTime.value?.time,
+                        icon: const Icon(Icons.cancel_outlined),
+                      )
+                    : null,
                 onTap: () => showDatePicker(
                   context: context,
                   initialDate: dateTime.value ?? DateTime.now(),
@@ -179,6 +162,12 @@ class DetailPage extends HookConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.schedule),
                 title: Text(dateTime.value?.toHHmm(context.l10n) ?? '時間を追加'),
+                trailing: dateTime.value?.compareTimeTo(todo.date ?? DateTime.now()) == 0
+                    ? IconButton(
+                        onPressed: () => dateTime.value = dateTime.value?.date,
+                        icon: const Icon(Icons.cancel_outlined),
+                      )
+                    : null,
                 onTap: () async {
                   showTimePicker(
                     initialTime: TimeOfDay.now(),
@@ -198,6 +187,20 @@ class DetailPage extends HookConsumerWidget {
                   });
                 },
               ),
+              if (dateTime.value != null)
+                ListTile(
+                  leading: const Icon(Icons.repeat),
+                  title: const Text('Repeat'),
+                  trailing: Text(
+                    schedule.value.name.capitalize,
+                    style: const TextStyle(fontSize: 14.0, fontWeight: FontWeight.w500),
+                  ),
+                  onTap: () => _showNotificationSchedule(context, schedule.value).then((repeat) {
+                    if (repeat != null) {
+                      schedule.value = repeat;
+                    }
+                  }),
+                ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Images'),
@@ -316,7 +319,7 @@ class DetailPage extends HookConsumerWidget {
       context: context,
       builder: (childContext) {
         return SimpleDialog(
-          title: const Text("Title"),
+          title: const Text("Repeat"),
           insetPadding: const EdgeInsets.all(15.0),
           children: <Widget>[
             for (final schedule in NotificationSchedule.values)
