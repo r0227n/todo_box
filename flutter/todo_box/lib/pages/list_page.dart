@@ -195,7 +195,6 @@ class _ListPageItem extends ConsumerWidget {
             builder: (_) => DetailPage(todo),
           ),
         ).then((todo) async {
-          print(todo);
           if (todo == null) {
             return;
           } else if (todo is! Todo) {
@@ -203,7 +202,7 @@ class _ListPageItem extends ConsumerWidget {
           }
 
           final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
-          await todoCtrl.updateState(todo).catchError((_) {
+          await todoCtrl.updateState(todo, context.l10n.timezoneId).catchError((_) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 action: SnackBarAction(

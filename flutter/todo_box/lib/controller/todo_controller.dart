@@ -111,22 +111,50 @@ class TodoController extends _$TodoController {
   /// stateを更新する
   /// [true]: 更新に成功する
   /// [false]: 更新に失敗する
-  Future<void> updateState(Todo todo) async {
+  Future<void> updateState(Todo todo, String timezoneId) async {
+    const updateErrorMessage = 'LocalNotificationUpdateError';
+
     final oldState = await future;
     state = const AsyncLoading();
-    final newState = await AsyncValue.guard(() async => oldState.map((t) {
-          if (t.id != todo.id) {
-            return t;
-          }
-          return todo;
-        }).toList());
 
-    newState.maybeWhen(
+    final updateNotification = await AsyncValue.guard<bool>(() async {
+      final localNotificationCtrl = ref.read(localNotificationProvider.notifier);
+
+      final currentState = oldState.firstWhere((t) => t.id == todo.id);
+      oldState[oldState.indexOf(currentState)] = todo;
+
+      if (todo.date == null) {
+        // dateが[null]の場合、通知を削除する
+        return await localNotificationCtrl.cancelNotification(todo.notification.first.id);
+      } else if (todo.date != null) {
+        if (todo.date != currentState.date) {
+          // dateが新規追加されていた場合、通知を追加する
+          // dateが変更されている場合、通知を更新する
+          final notificationId = await localNotificationCtrl.addNotification(
+            todo.table,
+            todo.title,
+            todo.date!,
+            id: todo.notification.first.id,
+            timezoneId: timezoneId,
+            channel: 'testing',
+            payload: todo.toJson(),
+            schedule: todo.notification.first.schedule,
+          );
+          return notificationId >= 0;
+        } else {
+          return false;
+        }
+      }
+
+      throw StateError('$updateErrorMessage: update notification errror');
+    });
+
+    updateNotification.maybeWhen(
       orElse: () {
-        state = AsyncValue.data(oldState);
-        throw StateError(newState.asError?.value);
+        state = AsyncValue.error(updateErrorMessage, StackTrace.current);
+        throw StateError(updateErrorMessage);
       },
-      data: (data) => state = AsyncValue.data(data),
+      data: (data) => state = AsyncValue.data(oldState),
     );
 
     await _updateDB(todo).catchError((e) => throw e);

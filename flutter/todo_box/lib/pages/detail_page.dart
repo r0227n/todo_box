@@ -1,6 +1,6 @@
 import 'dart:io' show File;
-import 'dart:typed_data' show Uint8List;
 import 'dart:convert' show base64Encode, base64Decode;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -26,7 +26,7 @@ class DetailPage extends HookConsumerWidget {
     final tableLabel = useState<String>(todo.table);
     final dateTime = useState<DateTime?>(todo.date);
     final images = useState<List<Uint8List>>(
-        todo.assets.isEmpty ? todo.assets.map((e) => base64Decode(e)).toList() : []);
+        todo.assets.isNotEmpty ? todo.assets.map((e) => base64Decode(e)).toList() : []);
     final schedule = useState<NotificationSchedule>(todo.notification.first.schedule);
     final txtController = useTextEditingController(text: todo.title);
 
@@ -54,8 +54,8 @@ class DetailPage extends HookConsumerWidget {
             if (details.localPosition.dx < 45.0) {
               // 画面右端をスワイプした場合は戻る
 
-              final popValue =
-                  _popTodo(todo, txtController.text, dateTime.value, schedule.value, images.value);
+              final popValue = _popTodo(tableLabel.value, txtController.text, dateTime.value,
+                  schedule.value, images.value);
               Navigator.pop(context, popValue);
             }
           },
@@ -290,8 +290,8 @@ class DetailPage extends HookConsumerWidget {
         ),
       ),
       onWillPop: () async {
-        final popValue =
-            _popTodo(todo, txtController.text, dateTime.value, schedule.value, images.value);
+        final popValue = _popTodo(
+            tableLabel.value, txtController.text, dateTime.value, schedule.value, images.value);
 
         Navigator.pop(context, popValue);
         return true;
@@ -300,7 +300,7 @@ class DetailPage extends HookConsumerWidget {
   }
 
   Todo? _popTodo(
-    Todo todo,
+    String table,
     String title,
     DateTime? dateTime,
     NotificationSchedule schedule,
@@ -313,7 +313,7 @@ class DetailPage extends HookConsumerWidget {
 
     // スワイプ方向が左の場合
     final editTodo = todo.copyWith(
-      table: todo.table,
+      table: table,
       title: title,
       date: dateTime,
       notification: todo.notification.map((e) => e.copyWith(schedule: schedule)).toList(),
