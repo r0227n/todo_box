@@ -150,8 +150,11 @@ class DetailPage extends HookConsumerWidget {
                 leading: const Icon(Icons.schedule),
                 title: Text(dateTime.value?.toHHmm(context.l10n) ?? '時間を追加'),
                 onTap: () async {
+                  final now = DateTime.now();
+                  final hour = dateTime.value?.hour ?? now.hour;
+                  final minute = dateTime.value?.minute ?? now.minute;
                   showTimePicker(
-                    initialTime: TimeOfDay.now(),
+                    initialTime: TimeOfDay(hour: hour, minute: minute),
                     context: context,
                   ).then((selectedTime) {
                     if (selectedTime != null) {
