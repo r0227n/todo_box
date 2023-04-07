@@ -111,25 +111,58 @@ class TodoController extends _$TodoController {
   /// stateを更新する
   /// [true]: 更新に成功する
   /// [false]: 更新に失敗する
-  Future<void> updateState(Todo todo) async {
-    final oldState = await future;
-    state = const AsyncLoading();
-    final newState = await AsyncValue.guard(() async => oldState.map((t) {
-          if (t.id != todo.id) {
-            return t;
-          }
-          return todo;
-        }).toList());
+  Future<void> updateState(Todo newTodo, String timezoneId) async {
+    const updateErrorMessage = 'LocalNotificationUpdateError';
 
-    newState.maybeWhen(
+    final oldState = await future.catchError((e) => throw e);
+    final previousState = await future.catchError((e) => throw e);
+    state = const AsyncLoading();
+
+    final currentState = oldState.firstWhere((t) => t.id == newTodo.id, orElse: () {
+      state = AsyncValue.data(oldState);
+      throw StateError('$newTodo: current state not found');
+    });
+
+    final updateNotification = await AsyncValue.guard<bool>(() async {
+      final localNotificationCtrl = ref.read(localNotificationProvider.notifier);
+
+      if (newTodo.date == null) {
+        // dateが[null]の場合、通知を削除する
+        return await localNotificationCtrl.cancelNotification(newTodo.notification.first.id);
+      } else if (newTodo.date != null) {
+        if (newTodo.date != currentState.date) {
+          // dateが新規追加されていた場合、通知を追加する
+          // dateが変更されている場合、通知を更新する
+          final notificationId = await localNotificationCtrl.addNotification(
+            newTodo.table,
+            newTodo.title,
+            newTodo.date!,
+            id: newTodo.notification.first.id,
+            timezoneId: timezoneId,
+            channel: 'testing',
+            payload: newTodo.toJson(),
+            schedule: newTodo.notification.first.schedule,
+          );
+          return notificationId >= 0;
+        } else {
+          return false;
+        }
+      }
+
+      throw StateError('$updateErrorMessage: update notification errror');
+    });
+
+    updateNotification.maybeWhen(
       orElse: () {
         state = AsyncValue.data(oldState);
-        throw StateError(newState.asError?.value);
+        throw StateError(updateErrorMessage);
       },
-      data: (data) => state = AsyncValue.data(data),
+      data: (_) async {
+        oldState[oldState.indexOf(currentState)] = newTodo;
+        state = AsyncValue.data(oldState);
+        await _updateDB(newTodo).catchError((e) => throw e);
+      },
     );
-
-    await _updateDB(todo).catchError((e) => throw e);
   }
 
   Future<Todo> findMetadata() async {

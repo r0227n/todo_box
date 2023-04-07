@@ -189,41 +189,43 @@ class _ListPageItem extends ConsumerWidget {
                 )
               : null,
         ),
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DetailPage(todo),
-          ),
-        ).then((todo) async {
-          if (todo == null) {
-            return;
-          } else if (todo is! Todo) {
-            throw FlutterError('$todo is not Todo.');
-          }
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DetailPage(todo),
+            ),
+          ).then((editTodo) async {
+            if (editTodo == null) {
+              return;
+            } else if (editTodo is! Todo) {
+              throw FlutterError('$todo is not Todo.');
+            }
 
-          final todoCtrl = ref.read(todoControllerProvider(todo.table).notifier);
-          await todoCtrl.updateState(todo).catchError((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                action: SnackBarAction(
-                  label: 'Close',
-                  onPressed: () {},
+            final todoCtrl = ref.read(todoControllerProvider(editTodo.table).notifier);
+            await todoCtrl.updateState(editTodo, context.l10n.timezoneId).catchError((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  action: SnackBarAction(
+                    label: 'Close',
+                    onPressed: () {},
+                  ),
+                  content: const Padding(
+                    padding: EdgeInsets.only(left: 16.0),
+                    child: Text('Failed to modify the Todo.'),
+                  ),
+                  duration: const Duration(milliseconds: 3000),
+                  margin: const EdgeInsets.symmetric(horizontal: 15.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
-                content: const Padding(
-                  padding: EdgeInsets.only(left: 16.0),
-                  child: Text('Failed to modify the Todo.'),
-                ),
-                duration: const Duration(milliseconds: 3000),
-                margin: const EdgeInsets.symmetric(horizontal: 15.0),
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-            );
+              );
+            });
           });
-        }),
+        },
       ),
     );
   }
