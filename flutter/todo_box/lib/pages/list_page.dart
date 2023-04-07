@@ -45,13 +45,6 @@ class ListPage extends HookConsumerWidget {
             .toList();
 
         return Scaffold(
-          appBar: AppBar(actions: [
-            IconButton(
-                onPressed: () {
-                  print(todos);
-                },
-                icon: const Icon(Icons.add)),
-          ]),
           body: KeyboardMods(
             visibleKeyboard: showKeyboard.value,
             visibleAppBar: display.isPage,
