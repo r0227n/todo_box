@@ -30,21 +30,15 @@ extension LocalString on DateTime {
     return DateFormat.Hm().format(this);
   }
 
-  String? toMMMEd(AppLocalizations localizations) {
-    if (year == 1972 && month == 1 && day == 1) {
-      return null;
-    } else if (isJp(localizations)) {
+  String toMMMEd(AppLocalizations localizations) {
+    if (isJp(localizations)) {
       return DateFormat.MMMEd('ja').format(this);
     }
 
     return DateFormat.yMd().format(this);
   }
 
-  String? toHHmm(AppLocalizations localizations) {
-    if (hour == 0 && minute == 0 && second == 0 && millisecond == 0) {
-      return null;
-    }
-
+  String toHHmm(AppLocalizations localizations) {
     return DateFormat('HH:mm').format(this);
   }
 
