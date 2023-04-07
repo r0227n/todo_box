@@ -37,9 +37,11 @@ class HomePage extends HookConsumerWidget {
         // アプリ終了状態で通知を開き、でアプリを起動したら詳細画面を表示する
         Navigator.push(
           context,
-          // MaterialPageRoute(builder: (_) => DetailPage(Todo.fromString(details.payload ?? ''))),
           MaterialPageRoute(
-              builder: (_) => DetailPage(Todo.fromJson(jsonDecode(details.payload ?? '')))),
+            builder: (_) => DetailPage(
+              Todo.fromJson(jsonDecode(details.payload ?? '')),
+            ),
+          ),
         );
       });
       return null;
