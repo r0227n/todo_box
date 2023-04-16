@@ -1,14 +1,5 @@
 import 'package:flutter/material.dart';
-
-enum DayOfWeek {
-  monday,
-  tuesday,
-  wednesday,
-  thursday,
-  friday,
-  saturday,
-  sunday;
-}
+import 'components/popup_day_of_week_button.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -37,40 +28,17 @@ class SettingPage extends StatelessWidget {
             indent: 10.0,
             endIndent: 10.0,
           ),
-          ListTile(
-            leading: const Icon(Icons.event_repeat),
-            title: const Text(
+          const ListTile(
+            leading: Icon(Icons.event_repeat),
+            title: Text(
               'Notification days',
               style: TextStyle(
                 fontSize: 15.0,
                 fontWeight: FontWeight.w400,
               ),
             ),
-            trailing: PopupMenuButton<DayOfWeek>(
-              initialValue: DayOfWeek.monday,
-              child: SizedBox.fromSize(
-                size: const Size(100.0, 50.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: const <Widget>[
-                    Text(
-                      'Monday',
-                      style: TextStyle(fontSize: 13.0),
-                    ),
-                    Icon(Icons.arrow_drop_down),
-                  ],
-                ),
-              ),
-              onSelected: (DayOfWeek day) {
-                print(day);
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<DayOfWeek>>[
-                for (final item in DayOfWeek.values)
-                  PopupMenuItem<DayOfWeek>(
-                    value: item,
-                    child: Text(item.toString().split('.').last),
-                  ),
-              ],
+            trailing: PopupDayOfWeekButton(
+              value: DayOfWeek.monday,
             ),
           ),
           const Divider(
