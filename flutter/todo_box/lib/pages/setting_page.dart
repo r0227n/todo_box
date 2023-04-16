@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'components/popup_day_of_week_button.dart';
+import 'components/version_text.dart';
 
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
@@ -23,11 +24,7 @@ class SettingPage extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(
-            height: 3.0,
-            indent: 10.0,
-            endIndent: 10.0,
-          ),
+          const Divider(height: 3.0, indent: 10.0, endIndent: 10.0),
           const ListTile(
             leading: Icon(Icons.event_repeat),
             title: Text(
@@ -41,11 +38,7 @@ class SettingPage extends StatelessWidget {
               value: DayOfWeek.monday,
             ),
           ),
-          const Divider(
-            height: 3.0,
-            indent: 10.0,
-            endIndent: 10.0,
-          ),
+          const Divider(height: 3.0, indent: 10.0, endIndent: 10.0),
           ListTile(
             leading: const Icon(Icons.edit_notifications_outlined),
             title: const Text(
@@ -76,11 +69,7 @@ class SettingPage extends StatelessWidget {
               ),
             ),
           ),
-          const Divider(
-            height: 3.0,
-            indent: 10.0,
-            endIndent: 10.0,
-          ),
+          const Divider(height: 3.0, indent: 10.0, endIndent: 10.0),
           ListTile(
             leading: const Icon(Icons.draw_outlined),
             title: const Text('Continue writing'),
@@ -90,11 +79,7 @@ class SettingPage extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          const Center(
-            child: Text(
-              'Version: 1.0.0', // TODO: ここにバージョンを持たせる
-            ),
-          ),
+          const Center(child: VersionText()),
         ],
       ),
     );
