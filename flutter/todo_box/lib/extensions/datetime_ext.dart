@@ -37,6 +37,23 @@ extension DateX on DateTime {
 
     return modifiedDate(other);
   }
+
+  /// 指定した曜日に変更したDateTime型の新しいインスタンスを作成
+  DateTime changeDayOfWeek(int dayOfWeek) {
+    // 現在の曜日を取得
+    final int currentWeekday = weekday;
+
+    // 現在の曜日から変更したい曜日までの日数を計算
+    int daysToAdd = (dayOfWeek - currentWeekday) % 7;
+    if (daysToAdd <= 0) {
+      daysToAdd += 7;
+    }
+
+    // 曜日を変更したDateTime型の新しいインスタンスを作成
+    DateTime newDateTime = add(Duration(days: daysToAdd));
+
+    return newDateTime;
+  }
 }
 
 /// DateTimeの時間に関する拡張メソッド

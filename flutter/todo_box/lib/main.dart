@@ -3,6 +3,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:todo_box/l10n/app_localizations.dart';
 import 'models/default_table.dart';
+import 'models/todo_box_metadata.dart';
 import 'database/helper/sql_helper.dart';
 import 'controller/query/todo_query.dart';
 import 'controller/local_notification_controller.dart';
@@ -24,6 +25,13 @@ void main() async {
     onCreate: (db, version) async {
       await db.execute(defaultTable.create());
       await db.insert(DefaultTable.name, defaultTable.insert());
+
+      final todoBoxMetadata = TodoBoxMetadata(notification: DateTime.now(), continueWriiting: true);
+      await db.execute(TodoBoxMetadata.toCreateSql);
+      await db.insert(todoBoxMetadata.tableName, {
+        'notification': todoBoxMetadata.notification.toIso8601String(),
+        'continue_wriiting': todoBoxMetadata.continueWriiting ? 1 : 0,
+      });
     },
     version: 1,
   );

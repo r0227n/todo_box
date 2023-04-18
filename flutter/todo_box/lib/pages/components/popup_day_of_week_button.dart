@@ -10,8 +10,27 @@ enum DayOfWeek {
   sunday;
 
   /// Returns the title of the day of the week.
-  /// For example, `DayOfWeek.monday.title` returns `monday`.
-  String get title => toString().split('.').last;
+  /// For example, `DayOfWeek.monday.text` returns `monday`.
+  String get text => toString().split('.').last;
+
+  int get number {
+    switch (this) {
+      case DayOfWeek.monday:
+        return DateTime.monday;
+      case DayOfWeek.tuesday:
+        return DateTime.tuesday;
+      case DayOfWeek.wednesday:
+        return DateTime.wednesday;
+      case DayOfWeek.thursday:
+        return DateTime.thursday;
+      case DayOfWeek.friday:
+        return DateTime.friday;
+      case DayOfWeek.saturday:
+        return DateTime.saturday;
+      case DayOfWeek.sunday:
+        return DateTime.sunday;
+    }
+  }
 }
 
 class PopupDayOfWeekButton extends StatelessWidget {
@@ -47,7 +66,7 @@ class PopupDayOfWeekButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: <Widget>[
               Text(
-                value.title,
+                value.text,
                 style: const TextStyle(fontSize: 13.0),
               ),
               const Icon(Icons.arrow_drop_down),
@@ -68,7 +87,7 @@ class PopupDayOfWeekButton extends StatelessWidget {
           for (final item in DayOfWeek.values)
             PopupMenuItem<DayOfWeek>(
               value: item,
-              child: Text(item.title),
+              child: Text(item.text),
             ),
         ],
       ),
