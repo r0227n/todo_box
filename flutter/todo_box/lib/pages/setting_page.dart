@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:todo_box/models/todo_box_metadata.dart';
 import 'components/popup_day_of_week_button.dart';
 import 'components/version_text.dart';
 import '../../extensions/ext.dart';
@@ -16,21 +14,18 @@ class SettingPage extends ConsumerWidget {
 
     return appSetting.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => const Center(child: Text('Error')),
-      data: (setting) => _SettingPage(setting),
+      error: (error, stack) => const Center(child: Text('Error')), // TODO: エラー画面を作成し、そこに遷移する
+      data: (_) => const _SettingDataPage(),
     );
   }
 }
 
-class _SettingPage extends HookWidget {
-  const _SettingPage(this.metadata);
-
-  final TodoBoxMetadata metadata;
+class _SettingDataPage extends ConsumerWidget {
+  const _SettingDataPage();
 
   @override
-  Widget build(BuildContext context) {
-    final notification = useState(metadata.notification);
-    final continueWriting = useState(metadata.continueWriiting);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final setting = ref.watch(appSettingControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -60,12 +55,11 @@ class _SettingPage extends HookWidget {
               ),
             ),
             trailing: PopupDayOfWeekButton(
-              value: DayOfWeek.monday,
+              value: setting.asData?.value.notification.dayOfWeek ?? DayOfWeek.monday,
               onChaged: (dayOfWeek) {
-                DateTime now = DateTime.now();
-                print(now.weekday);
-                now = now.changeDayOfWeek(dayOfWeek.number);
-                print(now.weekday);
+                final oldState = setting.asData?.value.notification;
+                final newState = oldState?.changeDayOfWeek(dayOfWeek.number);
+                ref.read(appSettingControllerProvider.notifier).modified(notification: newState);
               },
             ),
           ),
@@ -80,10 +74,30 @@ class _SettingPage extends HookWidget {
               ),
             ),
             trailing: ActionChip(
-              onPressed: () {},
-              label: const Text(
-                '10:00',
-                style: TextStyle(
+              onPressed: () {
+                final initTime =
+                    TimeOfDay.fromDateTime(setting.asData?.value.notification ?? DateTime.now());
+                showTimePicker(context: context, initialTime: initTime).then((time) {
+                  if (time == null) {
+                    return;
+                  }
+                  final oldState = setting.asData?.value.notification ?? DateTime.now();
+                  final newState = DateTime(
+                    oldState.year,
+                    oldState.month,
+                    oldState.day,
+                    time.hour,
+                    time.minute,
+                    oldState.second,
+                  );
+                  ref.read(appSettingControllerProvider.notifier).modified(notification: newState);
+                });
+              },
+              label: Text(
+                setting.asData?.value.notification == null
+                    ? '00:00'
+                    : '${setting.asData?.value.notification.hour}:${setting.asData?.value.notification.minute}',
+                style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w400,
                 ),
@@ -105,8 +119,10 @@ class _SettingPage extends HookWidget {
             leading: const Icon(Icons.draw_outlined),
             title: const Text('Continue writing'),
             trailing: Switch(
-              value: true, // TODO: ここに状態を持たせる
-              onChanged: (bool value) {},
+              value: setting.asData?.value.continueWriiting ?? false,
+              onChanged: (bool toggle) async {
+                ref.read(appSettingControllerProvider.notifier).modified(continueWriiting: toggle);
+              },
             ),
           ),
           const Spacer(),

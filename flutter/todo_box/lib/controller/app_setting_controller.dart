@@ -16,4 +16,26 @@ class AppSettingController extends _$AppSettingController {
     final metadata = result.asData!.value.first;
     return TodoBoxMetadata.fromSql(metadata);
   }
+
+  /// state update method
+  Future<void> modified({
+    int? id,
+    DateTime? notification,
+    bool? continueWriiting,
+  }) async {
+    final oldSate = state.asData?.value;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final newState = oldSate?.copyWith(
+        id: id ?? oldSate.id,
+        notification: notification ?? oldSate.notification,
+        continueWriiting: continueWriiting ?? oldSate.continueWriiting,
+      );
+      assert(newState != null);
+
+      // TODO: SQLの更新処理を実装する
+
+      return newState!;
+    });
+  }
 }
