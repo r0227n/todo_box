@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../extensions/string_ext.dart';
 
 enum DayOfWeek {
   monday,
@@ -11,7 +12,7 @@ enum DayOfWeek {
 
   /// Returns the title of the day of the week.
   /// For example, `DayOfWeek.monday.text` returns `monday`.
-  String get text => toString().split('.').last;
+  String get text => toString().split('.').last.capitalize;
 
   int get number {
     switch (this) {
@@ -82,7 +83,7 @@ class PopupDayOfWeekButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       child: PopupMenuButton<DayOfWeek>(
-        initialValue: DayOfWeek.monday,
+        initialValue: value,
         child: SizedBox.fromSize(
           size: size,
           child: Row(
