@@ -11,7 +11,7 @@ class TodoBoxMetadata with _$TodoBoxMetadata {
     @Default(todoBoxMetadataTable) String tableName,
     int? id,
     required DateTime notification,
-    @JsonKey(name: 'continue_wriiting') required bool continueWriiting,
+    @JsonKey(name: 'continue_writing') required bool continueWriiting,
   }) = _TodoBoxMetadata;
 
   // SQL Create
@@ -19,7 +19,7 @@ class TodoBoxMetadata with _$TodoBoxMetadata {
     CREATE TABLE todo_box_metadata(
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       notification TEXT NOT NULL,
-      continue_wriiting INTEGER NOT NULL
+      continue_writing INTEGER NOT NULL
     )
   ''';
 
@@ -28,11 +28,25 @@ class TodoBoxMetadata with _$TodoBoxMetadata {
     final json = {
       'id': map['id'],
       'notification': map['notification'],
-      'continue_wriiting': map['continue_wriiting'] == 1,
+      'continue_writing': map['continue_writing'] == 1,
     };
 
     return TodoBoxMetadata.fromJson(json);
   }
 
   factory TodoBoxMetadata.fromJson(Map<String, dynamic> json) => _$TodoBoxMetadataFromJson(json);
+}
+
+extension TodoBoxMetadataX on TodoBoxMetadata {
+  // to sql update
+  Map<String, dynamic> toSql({bool containsId = true}) {
+    final map = {
+      'notification': notification.toIso8601String(),
+      'continue_writing': continueWriiting ? 1 : 0,
+    };
+    if (containsId) {
+      map['id'] = id ?? -1;
+    }
+    return map;
+  }
 }

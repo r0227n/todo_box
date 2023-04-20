@@ -26,12 +26,10 @@ void main() async {
       await db.execute(defaultTable.create());
       await db.insert(DefaultTable.name, defaultTable.insert());
 
-      final todoBoxMetadata = TodoBoxMetadata(notification: DateTime.now(), continueWriiting: true);
+      final todoBoxMetadata =
+          TodoBoxMetadata(notification: DateTime.now(), continueWriiting: false);
       await db.execute(TodoBoxMetadata.toCreateSql);
-      await db.insert(todoBoxMetadata.tableName, {
-        'notification': todoBoxMetadata.notification.toIso8601String(),
-        'continue_wriiting': todoBoxMetadata.continueWriiting ? 1 : 0,
-      });
+      await db.insert(todoBoxMetadata.tableName, todoBoxMetadata.toSql(containsId: false));
     },
     version: 1,
   );
