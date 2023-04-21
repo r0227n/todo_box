@@ -118,7 +118,8 @@ class _KeyboardModsState extends State<KeyboardMods> {
     _initModButtons;
 
     if (widget.visibleKeyboard) {
-      FocusScope.of(context).requestFocus(_node);
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => FocusScope.of(context).requestFocus(_node));
     } else {
       FocusScope.of(context).unfocus();
     }
@@ -358,122 +359,117 @@ class _KeyboardModsState extends State<KeyboardMods> {
             opacity: _node.hasFocus ? 0.8 : 1.0,
             child: widget.child,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Offstage(
-                offstage: !_node.hasFocus,
-                child: GestureDetector(
-                  onVerticalDragUpdate: (detail) {
-                    if (((detail.primaryDelta ?? -1.0) < 0.0) || !_node.hasFocus) {
-                      return;
-                    } else if (_controller.text.isNotEmpty) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                            SnackBar(
-                              showCloseIcon: true,
-                              action: SnackBarAction(
-                                label: 'Restore',
-                                onPressed: () {},
+          FocusScope(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Offstage(
+                  offstage: !_node.hasFocus,
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (detail) {
+                      if (((detail.primaryDelta ?? -1.0) < 0.0) || !_node.hasFocus) {
+                        return;
+                      } else if (_controller.text.isNotEmpty) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(
+                              SnackBar(
+                                showCloseIcon: true,
+                                action: SnackBarAction(
+                                  label: 'Restore',
+                                  onPressed: () {},
+                                ),
+                                content: const Text('Discard current task'),
+                                duration: const Duration(milliseconds: 3000),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
                               ),
-                              content: const Text('Discard current task'),
-                              duration: const Duration(milliseconds: 3000),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                            ),
-                          )
-                          .closed
-                          .then((closedReason) {
-                        if (closedReason == SnackBarClosedReason.action) {
-                          FocusScope.of(context).requestFocus(_node);
-                        } else {
-                          _controller.clear();
-                        }
-                      });
-                    }
-                    setState(() {
-                      _pickFiles.clear();
-                      modButtons = modButtons.map((e) {
-                        if (e.select) {
-                          return e.copyWith(select: false);
-                        }
-                        return e;
-                      }).toList();
-                    });
-                    FocusScope.of(context).unfocus();
-
-                    // Notification dwipe down
-                    if (widget.onSwipeDown is ValueGetter) {
-                      widget.onSwipeDown!();
-                    }
-                  },
-                  child: TextField(
-                    focusNode: _node,
-                    controller: _controller,
-                    onSubmitted: (text) {
-                      if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                        final submittedMenu = _selectedChip.label ?? widget.selectedChip.label;
-                        if (submittedMenu == null) {
-                          throw StateError('The State of Menu does not exist.');
-                        }
-
-                        widget.onSubmitted!(ModInputValue(
-                          text: text,
-                          selectMenu: submittedMenu,
-                          date: _selectDateTime.value,
-                          images: _pickFiles,
-                          schedule: _notificationSchedule,
-                        ));
-
+                            )
+                            .closed
+                            .then((closedReason) {
+                          if (closedReason == SnackBarClosedReason.action) {
+                            FocusScope.of(context).requestFocus(_node);
+                          } else {
+                            _controller.clear();
+                          }
+                        });
+                      }
+                      setState(() {
                         _pickFiles.clear();
+                        modButtons = modButtons.map((e) {
+                          if (e.select) {
+                            return e.copyWith(select: false);
+                          }
+                          return e;
+                        }).toList();
+                      });
+                      FocusScope.of(context).unfocus();
+
+                      // Notification dwipe down
+                      if (widget.onSwipeDown is ValueGetter) {
+                        widget.onSwipeDown!();
                       }
-                      _controller.clear();
                     },
-                    onEditingComplete: () {
-                      // 呼び出し元で[visibleKeyboard]がEnterキーを押した場合、
-                      // true: キーボードを表示し続ける
-                      // false: キーボードを閉じる
-                      if (widget.visibleKeyboard) {
-                        _node.requestFocus();
-                      }
-                    },
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Colors.green,
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(width: 0),
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(13),
+                    child: TextField(
+                      focusNode: _node,
+                      controller: _controller,
+                      onSubmitted: (text) {
+                        if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
+                          final submittedMenu = _selectedChip.label ?? widget.selectedChip.label;
+                          if (submittedMenu == null) {
+                            throw StateError('The State of Menu does not exist.');
+                          }
+
+                          widget.onSubmitted!(ModInputValue(
+                            text: text,
+                            selectMenu: submittedMenu,
+                            date: _selectDateTime.value,
+                            images: _pickFiles,
+                            schedule: _notificationSchedule,
+                          ));
+                        }
+                      },
+                      onEditingComplete: () {
+                        _pickFiles.clear();
+                        _controller.clear();
+                      },
+                      decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Colors.green,
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(width: 0),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(13),
+                          ),
                         ),
+                        hintText: 'New Todo',
                       ),
-                      hintText: 'New Todo',
                     ),
                   ),
                 ),
-              ),
-              if (_node.hasFocus && _visibleToolBar && _modToolWidgetState != null)
-                SizedBox(
-                  width: double.infinity,
-                  height: 75,
-                  child: _modToolWidgetState,
-                ),
-              if (_node.hasFocus && widget.mods.isNotEmpty)
-                Container(
-                  color: Colors.grey,
-                  height: widget.height,
-                  width: widget.width,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: modButtons,
+                if (_node.hasFocus && _visibleToolBar && _modToolWidgetState != null)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 75,
+                    child: _modToolWidgetState,
                   ),
-                ),
-            ],
+                if (_node.hasFocus && widget.mods.isNotEmpty)
+                  Container(
+                    color: Colors.grey,
+                    height: widget.height,
+                    width: widget.width,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: modButtons,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
