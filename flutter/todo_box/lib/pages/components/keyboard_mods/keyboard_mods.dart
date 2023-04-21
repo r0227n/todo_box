@@ -13,6 +13,7 @@ class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
     this.visibleAppBar = false,
     required this.visibleKeyboard,
+    this.initialDateTime,
     this.appBarTitle,
     this.autofocus = false,
     required this.mods,
@@ -40,7 +41,10 @@ class KeyboardMods extends StatefulWidget {
 
   final bool visibleAppBar;
 
+  /// Visibility of keyboard
   final bool visibleKeyboard;
+
+  final DateTime? initialDateTime;
 
   final Widget? appBarTitle;
 
@@ -72,7 +76,7 @@ class KeyboardMods extends StatefulWidget {
 class _KeyboardModsState extends State<KeyboardMods> {
   late final FocusNode _node;
 
-  late List<ModButton> modButtons;
+  List<ModButton> modButtons = const <ModButton>[];
   late final TextEditingController _controller;
 
   final ImagePicker _picker = ImagePicker();
@@ -85,14 +89,13 @@ class _KeyboardModsState extends State<KeyboardMods> {
   bool _visibleToolBar = false;
   Widget? _modToolWidgetState;
 
-  late final DateTime _now;
   final ValueNotifier<DateTime?> _selectDateTime = ValueNotifier<DateTime?>(null);
 
   @override
   void initState() {
     super.initState();
     _node = FocusNode(debugLabel: 'KeyboardMods');
-
+    _selectedChip = widget.selectedChip;
     _initModButtons;
 
     /// [TextEditingController]'s initialize
@@ -106,9 +109,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
         }
       });
     });
-
-    _selectedChip = widget.selectedChip;
-    _now = DateTime.now();
   }
 
   /// 親Widgetが再描画したタイミングで呼び出される
@@ -135,11 +135,13 @@ class _KeyboardModsState extends State<KeyboardMods> {
   /// [ModButton]'s initialize
   void get _initModButtons {
     int count = 0;
-    modButtons = widget.mods
+    final currentState = modButtons.isEmpty ? widget.mods : modButtons;
+    modButtons = currentState
         .map((e) => e.copyWith(
             modIndex: count++, select: false, callback: _updateState, onDeleted: _deleteAction))
         .toList();
-    _selectDateTime.value = null;
+
+    _selectDateTime.value = widget.initialDateTime;
     _modToolWidgetState = null;
   }
 
@@ -181,7 +183,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
             valueListenable: _selectDateTime,
             builder: (context, value, child) {
               return _ModActionDateTime(
-                initDateTime: value ?? _now,
+                initDateTime: value ?? DateTime.now(),
                 dateTime: value,
                 schedule: _notificationSchedule,
                 focusNode: _node,
