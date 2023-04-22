@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' as foundation;
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import '../../models/default_table.dart';
 import '../../models/table.dart' as sql;
@@ -35,7 +36,7 @@ class _TableCreateFieldState extends State<TableCreateField> {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
           centerTitle: true,
-          title: const Text('Create new list'),
+          title: Text(context.l10n.createList),
           actions: <Widget>[
             TextButton(
               onPressed: _txtController.text.isNotEmpty
@@ -103,7 +104,7 @@ class _TableCreateFieldState extends State<TableCreateField> {
                   child: TextFormField(
                     controller: _txtController,
                     decoration: InputDecoration(
-                      hintText: 'Enter list title',
+                      hintText: context.l10n.listTitleHintText,
                       isDense: true,
                       suffixIcon: IconButton(
                         onPressed: () => setState(() => _txtController.clear()),
@@ -113,9 +114,9 @@ class _TableCreateFieldState extends State<TableCreateField> {
                     keyboardType: TextInputType.text,
                     validator: (String? value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter list title';
+                        return context.l10n.pleaseEnterListTitle;
                       } else if (value.startsWith('_') || value.startsWith('＿')) {
-                        return 'Do not put _ at the beginning';
+                        return context.l10n.listTitlePromptError;
                       }
                       return null;
                     },
@@ -151,9 +152,9 @@ class _TableCreateFieldState extends State<TableCreateField> {
                     showRecentsTab: true,
                     recentsLimit: 28,
                     replaceEmojiOnLimitExceed: false,
-                    noRecents: const Text(
-                      'No Recents',
-                      style: TextStyle(fontSize: 20, color: Colors.black26),
+                    noRecents: Text(
+                      context.l10n.noRecents,
+                      style: const TextStyle(fontSize: 20, color: Colors.black26),
                       textAlign: TextAlign.center,
                     ),
                     loadingIndicator: const SizedBox.shrink(),

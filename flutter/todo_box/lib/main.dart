@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:todo_box/l10n/app_localizations.dart';
 import 'models/default_table.dart';
 import 'models/todo_box_metadata.dart';
 import 'database/helper/sql_helper.dart';
@@ -57,7 +57,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: notification.navigatorKey,
-      title: 'Flutter Demo',
+      title: 'Flutter Demo', // TODO: タイトルをいい感じに変更する
       theme: ThemeData(
         colorSchemeSeed: const Color(0xff6750a4),
         useMaterial3: true,
@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
+      supportedLocales: const <Locale>[
         Locale('en'), // English
         Locale('ja'), // Japanese
       ],

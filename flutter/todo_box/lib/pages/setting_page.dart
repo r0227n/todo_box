@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'components/popup_day_of_week_button.dart';
 import 'components/version_text.dart';
@@ -29,16 +30,16 @@ class _SettingDataPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Setting'),
+        title: Text(context.l10n.setting),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 4.0),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 4.0),
             child: Text(
-              'Default Notification',
-              style: TextStyle(
+              context.l10n.notification,
+              style: const TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.bold,
               ),
@@ -47,9 +48,9 @@ class _SettingDataPage extends ConsumerWidget {
           const Divider(height: 3.0, indent: 10.0, endIndent: 10.0),
           ListTile(
             leading: const Icon(Icons.event_repeat),
-            title: const Text(
-              'Notification days',
-              style: TextStyle(
+            title: Text(
+              context.l10n.notificationDayOfWeek,
+              style: const TextStyle(
                 fontSize: 15.0,
                 fontWeight: FontWeight.w400,
               ),
@@ -66,9 +67,9 @@ class _SettingDataPage extends ConsumerWidget {
           const Divider(height: 3.0, indent: 10.0, endIndent: 10.0),
           ListTile(
             leading: const Icon(Icons.edit_notifications_outlined),
-            title: const Text(
-              'Notification time',
-              style: TextStyle(
+            title: Text(
+              context.l10n.notificationTime,
+              style: const TextStyle(
                 fontSize: 15.0,
                 fontWeight: FontWeight.w400,
               ),
@@ -104,11 +105,11 @@ class _SettingDataPage extends ConsumerWidget {
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16.0, 32.0, 16.0, 4.0),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 32.0, 16.0, 4.0),
             child: Text(
-              'Input',
-              style: TextStyle(
+              context.l10n.keyboardInput,
+              style: const TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.bold,
               ),
@@ -117,7 +118,7 @@ class _SettingDataPage extends ConsumerWidget {
           const Divider(height: 3.0, indent: 10.0, endIndent: 10.0),
           ListTile(
             leading: const Icon(Icons.draw_outlined),
-            title: const Text('Continue writing'),
+            title: Text(context.l10n.continuousInputTodo),
             trailing: Switch(
               value: setting.asData?.value.continueWriiting ?? false,
               onChanged: (bool toggle) async {

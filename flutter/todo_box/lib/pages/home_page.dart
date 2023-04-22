@@ -1,8 +1,8 @@
 import 'dart:convert' show base64Encode, jsonDecode;
 import 'package:flutter/material.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:todo_box/l10n/app_localizations.dart';
 import 'detail_page.dart';
 import 'table_create_field.dart';
 import 'list_page.dart';
@@ -118,7 +118,7 @@ class HomePage extends HookConsumerWidget {
                 ),
                 ListTile(
                   title: Text(
-                    'Lists',
+                    context.l10n.list,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   trailing: IconButton(
@@ -154,7 +154,7 @@ class HomePage extends HookConsumerWidget {
                         );
                       });
                     }),
-                    tooltip: 'Add a New List',
+                    tooltip: context.l10n.createNewList,
                     icon: const Icon(Icons.create_new_folder_outlined),
                   ),
                 ),
@@ -173,11 +173,11 @@ class HomePage extends HookConsumerWidget {
                             padding: const EdgeInsets.only(right: 12.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
-                              children: const <Widget>[
-                                Icon(Icons.delete, color: Colors.white),
+                              children: <Widget>[
+                                const Icon(Icons.delete, color: Colors.white),
                                 Text(
-                                  'Delete',
-                                  style: TextStyle(
+                                  context.l10n.delete,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),

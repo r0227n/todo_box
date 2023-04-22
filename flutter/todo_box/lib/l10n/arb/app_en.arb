@@ -1,6 +1,19 @@
 {
-  "helloWorld": "Hello World!",
-  "@helloWorld": {
-    "description": "The conventional newborn programmer greeting"
-  }
+  "@@locale": "en",
+  "delete": "Delete",
+  "list": "List",
+  "setting": "Setting",
+  "createList": "Create a List",
+  "createNewList": "Create a New List",
+  "listTitleHintText": "Enter list title",
+  "listTitlePromptError": "Do not put _ at the beginning",
+  "enterListTitle": "Enter list title",
+  "pleaseEnterListTitle": "Please enter list title",
+  "doNotPutAtTheBeginning": "Do not put _ at the beginning",
+  "noRecents": "No Recents",
+  "notification": "Notification",
+  "notificationDayOfWeek": "Default Day of Week",
+  "notificationTime": "Default Time",
+  "keyboardInput": "Keyboard Input",
+  "continuousInputTodo": "Continuous input of Todos"
 }

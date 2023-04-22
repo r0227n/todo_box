@@ -1,3 +1,18 @@
 {
-    "helloWorld": "¡Hola Mundo!"
+  "@@locale": "ja",
+  "delete": "削除",
+  "list": "リスト",
+  "setting": "設定",
+  "createList": "新規リスト",
+  "createNewList": "新規リストを作成する",
+  "listTitleHintText": "リスト名を入力",
+  "enterListTitle": "リストのタイトルを入力してください",
+  "pleaseEnterListTitle": "リストのタイトルを入力してください",
+  "doNotPutAtTheBeginning": "先頭に_を入力しないでください",
+  "noRecents": "履歴なし",
+  "notification": "通知",
+  "notificationDayOfWeek": "デフォルトの曜日",
+  "notificationTime": "デフォルトの時間",
+  "keyboardInput": "キーボード入力",
+  "continuousInputTodo": "Todoを連続して入力する"
 }

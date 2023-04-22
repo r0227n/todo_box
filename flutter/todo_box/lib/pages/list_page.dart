@@ -1,8 +1,8 @@
 import 'dart:convert' show base64Encode;
 import 'package:flutter/material.dart';
+import 'package:todo_box/l10n/app_localizations.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:todo_box/l10n/app_localizations.dart';
 import 'detail_page.dart';
 import 'components/mods.dart';
 import 'components/emoji_text.dart';
@@ -91,11 +91,11 @@ class ListPage extends HookConsumerWidget {
                       padding: const EdgeInsets.only(right: 12.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: const <Widget>[
-                          Icon(Icons.delete, color: Colors.white),
+                        children: <Widget>[
+                          const Icon(Icons.delete, color: Colors.white),
                           Text(
-                            'Delete',
-                            style: TextStyle(
+                            context.l10n.delete,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
