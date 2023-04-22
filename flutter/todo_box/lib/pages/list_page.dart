@@ -160,7 +160,10 @@ class ListPage extends HookConsumerWidget {
               ? null
               : showKeyboard.value
                   ? null
-                  : actionButton(() => showKeyboard.value = !showKeyboard.value),
+                  : actionButton(
+                      context: context,
+                      onPressed: () => showKeyboard.value = !showKeyboard.value,
+                    ),
         );
       },
     );

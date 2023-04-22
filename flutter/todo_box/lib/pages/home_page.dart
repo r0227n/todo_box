@@ -154,7 +154,7 @@ class HomePage extends HookConsumerWidget {
                         );
                       });
                     }),
-                    tooltip: context.l10n.createNewList,
+                    tooltip: context.l10n.tooltipCreateList,
                     icon: const Icon(Icons.create_new_folder_outlined),
                   ),
                 ),
@@ -243,8 +243,12 @@ class HomePage extends HookConsumerWidget {
           ),
           bottomNavigationBar: showKeyboard.value ? null : navigationBar(),
           floatingActionButtonLocation: showKeyboard.value ? null : buttonLocation(),
-          floatingActionButton:
-              showKeyboard.value ? null : actionButton(() => showKeyboard.value = true),
+          floatingActionButton: showKeyboard.value
+              ? null
+              : actionButton(
+                  context: context,
+                  onPressed: () => showKeyboard.value = true,
+                ),
         );
       },
     );
