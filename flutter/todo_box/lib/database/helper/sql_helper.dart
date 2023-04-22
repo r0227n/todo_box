@@ -105,7 +105,9 @@ class SqlHeloper {
   /// 行を更新
   /// [table]: テーブル名
   /// [map]: 行の内容
-  Future<int> update(String table, Map<String, Object?> map) async {
+  Future<int> update(String table, Map<String, Object?> map, {String? whereKey}) async {
+    final key = whereKey ?? this.key;
+
     return await instance.update(
       table,
       map,

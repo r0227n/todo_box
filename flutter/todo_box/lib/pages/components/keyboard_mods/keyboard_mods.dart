@@ -6,13 +6,14 @@ import 'mod_tool.dart';
 import 'mod_button.dart';
 import 'mod_tool_picker.dart';
 import '../../detail_image.dart';
+import '../../../extensions/ext.dart';
 import '../../../types/notification_type.dart';
-import '../../../extensions/string_ext.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
     this.visibleAppBar = false,
     required this.visibleKeyboard,
+    this.initialDateTime,
     this.appBarTitle,
     this.autofocus = false,
     required this.mods,
@@ -40,7 +41,10 @@ class KeyboardMods extends StatefulWidget {
 
   final bool visibleAppBar;
 
+  /// Visibility of keyboard
   final bool visibleKeyboard;
+
+  final DateTime? initialDateTime;
 
   final Widget? appBarTitle;
 
@@ -70,9 +74,11 @@ class KeyboardMods extends StatefulWidget {
 }
 
 class _KeyboardModsState extends State<KeyboardMods> {
+  final DateTime _nowDateTime = DateTime.now();
+
   late final FocusNode _node;
 
-  late List<ModButton> modButtons;
+  List<ModButton> modButtons = const <ModButton>[];
   late final TextEditingController _controller;
 
   final ImagePicker _picker = ImagePicker();
@@ -85,14 +91,24 @@ class _KeyboardModsState extends State<KeyboardMods> {
   bool _visibleToolBar = false;
   Widget? _modToolWidgetState;
 
-  late final DateTime _now;
-  final ValueNotifier<DateTime?> _selectDateTime = ValueNotifier<DateTime?>(null);
+  late final ValueNotifier<DateTime?> _selectDateTime;
 
   @override
   void initState() {
     super.initState();
     _node = FocusNode(debugLabel: 'KeyboardMods');
+    _selectedChip = widget.selectedChip;
 
+    final DateTime? nextWeekOfDay =
+        widget.initialDateTime?.changeDayOfWeek(widget.initialDateTime?.weekday ?? DateTime.sunday);
+
+    _selectDateTime = ValueNotifier<DateTime?>(DateTime(
+      nextWeekOfDay?.year ?? _nowDateTime.year,
+      nextWeekOfDay?.month ?? _nowDateTime.month,
+      nextWeekOfDay?.day ?? _nowDateTime.day,
+      nextWeekOfDay?.hour ?? _nowDateTime.hour,
+      nextWeekOfDay?.minute ?? _nowDateTime.minute,
+    ));
     _initModButtons;
 
     /// [TextEditingController]'s initialize
@@ -106,9 +122,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
         }
       });
     });
-
-    _selectedChip = widget.selectedChip;
-    _now = DateTime.now();
   }
 
   /// 親Widgetが再描画したタイミングで呼び出される
@@ -118,7 +131,8 @@ class _KeyboardModsState extends State<KeyboardMods> {
     _initModButtons;
 
     if (widget.visibleKeyboard) {
-      FocusScope.of(context).requestFocus(_node);
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => FocusScope.of(context).requestFocus(_node));
     } else {
       FocusScope.of(context).unfocus();
     }
@@ -134,11 +148,13 @@ class _KeyboardModsState extends State<KeyboardMods> {
   /// [ModButton]'s initialize
   void get _initModButtons {
     int count = 0;
-    modButtons = widget.mods
+
+    final currentState = modButtons.isEmpty ? widget.mods : modButtons;
+    modButtons = currentState
         .map((e) => e.copyWith(
             modIndex: count++, select: false, callback: _updateState, onDeleted: _deleteAction))
         .toList();
-    _selectDateTime.value = null;
+
     _modToolWidgetState = null;
   }
 
@@ -180,7 +196,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
             valueListenable: _selectDateTime,
             builder: (context, value, child) {
               return _ModActionDateTime(
-                initDateTime: value ?? _now,
+                initDateTime: _nowDateTime,
                 dateTime: value,
                 schedule: _notificationSchedule,
                 focusNode: _node,
@@ -281,21 +297,25 @@ class _KeyboardModsState extends State<KeyboardMods> {
   }
 
   void _deleteAction() {
-    final findDateTime = modButtons.where((element) => element.chip?.dateTime != null).toList();
-    if (findDateTime.isNotEmpty) {
-      if (findDateTime.length != 1) {
-        throw FlutterError('Error KeyboardMods State');
-      }
-      final index = modButtons.indexOf(findDateTime.first);
+    const errorPattern = ModButton(
+      type: ModButtonType.disabledFilledTonal,
+      tool: ModTool.top(category: ModCategory.time),
+    );
+    final findDateTime = modButtons.firstWhere(
+      (element) => element.chip?.dateTime != null,
+      orElse: () => errorPattern,
+    );
+    if (errorPattern != findDateTime) {
+      final index = modButtons.indexOf(findDateTime);
       final button = modButtons[index];
       setState(() {
         modButtons[index] = button.copyWith(
           select: _visibleToolBar,
           chip: button.chip?.copyWith(dateTime: null),
         );
+        _selectDateTime.value = null;
       });
     }
-    _selectDateTime.value = null;
   }
 
   @override
@@ -358,122 +378,115 @@ class _KeyboardModsState extends State<KeyboardMods> {
             opacity: _node.hasFocus ? 0.8 : 1.0,
             child: widget.child,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Offstage(
-                offstage: !_node.hasFocus,
-                child: GestureDetector(
-                  onVerticalDragUpdate: (detail) {
-                    if (((detail.primaryDelta ?? -1.0) < 0.0) || !_node.hasFocus) {
-                      return;
-                    } else if (_controller.text.isNotEmpty) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                            SnackBar(
-                              showCloseIcon: true,
-                              action: SnackBarAction(
-                                label: 'Restore',
-                                onPressed: () {},
+          FocusScope(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Offstage(
+                  offstage: !_node.hasFocus,
+                  child: GestureDetector(
+                    onVerticalDragUpdate: (detail) {
+                      if (((detail.primaryDelta ?? -1.0) < 0.0) || !_node.hasFocus) {
+                        return;
+                      } else if (_controller.text.isNotEmpty) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(
+                              SnackBar(
+                                showCloseIcon: true,
+                                action: SnackBarAction(
+                                  label: 'Restore',
+                                  onPressed: () {},
+                                ),
+                                content: const Text('Discard current task'),
+                                duration: const Duration(milliseconds: 3000),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
                               ),
-                              content: const Text('Discard current task'),
-                              duration: const Duration(milliseconds: 3000),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                            ),
-                          )
-                          .closed
-                          .then((closedReason) {
-                        if (closedReason == SnackBarClosedReason.action) {
-                          FocusScope.of(context).requestFocus(_node);
-                        } else {
-                          _controller.clear();
-                        }
-                      });
-                    }
-                    setState(() {
-                      _pickFiles.clear();
-                      modButtons = modButtons.map((e) {
-                        if (e.select) {
-                          return e.copyWith(select: false);
-                        }
-                        return e;
-                      }).toList();
-                    });
-                    FocusScope.of(context).unfocus();
-
-                    // Notification dwipe down
-                    if (widget.onSwipeDown is ValueGetter) {
-                      widget.onSwipeDown!();
-                    }
-                  },
-                  child: TextField(
-                    focusNode: _node,
-                    controller: _controller,
-                    onSubmitted: (text) {
-                      if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
-                        final submittedMenu = _selectedChip.label ?? widget.selectedChip.label;
-                        if (submittedMenu == null) {
-                          throw StateError('The State of Menu does not exist.');
-                        }
-
-                        widget.onSubmitted!(ModInputValue(
-                          text: text,
-                          selectMenu: submittedMenu,
-                          date: _selectDateTime.value,
-                          images: _pickFiles,
-                          schedule: _notificationSchedule,
-                        ));
-
+                            )
+                            .closed
+                            .then((closedReason) {
+                          if (closedReason == SnackBarClosedReason.action) {
+                            FocusScope.of(context).requestFocus(_node);
+                          } else {
+                            _controller.clear();
+                          }
+                        });
+                      }
+                      setState(() {
                         _pickFiles.clear();
+                        modButtons = modButtons.map((e) {
+                          if (e.select) {
+                            return e.copyWith(select: false);
+                          }
+                          return e;
+                        }).toList();
+                      });
+                      FocusScope.of(context).unfocus();
+
+                      // Notification dwipe down
+                      if (widget.onSwipeDown is ValueGetter) {
+                        widget.onSwipeDown!();
                       }
-                      _controller.clear();
                     },
-                    onEditingComplete: () {
-                      // 呼び出し元で[visibleKeyboard]がEnterキーを押した場合、
-                      // true: キーボードを表示し続ける
-                      // false: キーボードを閉じる
-                      if (widget.visibleKeyboard) {
-                        _node.requestFocus();
-                      }
-                    },
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Colors.green,
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(width: 0),
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(13),
+                    child: TextField(
+                      focusNode: _node,
+                      controller: _controller,
+                      onSubmitted: (text) {
+                        if (mounted && widget.onSubmitted is ValueChanged<ModInputValue>) {
+                          final submittedMenu = _selectedChip.label ?? widget.selectedChip.label;
+                          if (submittedMenu == null) {
+                            throw StateError('The State of Menu does not exist.');
+                          }
+                          widget.onSubmitted!(ModInputValue(
+                            text: text,
+                            selectMenu: submittedMenu,
+                            date: _selectDateTime.value,
+                            images: _pickFiles,
+                            schedule: _notificationSchedule,
+                          ));
+                        }
+                        _pickFiles.clear();
+                        _controller.clear();
+                      },
+                      onEditingComplete: () {},
+                      decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Colors.green,
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(width: 0),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(13),
+                          ),
                         ),
+                        hintText: 'New Todo',
                       ),
-                      hintText: 'New Todo',
                     ),
                   ),
                 ),
-              ),
-              if (_node.hasFocus && _visibleToolBar && _modToolWidgetState != null)
-                SizedBox(
-                  width: double.infinity,
-                  height: 75,
-                  child: _modToolWidgetState,
-                ),
-              if (_node.hasFocus && widget.mods.isNotEmpty)
-                Container(
-                  color: Colors.grey,
-                  height: widget.height,
-                  width: widget.width,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: modButtons,
+                if (_node.hasFocus && _visibleToolBar && _modToolWidgetState != null)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 75,
+                    child: _modToolWidgetState,
                   ),
-                ),
-            ],
+                if (_node.hasFocus && widget.mods.isNotEmpty)
+                  Container(
+                    color: Colors.grey,
+                    height: widget.height,
+                    width: widget.width,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: modButtons,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
@@ -564,7 +577,7 @@ class _ModActionChipTool extends StatelessWidget {
 class _ModActionDateTime extends StatelessWidget {
   const _ModActionDateTime({
     required this.initDateTime,
-    this.dateTime,
+    required this.dateTime,
     required this.schedule,
     required this.focusNode,
     required this.onDatePicker,
@@ -596,11 +609,12 @@ class _ModActionDateTime extends StatelessWidget {
                 side: const BorderSide(width: 0.5),
               ),
               onPressed: () async {
+                final currentDate = dateTime ?? DateTime.now();
                 final date = await showDatePicker(
                   context: context,
-                  initialDate: dateTime ?? DateTime.now(),
-                  firstDate: DateTime(2023),
-                  lastDate: DateTime(2040),
+                  initialDate: currentDate,
+                  firstDate: DateTime(currentDate.year),
+                  lastDate: DateTime(currentDate.year + 5),
                 );
                 if (date == null) {
                   return;

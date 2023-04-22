@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../setting_page.dart';
 
 class BottomNavigation extends StatelessWidget {
   const BottomNavigation({super.key});
@@ -29,10 +30,16 @@ class BottomNavigation extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(
-                Icons.info_outline,
+                Icons.settings,
                 color: Colors.white,
               ),
-              onPressed: () {},
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SettingPage(),
+                  fullscreenDialog: true, // true だとモーダル遷移になる
+                ),
+              ),
             ),
           ],
         ),

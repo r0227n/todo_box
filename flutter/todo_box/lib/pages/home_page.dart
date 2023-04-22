@@ -12,6 +12,7 @@ import 'components/emoji_text.dart';
 import 'components/consumer_widget_extension.dart';
 import '../controller/table_controller.dart';
 import '../controller/todo_controller.dart';
+import '../controller/app_setting_controller.dart';
 import '../controller/local_notification_controller.dart';
 import '../models/default_table.dart';
 import '../models/table.dart' as sql;
@@ -24,6 +25,7 @@ class HomePage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final appSetting = ref.watch(appSettingControllerProvider).asData?.value;
     final config = ref.watch(tableControllerProvider);
     final showKeyboard = useState<bool>(false);
 
@@ -56,6 +58,7 @@ class HomePage extends HookConsumerWidget {
         return Scaffold(
           body: KeyboardMods(
             visibleKeyboard: showKeyboard.value,
+            initialDateTime: appSetting?.notification,
             chips: tables
                 .map((e) => ModActionChip(
                       icon: EmojiText(e.icon),
@@ -64,18 +67,19 @@ class HomePage extends HookConsumerWidget {
                 .toList(),
             selectedChip:
                 const ModActionChip(icon: EmojiText(DefaultTable.emoji), label: DefaultTable.name),
-            mods: const [
-              ModButton.outline(
+            mods: [
+              const ModButton.outline(
                 chip: ModActionChip(icon: EmojiText(DefaultTable.emoji), label: DefaultTable.name),
                 tool: ModTool(position: ModPositioned.top, category: ModCategory.chips),
               ),
               ModButton.outline(
-                icon: Icon(Icons.schedule_outlined),
-                selectedIcon: Icon(Icons.schedule),
-                chip: ModActionChip(icon: Icon(Icons.schedule_outlined), dateTime: null),
-                tool: ModTool(position: ModPositioned.dialog, category: ModCategory.time),
+                icon: const Icon(Icons.schedule_outlined),
+                selectedIcon: const Icon(Icons.schedule),
+                chip: ModActionChip(
+                    icon: const Icon(Icons.schedule_outlined), dateTime: appSetting?.notification),
+                tool: const ModTool(position: ModPositioned.dialog, category: ModCategory.time),
               ),
-              ModButton.outline(
+              const ModButton.outline(
                 icon: Icon(Icons.camera_alt_outlined),
                 selectedIcon: Icon(
                   Icons.camera_alt,
@@ -200,7 +204,7 @@ class HomePage extends HookConsumerWidget {
               ],
             ),
             onSwipeDown: () {
-              showKeyboard.value = !showKeyboard.value;
+              showKeyboard.value = false;
             },
             onSubmitted: (value) async {
               final timezonId = context.l10n.timezoneId;
@@ -233,15 +237,14 @@ class HomePage extends HookConsumerWidget {
                 // TODO: エラーハンドリング
               }
 
-              // TODO: 設定で↓の値を切り替える(条件分岐)する項目を入れる
-              showKeyboard.value = !showKeyboard.value;
+              // 連続入力機能(キーボード常時表示)のオンオフ
+              showKeyboard.value = appSetting?.continueWriiting ?? false;
             },
           ),
           bottomNavigationBar: showKeyboard.value ? null : navigationBar(),
           floatingActionButtonLocation: showKeyboard.value ? null : buttonLocation(),
-          floatingActionButton: showKeyboard.value
-              ? null
-              : actionButton(() => showKeyboard.value = !showKeyboard.value),
+          floatingActionButton:
+              showKeyboard.value ? null : actionButton(() => showKeyboard.value = true),
         );
       },
     );
