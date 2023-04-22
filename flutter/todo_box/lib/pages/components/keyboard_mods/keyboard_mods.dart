@@ -6,8 +6,8 @@ import 'mod_tool.dart';
 import 'mod_button.dart';
 import 'mod_tool_picker.dart';
 import '../../detail_image.dart';
+import '../../../extensions/ext.dart';
 import '../../../types/notification_type.dart';
-import '../../../extensions/string_ext.dart';
 
 class KeyboardMods extends StatefulWidget {
   const KeyboardMods({
@@ -74,6 +74,8 @@ class KeyboardMods extends StatefulWidget {
 }
 
 class _KeyboardModsState extends State<KeyboardMods> {
+  final DateTime _nowDateTime = DateTime.now();
+
   late final FocusNode _node;
 
   List<ModButton> modButtons = const <ModButton>[];
@@ -89,13 +91,24 @@ class _KeyboardModsState extends State<KeyboardMods> {
   bool _visibleToolBar = false;
   Widget? _modToolWidgetState;
 
-  final ValueNotifier<DateTime?> _selectDateTime = ValueNotifier<DateTime?>(null);
+  late final ValueNotifier<DateTime?> _selectDateTime;
 
   @override
   void initState() {
     super.initState();
     _node = FocusNode(debugLabel: 'KeyboardMods');
     _selectedChip = widget.selectedChip;
+
+    final DateTime? nextWeekOfDay =
+        widget.initialDateTime?.changeDayOfWeek(widget.initialDateTime?.weekday ?? DateTime.sunday);
+
+    _selectDateTime = ValueNotifier<DateTime?>(DateTime(
+      nextWeekOfDay?.year ?? _nowDateTime.year,
+      nextWeekOfDay?.month ?? _nowDateTime.month,
+      nextWeekOfDay?.day ?? _nowDateTime.day,
+      nextWeekOfDay?.hour ?? _nowDateTime.hour,
+      nextWeekOfDay?.minute ?? _nowDateTime.minute,
+    ));
     _initModButtons;
 
     /// [TextEditingController]'s initialize
@@ -135,13 +148,13 @@ class _KeyboardModsState extends State<KeyboardMods> {
   /// [ModButton]'s initialize
   void get _initModButtons {
     int count = 0;
+
     final currentState = modButtons.isEmpty ? widget.mods : modButtons;
     modButtons = currentState
         .map((e) => e.copyWith(
             modIndex: count++, select: false, callback: _updateState, onDeleted: _deleteAction))
         .toList();
 
-    _selectDateTime.value = widget.initialDateTime;
     _modToolWidgetState = null;
   }
 
@@ -183,7 +196,7 @@ class _KeyboardModsState extends State<KeyboardMods> {
             valueListenable: _selectDateTime,
             builder: (context, value, child) {
               return _ModActionDateTime(
-                initDateTime: value ?? DateTime.now(),
+                initDateTime: _nowDateTime,
                 dateTime: value,
                 schedule: _notificationSchedule,
                 focusNode: _node,
@@ -284,21 +297,25 @@ class _KeyboardModsState extends State<KeyboardMods> {
   }
 
   void _deleteAction() {
-    final findDateTime = modButtons.where((element) => element.chip?.dateTime != null).toList();
-    if (findDateTime.isNotEmpty) {
-      if (findDateTime.length != 1) {
-        throw FlutterError('Error KeyboardMods State');
-      }
-      final index = modButtons.indexOf(findDateTime.first);
+    const errorPattern = ModButton(
+      type: ModButtonType.disabledFilledTonal,
+      tool: ModTool.top(category: ModCategory.time),
+    );
+    final findDateTime = modButtons.firstWhere(
+      (element) => element.chip?.dateTime != null,
+      orElse: () => errorPattern,
+    );
+    if (errorPattern != findDateTime) {
+      final index = modButtons.indexOf(findDateTime);
       final button = modButtons[index];
       setState(() {
         modButtons[index] = button.copyWith(
           select: _visibleToolBar,
           chip: button.chip?.copyWith(dateTime: null),
         );
+        _selectDateTime.value = null;
       });
     }
-    _selectDateTime.value = null;
   }
 
   @override
@@ -426,7 +443,6 @@ class _KeyboardModsState extends State<KeyboardMods> {
                           if (submittedMenu == null) {
                             throw StateError('The State of Menu does not exist.');
                           }
-
                           widget.onSubmitted!(ModInputValue(
                             text: text,
                             selectMenu: submittedMenu,
@@ -435,11 +451,10 @@ class _KeyboardModsState extends State<KeyboardMods> {
                             schedule: _notificationSchedule,
                           ));
                         }
-                      },
-                      onEditingComplete: () {
                         _pickFiles.clear();
                         _controller.clear();
                       },
+                      onEditingComplete: () {},
                       decoration: const InputDecoration(
                         filled: true,
                         fillColor: Colors.green,
@@ -562,7 +577,7 @@ class _ModActionChipTool extends StatelessWidget {
 class _ModActionDateTime extends StatelessWidget {
   const _ModActionDateTime({
     required this.initDateTime,
-    this.dateTime,
+    required this.dateTime,
     required this.schedule,
     required this.focusNode,
     required this.onDatePicker,
@@ -594,11 +609,12 @@ class _ModActionDateTime extends StatelessWidget {
                 side: const BorderSide(width: 0.5),
               ),
               onPressed: () async {
+                final currentDate = dateTime ?? DateTime.now();
                 final date = await showDatePicker(
                   context: context,
-                  initialDate: dateTime ?? DateTime.now(),
-                  firstDate: DateTime(2023),
-                  lastDate: DateTime(2040),
+                  initialDate: currentDate,
+                  firstDate: DateTime(currentDate.year),
+                  lastDate: DateTime(currentDate.year + 5),
                 );
                 if (date == null) {
                   return;

@@ -9,7 +9,7 @@ class AppSettingController extends _$AppSettingController {
   @override
   FutureOr<TodoBoxMetadata> build() async {
     final query = ref.watch(todoQueryProvider);
-    final result = await AsyncValue.guard(() => query.listFields(todoBoxMetadataTable));
+    final result = await AsyncValue.guard(() async => await query.listFields(todoBoxMetadataTable));
 
     // 設定関連のテーブルが存在しない場合、エラーを返す
     assert(result.asData?.value.length == 1);
